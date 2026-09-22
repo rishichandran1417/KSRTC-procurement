@@ -8,7 +8,6 @@ export const ENDPOINTS = {
   forecast: import.meta.env.VITE_FORECAST_API_URL ?? "",
   optimization: import.meta.env.VITE_OPTIMIZATION_API_URL ?? "",
   powerbi: import.meta.env.VITE_POWERBI_EMBED_URL ?? "",
-  geminiKey: import.meta.env.VITE_GEMINI_API_KEY ?? "",
 };
 
 export class ApiError extends Error {

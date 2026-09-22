@@ -13,27 +13,32 @@ export default function Analytics() {
   const load = () => {
     setLoading(true);
     setError(null);
-    getPowerBIConfig().then(setConfig).catch(() => setError("Could not reach Power BI service.")).finally(() => setLoading(false));
+    getPowerBIConfig()
+      .then(setConfig)
+      .catch(() => setError("Could not reach Vendor Performance analytics service."))
+      .finally(() => setLoading(false));
   };
 
   useEffect(load, []);
 
   return (
     <div>
-      <TopBar title="Power BI Analytics" subtitle="How is the supply chain performing? — Executive reporting dashboard" />
+      <TopBar
+        title="Vendor Performance Analytics"
+        subtitle="Evaluate supplier delivery compliance, lead times, quality scores, and price variance reports"
+      />
       <div className="p-6 space-y-4">
         <div className="flex items-center gap-2 rounded-md border border-[--color-border] bg-[--color-surface-1] p-3 text-xs text-[--color-ink-700]">
           <BarChart3 className="text-[--color-forecast-600]" size={18} />
           <span>
-            This dedicated container renders your Power BI report iframe. Configure your Power BI Embed URL and access tokens under <strong>Settings → Integrations</strong>.
+            This container renders your interactive Vendor Performance analytics dashboard. Configure your embed URL under <strong>Settings → Integrations</strong>.
           </span>
         </div>
 
         <PowerBIEmbed config={config} loading={loading} error={error} onRetry={load} />
 
         <p className="text-xs text-[--color-ink-500]">
-          Covers overall fleet demand trends, inventory turnover rate, stockout frequency, supplier delivery performance,
-          procurement budget allocation, and historical price variances across KSRTC depots.
+          Covers vendor/supplier delivery lead times, on-time in-full (OTIF) fulfillment rates, quality rejection counts, unit cost variance, and depot supplier performance rankings across KSRTC workshops.
         </p>
       </div>
     </div>

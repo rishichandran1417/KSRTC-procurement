@@ -41,11 +41,11 @@ const INTEGRATIONS: IntegrationConfig[] = [
     defaultUrl: ENDPOINTS.powerbi || "https://app.powerbi.com/reportEmbed?reportId=ksrtc-supply-chain-v1",
   },
   {
-    id: "gemini",
-    name: "Gemini AI Assistant Service",
-    description: "Conversational copilot service processing user supply chain queries and returning structured analytical data.",
+    id: "scion",
+    name: "KSRTC SCION Intelligence Engine",
+    description: "Conversational AI Copilot processing user supply chain queries and returning structured analytical data.",
     icon: Sparkles,
-    defaultUrl: ENDPOINTS.base ? `${ENDPOINTS.base}/chat` : "http://localhost:8000/api/v1/chat",
+    defaultUrl: "/api/chat",
   },
 ];
 

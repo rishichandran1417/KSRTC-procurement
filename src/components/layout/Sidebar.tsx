@@ -1,10 +1,17 @@
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard, TrendingUp, Calculator, Boxes, ClipboardList,
-  Truck, BarChart3, Sparkles, Settings as SettingsIcon,
+  Truck, BarChart3, Settings as SettingsIcon,
 } from "lucide-react";
 
-const NAV_GROUPS = [
+interface NavItem {
+  to: string;
+  label: string;
+  icon?: any;
+  imgSrc?: string;
+}
+
+const NAV_GROUPS: { label: string | null; items: NavItem[] }[] = [
   {
     label: null,
     items: [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard }],
@@ -26,11 +33,11 @@ const NAV_GROUPS = [
   },
   {
     label: "Analytics",
-    items: [{ to: "/analytics", label: "Power BI", icon: BarChart3 }],
+    items: [{ to: "/analytics", label: "Vendor Performance", icon: BarChart3 }],
   },
   {
-    label: "AI",
-    items: [{ to: "/ai-assistant", label: "Supply Chain Assistant", icon: Sparkles }],
+    label: "AI Intelligence",
+    items: [{ to: "/ai-assistant", label: "KSRTC SCION", imgSrc: "/scion-logo.png" }],
   },
 ];
 
@@ -66,7 +73,11 @@ export function Sidebar() {
                       }`
                     }
                   >
-                    <item.icon size={16} />
+                    {item.imgSrc ? (
+                      <img src={item.imgSrc} alt={item.label} className="h-4 w-4 object-contain shrink-0" />
+                    ) : (
+                      <item.icon size={16} />
+                    )}
                     {item.label}
                   </NavLink>
                 </li>

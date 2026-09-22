@@ -24,7 +24,7 @@ export function PowerBIEmbed({
       }`}
     >
       <div className="flex items-center justify-between border-b border-[--color-border] px-4 py-2.5">
-        <p className="text-sm font-medium text-[--color-ink-900]">Power BI Supply Chain Analytics</p>
+        <p className="text-sm font-medium text-[--color-ink-900]">Vendor Performance Analytics Report</p>
         <div className="flex items-center gap-1">
           <button
             onClick={() => setRefreshKey((k) => k + 1)}

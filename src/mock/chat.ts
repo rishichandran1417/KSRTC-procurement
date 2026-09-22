@@ -9,6 +9,6 @@ export function mockChatReply(userText: string): ChatMessage {
     id: nextId(),
     role: "assistant",
     type: "text",
-    text: `Received your query: "${userText}". Connecting to Gemini AI service endpoint for ${SINGLE_DEPOT}... Set VITE_DEMO_MODE=false to process via your live Gemini backend.`,
+    text: `Received your query: "${userText}". Processing through KSRTC SCION intelligence service endpoint for ${SINGLE_DEPOT}...`,
   };
 }
