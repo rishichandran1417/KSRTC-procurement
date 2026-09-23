@@ -91,6 +91,8 @@ export async function addInventoryItem(payload: AddInventoryPayload): Promise<In
     stockoutRisk: status === "Critical" ? "High" : status === "Warning" ? "Medium" : "Low",
     status,
     lastUpdated: new Date().toISOString().slice(0, 10),
+    unitCost: payload.unitCost,
+    primarySupplier: payload.primarySupplier,
     notes: payload.notes || "Added manually",
   };
 

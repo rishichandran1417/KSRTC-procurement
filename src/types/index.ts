@@ -98,6 +98,8 @@ export interface InventoryItem {
   stockoutRisk: "Low" | "Medium" | "High";
   status: StockStatus;
   lastUpdated: string;
+  unitCost?: number;
+  primarySupplier?: string;
   notes?: string;
 }
 
@@ -107,6 +109,8 @@ export interface AddInventoryPayload {
   currentStock: number;
   safetyStock: number;
   reorderPoint: number;
+  unitCost?: number;
+  primarySupplier?: string;
   depot?: string;
   notes?: string;
 }
@@ -117,6 +121,8 @@ export interface UpdateInventoryPayload {
   currentStock?: number;
   safetyStock?: number;
   reorderPoint?: number;
+  unitCost?: number;
+  primarySupplier?: string;
   notes?: string;
 }
 
