@@ -1,8 +1,67 @@
 import { apiClient, DEMO_MODE, ENDPOINTS, simulateLatency } from "./apiClient";
-import { MOCK_INVENTORY, SINGLE_DEPOT, mockConsumptionHistory, mockPriceHistory } from "../mock/inventory";
+import { SINGLE_DEPOT } from "../constants";
 import type { InventoryItem, AddInventoryPayload, UpdateInventoryPayload, ConsumptionRecord, PriceRecord } from "../types";
 
-let activeInventory: InventoryItem[] = [...MOCK_INVENTORY];
+const INVENTORY_STORAGE_KEY = "ksrtc_inventory_clean_v1";
+
+// Unconditionally wipe legacy dummy keys from storage
+try {
+  localStorage.removeItem("ksrtc_inventory_data");
+  localStorage.removeItem("ksrtc_inventory_v1");
+  localStorage.removeItem("ksrtc_inventory_v2");
+} catch {
+  // Ignore localStorage access issues
+}
+
+const DUMMY_PARTS = [
+  "leyland viking",
+  "brake drum",
+  "radial bus tyre",
+  "retread tyre",
+  "oil filter",
+  "fuel filter",
+  "air filter",
+  "wheel hub bearing",
+  "alternator",
+  "starter motor",
+  "coolant heavy duty",
+  "lubricant oil",
+];
+
+function loadStoredInventory(): InventoryItem[] {
+  try {
+    const raw = localStorage.getItem(INVENTORY_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed: InventoryItem[] = JSON.parse(raw);
+    return parsed.filter(
+      (item) => !DUMMY_PARTS.some((d) => item.part.toLowerCase().includes(d))
+    );
+  } catch {
+    return [];
+  }
+}
+
+function saveStoredInventory(items: InventoryItem[]): void {
+  try {
+    const cleanItems = items.filter(
+      (item) => !DUMMY_PARTS.some((d) => item.part.toLowerCase().includes(d))
+    );
+    localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(cleanItems));
+  } catch {
+    // Ignore storage quota errors
+  }
+}
+
+let activeInventory: InventoryItem[] = loadStoredInventory();
+
+export function clearInventory(): InventoryItem[] {
+  activeInventory = [];
+  try {
+    localStorage.removeItem(INVENTORY_STORAGE_KEY);
+    localStorage.removeItem("ksrtc_inventory_data");
+  } catch {}
+  return [];
+}
 
 export async function getInventory(): Promise<InventoryItem[]> {
   if (DEMO_MODE || !ENDPOINTS.base) {
@@ -37,6 +96,7 @@ export async function addInventoryItem(payload: AddInventoryPayload): Promise<In
 
   if (DEMO_MODE || !ENDPOINTS.base) {
     activeInventory.unshift(newItem);
+    saveStoredInventory(activeInventory);
     return simulateLatency(newItem, 400);
   }
   return apiClient.post<InventoryItem>(`${ENDPOINTS.base}/inventory`, payload);
@@ -66,6 +126,7 @@ export async function updateInventoryItem(id: string, payload: UpdateInventoryPa
         lastUpdated: new Date().toISOString().slice(0, 10),
       };
       activeInventory[idx] = updated;
+      saveStoredInventory(activeInventory);
       return simulateLatency(updated, 300);
     }
   }
@@ -101,14 +162,14 @@ export async function receiveItemStockIntoInventory(partName: string, quantityRe
 
 export async function getConsumptionHistory(partId: string): Promise<ConsumptionRecord[]> {
   if (DEMO_MODE || !ENDPOINTS.base) {
-    return simulateLatency(mockConsumptionHistory(), 300);
+    return simulateLatency([], 200);
   }
   return apiClient.get<ConsumptionRecord[]>(`${ENDPOINTS.base}/inventory/${partId}/consumption`);
 }
 
 export async function getPriceHistory(partIdOrName: string): Promise<PriceRecord[]> {
   if (DEMO_MODE || !ENDPOINTS.base) {
-    return simulateLatency(mockPriceHistory(partIdOrName), 300);
+    return simulateLatency([], 200);
   }
   return apiClient.get<PriceRecord[]>(`${ENDPOINTS.base}/inventory/${partIdOrName}/prices`);
 }

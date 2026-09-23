@@ -20,7 +20,7 @@ export function PowerBIEmbed({
   return (
     <div
       className={`flex flex-col rounded-md border border-[--color-border] bg-[--color-surface-0] ${
-        isFullscreen ? "fixed inset-4 z-50 shadow-xl" : "h-[560px]"
+        isFullscreen ? "fixed inset-2 sm:inset-4 z-50 shadow-xl" : "h-[380px] sm:h-[480px] md:h-[560px] lg:h-[620px]"
       }`}
     >
       <div className="flex items-center justify-between border-b border-[--color-border] px-4 py-2.5">

@@ -27,7 +27,7 @@ export default function Analytics() {
         title="Vendor Performance Analytics"
         subtitle="Evaluate supplier delivery compliance, lead times, quality scores, and price variance reports"
       />
-      <div className="p-6 space-y-4">
+      <div className="p-4 sm:p-6 space-y-4">
         <div className="flex items-center gap-2 rounded-md border border-[--color-border] bg-[--color-surface-1] p-3 text-xs text-[--color-ink-700]">
           <BarChart3 className="text-[--color-forecast-600]" size={18} />
           <span>

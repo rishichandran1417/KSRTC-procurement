@@ -212,16 +212,16 @@ export default function AiAssistant() {
   return (
     <div className="flex h-full flex-col relative bg-[--color-surface-0]">
       {/* TOP BAR HEADER */}
-      <div className="flex items-center justify-between border-b border-[--color-border] bg-[--color-surface-0] pr-6 shadow-sm">
-        <div className="flex-1">
+      <div className="flex items-center justify-between border-b border-[--color-border] bg-[--color-surface-0] pr-3 sm:pr-6 shadow-sm">
+        <div className="flex-1 min-w-0">
           <TopBar
             title="KSRTC SCION"
             subtitle="Supply Chain Intelligence & Operational Copilot"
             showFilters={false}
           />
         </div>
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 rounded-full bg-cyan-500/10 px-3 py-1 border border-cyan-500/20 text-xs font-medium text-cyan-400">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="hidden md:flex items-center gap-2 rounded-full bg-cyan-500/10 px-3 py-1 border border-cyan-500/20 text-xs font-medium text-cyan-400">
             <img src="/scion-logo.png" alt="SCION Logo" className="h-4 w-4 object-contain" />
             <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
             SCION AI Active
@@ -229,16 +229,18 @@ export default function AiAssistant() {
 
           <button
             onClick={startNewChat}
-            className="flex items-center gap-1.5 rounded-md border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-xs font-medium text-[--color-ink-700] hover:bg-[--color-surface-2] transition-all shadow-sm"
+            className="flex items-center gap-1.5 rounded-md border border-[--color-border] bg-[--color-surface-1] px-2.5 sm:px-3 py-1.5 text-xs font-medium text-[--color-ink-700] hover:bg-[--color-surface-2] transition-all shadow-sm"
+            title="Start new conversation"
           >
-            <Plus size={14} /> New Chat
+            <Plus size={14} /> <span className="hidden sm:inline">New Chat</span>
           </button>
 
           <button
             onClick={() => setShowHistoryDrawer(true)}
-            className="flex items-center gap-1.5 rounded-md bg-[--color-forecast-500] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[--color-forecast-700] transition-all shadow-sm"
+            className="flex items-center gap-1.5 rounded-md bg-[--color-forecast-500] px-2.5 sm:px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[--color-forecast-700] transition-all shadow-sm"
+            title="Recent Chats"
           >
-            <History size={14} /> Recent Chats ({sessions.length})
+            <History size={14} /> <span className="hidden sm:inline">Recent Chats</span> ({sessions.length})
           </button>
         </div>
       </div>
@@ -344,21 +346,21 @@ export default function AiAssistant() {
       ) : null}
 
       {/* INPUT FIELD */}
-      <div className="border-t border-[--color-border] bg-[--color-surface-0] p-4">
+      <div className="border-t border-[--color-border] bg-[--color-surface-0] p-3 sm:p-4">
         <div className="max-w-4xl mx-auto flex items-center gap-2">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && send(input)}
             placeholder="Ask KSRTC SCION anything about supply chain, EOQ formulas, spare parts, POs..."
-            className="flex-1 rounded-xl border border-[--color-border] bg-[--color-surface-1] px-4 py-3 text-sm text-[--color-ink-900] placeholder-[--color-ink-400] focus:border-[--color-forecast-500] focus:ring-1 focus:ring-[--color-forecast-500] focus:outline-none transition-all shadow-inner"
+            className="flex-1 rounded-xl border border-[--color-border] bg-[--color-surface-1] px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-[--color-ink-900] placeholder-[--color-ink-400] focus:border-[--color-forecast-500] focus:ring-1 focus:ring-[--color-forecast-500] focus:outline-none transition-all shadow-inner"
           />
           <button
             onClick={() => send(input)}
             disabled={!input.trim() || sending}
-            className="flex items-center gap-2 rounded-xl bg-[--color-forecast-500] px-5 py-3 text-sm font-bold text-white hover:bg-[--color-forecast-700] disabled:opacity-40 transition-all shadow-md shrink-0 cursor-pointer"
+            className="flex items-center gap-1.5 sm:gap-2 rounded-xl bg-[--color-forecast-500] px-3.5 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-white hover:bg-[--color-forecast-700] disabled:opacity-40 transition-all shadow-md shrink-0 cursor-pointer"
           >
-            <Send size={16} /> Send
+            <Send size={15} /> <span className="hidden sm:inline">Send</span>
           </button>
         </div>
       </div>
@@ -366,11 +368,11 @@ export default function AiAssistant() {
       {/* RECENT CHATS DRAWER */}
       {showHistoryDrawer ? (
         <div
-          className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-md transition-opacity"
           onClick={() => setShowHistoryDrawer(false)}
         >
           <div
-            className="h-full w-full max-w-sm overflow-y-auto border-l border-[--color-border] bg-[--color-surface-0] p-5 space-y-4 shadow-2xl"
+            className="h-full w-full max-w-sm overflow-y-auto border-l border-[--color-border] bg-[#121620] text-[--color-ink-900] p-5 space-y-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-[--color-border] pb-3">
@@ -617,12 +619,15 @@ function FormattedContent({ text }: { text: string }) {
     });
   };
 
+  let orderedItemCounter = 0;
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmed = line.trim();
 
     // Code blocks
     if (trimmed.startsWith("```")) {
+      orderedItemCounter = 0;
       if (inCodeBlock) {
         flushList();
         elements.push(
@@ -653,6 +658,7 @@ function FormattedContent({ text }: { text: string }) {
       (trimmed.includes("\\sqrt") || trimmed.includes("√") || trimmed.includes("Formula"))
     ) {
       flushList();
+      orderedItemCounter = 0;
       elements.push(
         <div
           key={`formula-${elements.length}`}
@@ -683,6 +689,7 @@ function FormattedContent({ text }: { text: string }) {
     // Headings (###, ##, #)
     if (trimmed.startsWith("### ")) {
       flushList();
+      orderedItemCounter = 0;
       elements.push(
         <h4
           key={`h4-${elements.length}`}
@@ -697,6 +704,7 @@ function FormattedContent({ text }: { text: string }) {
 
     if (trimmed.startsWith("## ")) {
       flushList();
+      orderedItemCounter = 0;
       elements.push(
         <h3
           key={`h3-${elements.length}`}
@@ -710,6 +718,7 @@ function FormattedContent({ text }: { text: string }) {
 
     if (trimmed.startsWith("# ")) {
       flushList();
+      orderedItemCounter = 0;
       elements.push(
         <h2 key={`h2-${elements.length}`} className="text-xl font-black text-[--color-ink-900] mt-6 mb-3">
           {parseInline(trimmed.slice(2))}
@@ -721,6 +730,7 @@ function FormattedContent({ text }: { text: string }) {
     // Horizontal rule
     if (trimmed === "---" || trimmed === "***") {
       flushList();
+      orderedItemCounter = 0;
       elements.push(
         <hr key={`hr-${elements.length}`} className="my-4 border-t border-[--color-border]" />
       );
@@ -740,16 +750,25 @@ function FormattedContent({ text }: { text: string }) {
       continue;
     }
 
-    // Ordered lists (1., 2.)
-    const numMatch = trimmed.match(/^\d+\.\s+(.*)/);
+    // Ordered lists / numbered points (1., 2.)
+    const numMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
     if (numMatch) {
-      const itemContent = parseInline(numMatch[1]);
-      if (!currentList || currentList.type !== "ol") {
-        flushList();
-        currentList = { type: "ol", items: [itemContent] };
-      } else {
-        currentList.items.push(itemContent);
-      }
+      flushList();
+      orderedItemCounter += 1;
+      const title = numMatch[2];
+      elements.push(
+        <div
+          key={`num-heading-${elements.length}`}
+          className="mt-3.5 mb-1.5 flex items-start gap-2.5 font-semibold text-[--color-ink-900]"
+        >
+          <span className="shrink-0 flex items-center justify-center h-5 w-5 rounded-md bg-[--color-forecast-500]/20 text-[--color-forecast-600] text-xs font-bold mt-0.5">
+            {orderedItemCounter}
+          </span>
+          <div className="leading-snug pt-0.5">
+            {parseInline(title)}
+          </div>
+        </div>
+      );
       continue;
     }
 
@@ -779,30 +798,32 @@ function FormattedContent({ text }: { text: string }) {
 function ProcurementTable({ result }: { result: ProcurementResult }) {
   return (
     <div className="mt-4 rounded-xl border border-[--color-border] overflow-hidden shadow-sm bg-[--color-surface-0]">
-      <table className="w-full text-xs">
-        <thead>
-          <tr className="border-b border-[--color-border] bg-[--color-surface-2] text-left uppercase text-[--color-ink-500]">
-            <th className="py-2 px-3 font-semibold">Part</th>
-            <th className="py-2 px-3 font-semibold">Qty</th>
-            <th className="py-2 px-3 font-semibold">Total Cost</th>
-            <th className="py-2 px-3 font-semibold">Priority</th>
-          </tr>
-        </thead>
-        <tbody>
-          {result.items.map((i) => (
-            <tr key={i.part} className="border-b border-[--color-border] last:border-0 hover:bg-[--color-surface-1]">
-              <td className="py-2 px-3 font-medium text-[--color-ink-900]">{i.part}</td>
-              <td className="py-2 px-3 tabular text-[--color-ink-700]">{i.quantity}</td>
-              <td className="py-2 px-3 tabular font-semibold text-[--color-ink-900]">
-                ₹{i.total_cost.toLocaleString("en-IN")}
-              </td>
-              <td className="py-2 px-3">
-                <StatusBadge label={i.priority} />
-              </td>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs min-w-[340px]">
+          <thead>
+            <tr className="border-b border-[--color-border] bg-[--color-surface-2] text-left uppercase text-[--color-ink-500]">
+              <th className="py-2 px-3 font-semibold">Part</th>
+              <th className="py-2 px-3 font-semibold">Qty</th>
+              <th className="py-2 px-3 font-semibold">Total Cost</th>
+              <th className="py-2 px-3 font-semibold">Priority</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {result.items.map((i) => (
+              <tr key={i.part} className="border-b border-[--color-border] last:border-0 hover:bg-[--color-surface-1]">
+                <td className="py-2 px-3 font-medium text-[--color-ink-900]">{i.part}</td>
+                <td className="py-2 px-3 tabular text-[--color-ink-700]">{i.quantity}</td>
+                <td className="py-2 px-3 tabular font-semibold text-[--color-ink-900]">
+                  ₹{i.total_cost.toLocaleString("en-IN")}
+                </td>
+                <td className="py-2 px-3">
+                  <StatusBadge label={i.priority} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -810,28 +831,30 @@ function ProcurementTable({ result }: { result: ProcurementResult }) {
 function InventoryTable({ items }: { items: InventoryItem[] }) {
   return (
     <div className="mt-4 rounded-xl border border-[--color-border] overflow-hidden shadow-sm bg-[--color-surface-0]">
-      <table className="w-full text-xs">
-        <thead>
-          <tr className="border-b border-[--color-border] bg-[--color-surface-2] text-left uppercase text-[--color-ink-500]">
-            <th className="py-2 px-3 font-semibold">Part</th>
-            <th className="py-2 px-3 font-semibold">Stock</th>
-            <th className="py-2 px-3 font-semibold">Supply Days</th>
-            <th className="py-2 px-3 font-semibold">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((i) => (
-            <tr key={i.id} className="border-b border-[--color-border] last:border-0 hover:bg-[--color-surface-1]">
-              <td className="py-2 px-3 font-medium text-[--color-ink-900]">{i.part}</td>
-              <td className="py-2 px-3 tabular font-bold text-[--color-forecast-500]">{i.currentStock}</td>
-              <td className="py-2 px-3 tabular text-[--color-ink-700]">{i.daysOfSupply}d</td>
-              <td className="py-2 px-3">
-                <StatusBadge label={i.status} />
-              </td>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs min-w-[320px]">
+          <thead>
+            <tr className="border-b border-[--color-border] bg-[--color-surface-2] text-left uppercase text-[--color-ink-500]">
+              <th className="py-2 px-3 font-semibold">Part</th>
+              <th className="py-2 px-3 font-semibold">Stock</th>
+              <th className="py-2 px-3 font-semibold">Supply Days</th>
+              <th className="py-2 px-3 font-semibold">Status</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {items.map((i) => (
+              <tr key={i.id} className="border-b border-[--color-border] last:border-0 hover:bg-[--color-surface-1]">
+                <td className="py-2 px-3 font-medium text-[--color-ink-900]">{i.part}</td>
+                <td className="py-2 px-3 tabular font-bold text-[--color-forecast-500]">{i.currentStock}</td>
+                <td className="py-2 px-3 tabular text-[--color-ink-700]">{i.daysOfSupply}d</td>
+                <td className="py-2 px-3">
+                  <StatusBadge label={i.status} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -839,30 +862,32 @@ function InventoryTable({ items }: { items: InventoryItem[] }) {
 function PoTable({ orders }: { orders: PurchaseOrder[] }) {
   return (
     <div className="mt-4 rounded-xl border border-[--color-border] overflow-hidden shadow-sm bg-[--color-surface-0]">
-      <table className="w-full text-xs">
-        <thead>
-          <tr className="border-b border-[--color-border] bg-[--color-surface-2] text-left uppercase text-[--color-ink-500]">
-            <th className="py-2 px-3 font-semibold">PO #</th>
-            <th className="py-2 px-3 font-semibold">Supplier</th>
-            <th className="py-2 px-3 font-semibold">Total</th>
-            <th className="py-2 px-3 font-semibold">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.map((po) => (
-            <tr key={po.poNumber} className="border-b border-[--color-border] last:border-0 hover:bg-[--color-surface-1]">
-              <td className="py-2 px-3 font-medium text-[--color-ink-900]">{po.poNumber}</td>
-              <td className="py-2 px-3 text-[--color-ink-700]">{po.supplier}</td>
-              <td className="py-2 px-3 tabular font-semibold text-[--color-ink-900]">
-                ₹{po.total.toLocaleString("en-IN")}
-              </td>
-              <td className="py-2 px-3">
-                <StatusBadge label={po.status} />
-              </td>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs min-w-[320px]">
+          <thead>
+            <tr className="border-b border-[--color-border] bg-[--color-surface-2] text-left uppercase text-[--color-ink-500]">
+              <th className="py-2 px-3 font-semibold">PO #</th>
+              <th className="py-2 px-3 font-semibold">Supplier</th>
+              <th className="py-2 px-3 font-semibold">Total</th>
+              <th className="py-2 px-3 font-semibold">Status</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {orders.map((po) => (
+              <tr key={po.poNumber} className="border-b border-[--color-border] last:border-0 hover:bg-[--color-surface-1]">
+                <td className="py-2 px-3 font-medium text-[--color-ink-900]">{po.poNumber}</td>
+                <td className="py-2 px-3 text-[--color-ink-700]">{po.supplier}</td>
+                <td className="py-2 px-3 tabular font-semibold text-[--color-ink-900]">
+                  ₹{po.total.toLocaleString("en-IN")}
+                </td>
+                <td className="py-2 px-3">
+                  <StatusBadge label={po.status} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -870,24 +895,26 @@ function PoTable({ orders }: { orders: PurchaseOrder[] }) {
 function PriceTable({ prices }: { prices: PriceRecord[] }) {
   return (
     <div className="mt-4 rounded-xl border border-[--color-border] overflow-hidden shadow-sm bg-[--color-surface-0]">
-      <table className="w-full text-xs">
-        <thead>
-          <tr className="border-b border-[--color-border] bg-[--color-surface-2] text-left uppercase text-[--color-ink-500]">
-            <th className="py-2 px-3 font-semibold">Date</th>
-            <th className="py-2 px-3 font-semibold">Supplier</th>
-            <th className="py-2 px-3 font-semibold">Unit Price</th>
-          </tr>
-        </thead>
-        <tbody>
-          {prices.map((p, i) => (
-            <tr key={i} className="border-b border-[--color-border] last:border-0 hover:bg-[--color-surface-1]">
-              <td className="py-2 px-3 text-[--color-ink-700]">{p.date}</td>
-              <td className="py-2 px-3 text-[--color-ink-700]">{p.supplier}</td>
-              <td className="py-2 px-3 tabular font-semibold text-[--color-ink-900]">₹{p.unitPrice}</td>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs min-w-[280px]">
+          <thead>
+            <tr className="border-b border-[--color-border] bg-[--color-surface-2] text-left uppercase text-[--color-ink-500]">
+              <th className="py-2 px-3 font-semibold">Date</th>
+              <th className="py-2 px-3 font-semibold">Supplier</th>
+              <th className="py-2 px-3 font-semibold">Unit Price</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {prices.map((p, i) => (
+              <tr key={i} className="border-b border-[--color-border] last:border-0 hover:bg-[--color-surface-1]">
+                <td className="py-2 px-3 text-[--color-ink-700]">{p.date}</td>
+                <td className="py-2 px-3 text-[--color-ink-700]">{p.supplier}</td>
+                <td className="py-2 px-3 tabular font-semibold text-[--color-ink-900]">₹{p.unitPrice}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

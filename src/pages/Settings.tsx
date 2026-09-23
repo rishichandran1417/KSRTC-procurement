@@ -54,16 +54,16 @@ export default function Settings() {
     <div>
       <TopBar title="Settings → System Integrations" subtitle="Configure and monitor connection status for external services" />
 
-      <div className="p-6 space-y-4">
+      <div className="p-4 sm:p-6 space-y-4">
         {DEMO_MODE ? (
-          <div className="rounded-md border border-[--color-forecast-500]/30 bg-[--color-forecast-500]/10 p-4 text-xs text-[--color-ink-700] flex items-center justify-between">
+          <div className="rounded-md border border-[--color-forecast-500]/30 bg-[--color-forecast-500]/10 p-4 text-xs text-[--color-ink-700] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <p className="font-semibold text-[--color-forecast-700]">Demo Mode Active (In-Memory Frontend Services)</p>
               <p className="text-[--color-ink-500]">
                 All 5 external integration interfaces are connected to mock service handlers so you can test end-to-end workflows. Set environment variables to override endpoints for production.
               </p>
             </div>
-            <span className="flex items-center gap-1.5 rounded-full bg-[--color-healthy-500]/20 px-3 py-1 text-xs font-bold text-[--color-healthy-500]">
+            <span className="shrink-0 flex items-center gap-1.5 rounded-full bg-[--color-healthy-500]/20 px-3 py-1 text-xs font-bold text-[--color-healthy-500]">
               <span className="h-2 w-2 rounded-full bg-[--color-healthy-500] animate-pulse" /> Live Ready
             </span>
           </div>
@@ -95,11 +95,11 @@ function IntegrationCard({ integration }: { integration: IntegrationConfig }) {
   const IconComp = integration.icon;
 
   return (
-    <div className="rounded-md border border-[--color-border] bg-[--color-surface-0] p-5 flex flex-col justify-between space-y-4">
+    <div className="rounded-md border border-[--color-border] bg-[--color-surface-0] p-4 sm:p-5 flex flex-col justify-between space-y-4">
       <div>
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
           <div className="flex items-center gap-2.5">
-            <div className="rounded p-2 bg-[--color-surface-1] text-[--color-forecast-600]">
+            <div className="rounded p-2 bg-[--color-surface-1] text-[--color-forecast-600] shrink-0">
               <IconComp size={20} />
             </div>
             <div>
@@ -108,7 +108,7 @@ function IntegrationCard({ integration }: { integration: IntegrationConfig }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 rounded-full bg-[--color-healthy-500]/10 px-2.5 py-1 text-xs font-semibold text-[--color-healthy-500]">
+          <div className="self-start shrink-0 flex items-center gap-1.5 rounded-full bg-[--color-healthy-500]/10 px-2.5 py-1 text-xs font-semibold text-[--color-healthy-500]">
             <span className="h-2 w-2 rounded-full bg-[--color-healthy-500]" />
             ● Connected
           </div>
@@ -124,12 +124,12 @@ function IntegrationCard({ integration }: { integration: IntegrationConfig }) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between border-t border-[--color-border] pt-3 text-xs text-[--color-ink-500]">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-t border-[--color-border] pt-3 text-xs text-[--color-ink-500]">
         <span>Last checked: {lastTested}</span>
         <button
           onClick={testConnection}
           disabled={testing}
-          className="flex items-center gap-1.5 rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-1 text-xs font-medium text-[--color-ink-700] hover:bg-[--color-surface-2] disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-1 text-xs font-medium text-[--color-ink-700] hover:bg-[--color-surface-2] disabled:opacity-50 w-full sm:w-auto justify-center"
         >
           <RefreshCw size={12} className={testing ? "animate-spin" : ""} />
           {testing ? "Testing Connection…" : "Test Connection"}

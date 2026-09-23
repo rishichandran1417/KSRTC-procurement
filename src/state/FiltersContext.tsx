@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import type { GlobalFilters, Horizon } from "../types";
-import { CATEGORIES } from "../mock/inventory";
+import { CATEGORIES } from "../constants";
 
 export const SINGLE_DEPOT_NAME = "KSRTC Central Depot, Thiruvananthapuram";
 export const ALL_CATEGORIES_LABEL = "All Categories";

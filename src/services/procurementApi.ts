@@ -1,5 +1,4 @@
 import { apiClient, DEMO_MODE, ENDPOINTS, simulateLatency } from "./apiClient";
-import { mockProcurement } from "../mock/procurement";
 import type { ProcurementRequest, ProcurementResult } from "../types";
 
 /**
@@ -8,7 +7,15 @@ import type { ProcurementRequest, ProcurementResult } from "../types";
  */
 export async function runOptimization(req: ProcurementRequest): Promise<ProcurementResult> {
   if (DEMO_MODE || !ENDPOINTS.optimization) {
-    return simulateLatency(mockProcurement(req), 900);
+    return simulateLatency(
+      {
+        budget: req.budget,
+        recommended_spend: 0,
+        remaining_budget: req.budget,
+        items: [],
+      },
+      300
+    );
   }
   return apiClient.post<ProcurementResult>(`${ENDPOINTS.optimization}/optimize`, req);
 }

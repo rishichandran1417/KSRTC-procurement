@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Edit3, Sliders, X } from "lucide-react";
+import { Plus, Search, Edit3, Sliders, X, AlertTriangle } from "lucide-react";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
@@ -7,6 +7,7 @@ import { TopBar } from "../components/layout/TopBar";
 import { LoadingState, ErrorState, EmptyState } from "../components/ui/States";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { useFilters } from "../state/FiltersContext";
+import { useAlerts } from "../state/AlertsContext";
 import {
   getInventory, addInventoryItem, updateInventoryItem, adjustInventoryQuantity,
   getConsumptionHistory, getPriceHistory
@@ -15,6 +16,7 @@ import type { InventoryItem, AddInventoryPayload, ConsumptionRecord, PriceRecord
 
 export default function Inventory() {
   const { filters } = useFilters();
+  const { openAlertModal, totalAlerts, criticalItems, warningItems } = useAlerts();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,10 +54,40 @@ export default function Inventory() {
     <div>
       <TopBar title="Inventory Management" subtitle="What do we have? — Current stock levels & safety thresholds" />
 
-      <div className="p-6">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="p-4 sm:p-6">
+        {totalAlerts > 0 && (
+          <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-red-500/30 bg-red-500/10 p-3.5 sm:p-4 text-xs sm:text-sm">
+            <div className="flex items-start sm:items-center gap-2.5">
+              <AlertTriangle className="text-red-500 shrink-0 mt-0.5 sm:mt-0" size={18} />
+              <div>
+                <p className="font-semibold text-red-700 dark:text-red-300">
+                  Low Stock Alert: {totalAlerts} items require attention
+                </p>
+                <p className="text-red-600/80 dark:text-red-400/80 text-xs">
+                  {criticalItems.length} critical stockout risk &bull; {warningItems.length} below reorder threshold
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setStatusFilter("Critical")}
+                className="rounded border border-red-500/30 bg-[--color-surface-0] px-2.5 py-1 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+              >
+                Filter Critical
+              </button>
+              <button
+                onClick={openAlertModal}
+                className="rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white shadow-xs hover:bg-red-700 transition-colors cursor-pointer"
+              >
+                Review & Reorder All →
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <div className="relative w-64">
+            <div className="relative flex-1 sm:w-64 min-w-[180px]">
               <input
                 placeholder="Search part or component…"
                 value={search}
@@ -78,9 +110,9 @@ export default function Inventory() {
 
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 rounded bg-[--color-forecast-500] px-3.5 py-1.5 text-sm font-medium text-white hover:bg-[--color-forecast-700]"
+            className="flex items-center justify-center gap-1.5 rounded bg-[--color-forecast-500] px-3.5 py-1.5 text-sm font-medium text-white hover:bg-[--color-forecast-700] w-full sm:w-auto cursor-pointer shadow-xs active:scale-98 transition-all"
           >
-            <Plus size={16} /> + Add Inventory
+            <Plus size={16} /> Add Inventory
           </button>
         </div>
 
@@ -89,13 +121,21 @@ export default function Inventory() {
         ) : error ? (
           <ErrorState title="Inventory unavailable." message={error} onRetry={load} />
         ) : filteredItems.length === 0 ? (
-          <EmptyState title="No matching inventory items" message="Try adjusting search or category filters." />
+          <EmptyState
+            title={items.length === 0 ? "No inventory items registered yet" : "No matching inventory items"}
+            message={
+              items.length === 0
+                ? "Your inventory is currently empty. Click 'Add Inventory' above to register your first spare part."
+                : "Try adjusting search or category filters."
+            }
+          />
         ) : (
-          <div className="overflow-hidden rounded-md border border-[--color-border] bg-[--color-surface-0]">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[--color-border] text-left text-xs uppercase tracking-wide text-[--color-ink-500]">
-                  <th className="px-4 py-2.5">Part / Item</th>
+          <div className="rounded-md border border-[--color-border] bg-[--color-surface-0] overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[780px]">
+                <thead>
+                  <tr className="border-b border-[--color-border] text-left text-xs uppercase tracking-wide text-[--color-ink-500]">
+                    <th className="px-4 py-2.5">Part / Item</th>
                   <th className="px-2 py-2.5">Category</th>
                   <th className="px-2 py-2.5">Current Stock</th>
                   <th className="px-2 py-2.5">Safety Stock</th>
@@ -149,6 +189,7 @@ export default function Inventory() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>
@@ -206,9 +247,9 @@ function InventoryDetailDrawer({ item, onClose }: { item: InventoryItem; onClose
   }, [item]);
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-md" onClick={onClose}>
       <div
-        className="h-full w-full max-w-md overflow-y-auto border-l border-[--color-border] bg-[--color-surface-0] p-5"
+        className="h-full w-full sm:max-w-md overflow-y-auto border-l border-[--color-border-strong] bg-[#121620] p-5 sm:p-6 shadow-2xl text-[--color-ink-900]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between border-b border-[--color-border] pb-3">
@@ -303,15 +344,15 @@ function AddInventoryModal({ onClose, onAdded }: { onClose: () => void; onAdded:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4" onClick={onClose}>
       <div
-        className="w-full max-w-lg rounded-md border border-[--color-border] bg-[--color-surface-0] p-6 shadow-xl"
+        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-[--color-border-strong] bg-[#121620] p-5 sm:p-6 shadow-2xl text-[--color-ink-900]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-[--color-border] pb-3 mb-4">
-          <h2 className="text-base font-semibold text-[--color-ink-900]">+ Add New Inventory Item</h2>
-          <button onClick={onClose} className="rounded p-1 text-[--color-ink-500] hover:bg-[--color-surface-1]">
-            <X size={16} />
+          <h2 className="text-base font-semibold text-[--color-ink-900]">Add New Inventory Item</h2>
+          <button onClick={onClose} className="rounded p-1 text-[--color-ink-500] hover:bg-[--color-surface-1] cursor-pointer">
+            <X size={18} />
           </button>
         </div>
 
@@ -320,7 +361,7 @@ function AddInventoryModal({ onClose, onAdded }: { onClose: () => void; onAdded:
             <label className="mb-1 block text-xs font-medium text-[--color-ink-700]">Part / Component Name *</label>
             <input
               required
-              placeholder="e.g. Front Brake Pad Set"
+              placeholder="Enter component name"
               value={part}
               onChange={(e) => setPart(e.target.value)}
               className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-3 py-1.5 text-sm"
@@ -379,7 +420,7 @@ function AddInventoryModal({ onClose, onAdded }: { onClose: () => void; onAdded:
             <label className="mb-1 block text-xs font-medium text-[--color-ink-700]">Notes / Storage Location</label>
             <textarea
               rows={2}
-              placeholder="e.g. Bin B-12, Depot Warehouse"
+              placeholder="Storage location or notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-3 py-1.5 text-sm"
@@ -434,15 +475,15 @@ function EditInventoryModal({ item, onClose, onUpdated }: { item: InventoryItem;
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4" onClick={onClose}>
       <div
-        className="w-full max-w-lg rounded-md border border-[--color-border] bg-[--color-surface-0] p-6 shadow-xl"
+        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-[--color-border-strong] bg-[#121620] p-5 sm:p-6 shadow-2xl text-[--color-ink-900]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-[--color-border] pb-3 mb-4">
           <h2 className="text-base font-semibold text-[--color-ink-900]">Edit Inventory Item — {item.part}</h2>
-          <button onClick={onClose} className="rounded p-1 text-[--color-ink-500] hover:bg-[--color-surface-1]">
-            <X size={16} />
+          <button onClick={onClose} className="rounded p-1 text-[--color-ink-500] hover:bg-[--color-surface-1] cursor-pointer">
+            <X size={18} />
           </button>
         </div>
 
@@ -512,14 +553,14 @@ function EditInventoryModal({ item, onClose, onUpdated }: { item: InventoryItem;
             <button
               type="button"
               onClick={onClose}
-              className="rounded border border-[--color-border] px-4 py-1.5 text-xs text-[--color-ink-700] hover:bg-[--color-surface-1]"
+              className="rounded border border-[--color-border] px-4 py-1.5 text-xs text-[--color-ink-700] hover:bg-[--color-surface-1] cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="rounded bg-[--color-forecast-500] px-4 py-1.5 text-xs font-medium text-white hover:bg-[--color-forecast-700]"
+              className="rounded bg-[--color-forecast-500] px-4 py-1.5 text-xs font-medium text-white hover:bg-[--color-forecast-700] cursor-pointer"
             >
               {submitting ? "Saving…" : "Save Changes"}
             </button>
@@ -543,15 +584,15 @@ function AdjustQuantityModal({ item, onClose, onAdjusted }: { item: InventoryIte
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4" onClick={onClose}>
       <div
-        className="w-full max-w-sm rounded-md border border-[--color-border] bg-[--color-surface-0] p-5 shadow-xl text-sm"
+        className="w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-2xl border border-[--color-border-strong] bg-[#121620] p-5 shadow-2xl text-sm text-[--color-ink-900]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-[--color-border] pb-2 mb-3">
           <h3 className="font-semibold text-[--color-ink-900]">Adjust Quantity — {item.part}</h3>
-          <button onClick={onClose} className="rounded p-1 text-[--color-ink-500] hover:bg-[--color-surface-1]">
-            <X size={16} />
+          <button onClick={onClose} className="rounded p-1 text-[--color-ink-500] hover:bg-[--color-surface-1] cursor-pointer">
+            <X size={18} />
           </button>
         </div>
 

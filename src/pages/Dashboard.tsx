@@ -9,6 +9,7 @@ import { KpiCard } from "../components/ui/KpiCard";
 import { LoadingState, ErrorState } from "../components/ui/States";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { useFilters } from "../state/FiltersContext";
+import { useAlerts } from "../state/AlertsContext";
 import { getDashboardKpis } from "../services/dashboardApi";
 import { getInventory } from "../services/inventoryApi";
 import { getPurchaseOrders } from "../services/purchaseOrderApi";
@@ -22,6 +23,7 @@ function formatCurrency(n: number) {
 
 export default function Dashboard() {
   const { filters } = useFilters();
+  const { openAlertModal, totalAlerts } = useAlerts();
   const navigate = useNavigate();
 
   const [kpis, setKpis] = useState<DashboardKpis | null>(null);
@@ -47,7 +49,7 @@ export default function Dashboard() {
         if (invData.length > 0) {
           const firstPart = invData[0].part;
           const fcData = await getForecast({ part: firstPart, start_date: filters.startDate, end_date: filters.endDate, horizon: filters.horizon });
-          const pulpData = await runOptimization({ budget: 600000, forecast_horizon: filters.horizon, service_level: 0.95 });
+          const pulpData = await runOptimization({ budget: 0, forecast_horizon: filters.horizon, service_level: 0.95 });
           setLatestForecast(fcData.series.length > 0 ? fcData : null);
           setPulpResult(pulpData.items.length > 0 ? pulpData : null);
         } else {
@@ -70,7 +72,7 @@ export default function Dashboard() {
     <div>
       <TopBar title="Operational Dashboard" subtitle="Real-time overview of depot operations" />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         {loading ? (
           <LoadingState label="Loading operational metrics…" />
         ) : error || !kpis ? (
@@ -78,7 +80,7 @@ export default function Dashboard() {
         ) : (
           <>
             {/* KPI ROW */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
               <KpiCard
                 label="Forecast Demand"
                 value={kpis.forecastDemand.toLocaleString("en-IN")}
@@ -100,6 +102,8 @@ export default function Dashboard() {
                 unit="items"
                 accent="critical"
                 icon={AlertTriangle}
+                helpText="Click to review alerts & reorder"
+                onClick={openAlertModal}
               />
               <KpiCard
                 label="Open POs"
@@ -122,22 +126,32 @@ export default function Dashboard() {
             </div>
 
             {/* OPERATIONAL PANELS GRID */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
               
               {/* 1. INVENTORY RISK */}
               <div className="rounded-md border border-[--color-border] bg-[--color-surface-0] p-4 flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center justify-between border-b border-[--color-border] pb-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[--color-border] pb-3">
                     <div className="flex items-center gap-2">
                       <ShieldAlert className="text-[--color-critical-500]" size={18} />
                       <h2 className="text-sm font-semibold text-[--color-ink-900]">Inventory Risk — Action Required</h2>
                     </div>
-                    <button
-                      onClick={() => navigate("/inventory")}
-                      className="flex items-center gap-1 text-xs font-medium text-[--color-forecast-600] hover:underline"
-                    >
-                      View All Inventory <ArrowRight size={12} />
-                    </button>
+                    <div className="flex items-center gap-3">
+                      {totalAlerts > 0 && (
+                        <button
+                          onClick={openAlertModal}
+                          className="flex items-center gap-1 rounded bg-red-500/10 px-2 py-1 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-colors"
+                        >
+                          <AlertTriangle size={12} /> Low Stock Alert ({totalAlerts})
+                        </button>
+                      )}
+                      <button
+                        onClick={() => navigate("/inventory")}
+                        className="flex items-center gap-1 text-xs font-medium text-[--color-forecast-600] hover:underline"
+                      >
+                        View All <ArrowRight size={12} />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="mt-3 overflow-x-auto">
@@ -146,7 +160,7 @@ export default function Dashboard() {
                         No stockout risk items detected. All inventory healthy.
                       </p>
                     ) : (
-                      <table className="w-full text-xs">
+                      <table className="w-full text-xs min-w-[400px]">
                         <thead>
                           <tr className="border-b border-[--color-border] text-left uppercase tracking-wider text-[--color-ink-500]">
                             <th className="py-2 pr-2">Part</th>
@@ -178,7 +192,7 @@ export default function Dashboard() {
               {/* 2. RECENT PURCHASE ORDERS */}
               <div className="rounded-md border border-[--color-border] bg-[--color-surface-0] p-4 flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center justify-between border-b border-[--color-border] pb-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[--color-border] pb-3">
                     <div className="flex items-center gap-2">
                       <Package className="text-[--color-forecast-600]" size={18} />
                       <h2 className="text-sm font-semibold text-[--color-ink-900]">Recent Purchase Orders</h2>
@@ -197,7 +211,7 @@ export default function Dashboard() {
                         No purchase orders placed yet.
                       </p>
                     ) : (
-                      <table className="w-full text-xs">
+                      <table className="w-full text-xs min-w-[340px]">
                         <thead>
                           <tr className="border-b border-[--color-border] text-left uppercase tracking-wider text-[--color-ink-500]">
                             <th className="py-2 pr-2">PO #</th>
@@ -226,7 +240,7 @@ export default function Dashboard() {
 
               {/* 3. FORECAST OVERVIEW */}
               <div className="rounded-md border border-[--color-border] bg-[--color-surface-0] p-4">
-                <div className="flex items-center justify-between border-b border-[--color-border] pb-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[--color-border] pb-3">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="text-[--color-forecast-500]" size={18} />
                     <div>
@@ -244,7 +258,7 @@ export default function Dashboard() {
 
                 {latestForecast ? (
                   <div className="mt-4 space-y-3">
-                    <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
                       <div className="rounded border border-[--color-border] bg-[--color-surface-1] p-2">
                         <p className="text-[10px] text-[--color-ink-500]">MODEL</p>
                         <p className="font-semibold text-[--color-ink-900] truncate">{latestForecast.modelName}</p>
@@ -276,7 +290,7 @@ export default function Dashboard() {
               {/* 4. PROCUREMENT OVERVIEW */}
               <div className="rounded-md border border-[--color-border] bg-[--color-surface-0] p-4 flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center justify-between border-b border-[--color-border] pb-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[--color-border] pb-3">
                     <div className="flex items-center gap-2">
                       <Calculator className="text-[--color-optimize-500]" size={18} />
                       <div>

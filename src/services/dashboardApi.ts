@@ -15,8 +15,10 @@ export async function getDashboardKpis(_filters: GlobalFilters): Promise<Dashboa
       (po) => !["Received", "Closed", "Cancelled"].includes(po.status)
     ).length;
 
+    const recommendedProcurement = inventory
+      .filter((i) => i.currentStock < i.reorderPoint)
+      .reduce((sum, i) => sum + (i.reorderPoint - i.currentStock) * (i.unitCost || 0), 0);
     const procurementBudget = orders.reduce((sum, o) => sum + o.total, 0);
-    const recommendedProcurement = 0;
 
     return simulateLatency(
       {

@@ -6,7 +6,6 @@ import { SINGLE_DEPOT_NAME } from "../state/FiltersContext";
 import { createPurchaseOrder } from "../services/purchaseOrderApi";
 import type { ProcurementItem, PurchaseOrder, PurchaseOrderLine } from "../types";
 
-const STANDARD_PARTS = ["Brake Pad", "Oil Filter", "Wheel Bearing", "Clutch Plate", "Air Filter", "Tyre (Retreaded)", "Battery"];
 
 interface NavState {
   items?: ProcurementItem[];
@@ -21,13 +20,13 @@ export default function NewPurchaseOrder() {
   const [lines, setLines] = useState<PurchaseOrderLine[]>(
     prefilledItems.length > 0
       ? prefilledItems.map((i) => ({ part: i.part, quantity: i.quantity, unitPrice: i.unit_price, totalCost: i.total_cost }))
-      : [{ part: "Brake Pad", quantity: 100, unitPrice: 620, totalCost: 62000 }]
+      : [{ part: "", quantity: 1, unitPrice: 0, totalCost: 0 }]
   );
 
-  const [supplier, setSupplier] = useState(prefilledItems[0]?.supplier ?? "Southern Bus Spares Co.");
-  const [expectedDelivery, setExpectedDelivery] = useState("2026-10-15");
+  const [supplier, setSupplier] = useState(prefilledItems[0]?.supplier ?? "");
+  const [expectedDelivery, setExpectedDelivery] = useState("");
   const [notes, setNotes] = useState(
-    prefilledItems.length > 0 ? "Pre-populated from PuLP Optimization Model Recommendation" : "Manual purchase order"
+    prefilledItems.length > 0 ? "Pre-populated from PuLP Optimization Model Recommendation" : ""
   );
   const [submitting, setSubmitting] = useState(false);
 
@@ -50,7 +49,7 @@ export default function NewPurchaseOrder() {
   };
 
   const addLine = () => {
-    setLines((prev) => [...prev, { part: STANDARD_PARTS[prev.length % STANDARD_PARTS.length], quantity: 50, unitPrice: 500, totalCost: 25000 }]);
+    setLines((prev) => [...prev, { part: "", quantity: 1, unitPrice: 0, totalCost: 0 }]);
   };
 
   const removeLine = (idx: number) => {
@@ -83,15 +82,15 @@ export default function NewPurchaseOrder() {
     <div>
       <TopBar title="Create Purchase Order" subtitle="What did we order? — Review and submit purchase order" />
 
-      <div className="p-6 max-w-4xl">
+      <div className="p-4 sm:p-6 max-w-4xl">
         {prefilledItems.length > 0 ? (
           <div className="mb-4 flex items-center gap-2 rounded-md border border-[--color-forecast-500]/30 bg-[--color-forecast-500]/10 p-3 text-xs text-[--color-forecast-700]">
-            <CheckCircle2 size={16} />
+            <CheckCircle2 size={16} className="shrink-0" />
             <span>Form auto-populated with <strong>{prefilledItems.length} items</strong> from PuLP Optimization Model. You can review and adjust quantities and unit prices below.</span>
           </div>
         ) : null}
 
-        <div className="rounded-md border border-[--color-border] bg-[--color-surface-0] p-6 space-y-6">
+        <div className="rounded-md border border-[--color-border] bg-[--color-surface-0] p-4 sm:p-6 space-y-4 sm:space-y-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs font-medium text-[--color-ink-500]">Supplier Name</label>
@@ -99,7 +98,7 @@ export default function NewPurchaseOrder() {
                 type="text"
                 value={supplier}
                 onChange={(e) => setSupplier(e.target.value)}
-                placeholder="e.g. Southern Bus Spares Co."
+                placeholder="Enter supplier name"
                 className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-3 py-1.5 text-sm font-medium text-[--color-ink-900]"
               />
             </div>
@@ -128,7 +127,7 @@ export default function NewPurchaseOrder() {
             </div>
 
             <div className="overflow-x-auto rounded border border-[--color-border]">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-[550px]">
                 <thead>
                   <tr className="border-b border-[--color-border] bg-[--color-surface-1] text-left text-xs uppercase tracking-wider text-[--color-ink-500]">
                     <th className="px-3 py-2">Part / Item</th>
@@ -192,22 +191,22 @@ export default function NewPurchaseOrder() {
             <input
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. Approved under Quarterly Bus Fleet Maintenance Budget"
+              placeholder="Enter purchase order notes or reference"
               className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-3 py-1.5 text-sm"
             />
           </div>
 
-          <div className="flex items-center justify-between border-t border-[--color-border] pt-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-[--color-border] pt-4">
             <div>
               <p className="text-xs text-[--color-ink-500]">Total Purchase Order Cost</p>
               <p className="text-xl font-bold tabular text-[--color-forecast-600]">₹{total.toLocaleString("en-IN")}</p>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => navigate("/purchase-orders")}
-                className="rounded border border-[--color-border] px-4 py-2 text-sm text-[--color-ink-700] hover:bg-[--color-surface-1]"
+                className="flex-1 sm:flex-none rounded border border-[--color-border] px-4 py-2 text-sm text-[--color-ink-700] hover:bg-[--color-surface-1]"
               >
                 Cancel
               </button>
@@ -215,7 +214,7 @@ export default function NewPurchaseOrder() {
                 type="button"
                 onClick={submit}
                 disabled={submitting || lines.length === 0}
-                className="rounded bg-[--color-forecast-500] px-5 py-2 text-sm font-medium text-white hover:bg-[--color-forecast-700] disabled:opacity-50"
+                className="flex-1 sm:flex-none rounded bg-[--color-forecast-500] px-5 py-2 text-sm font-medium text-white hover:bg-[--color-forecast-700] disabled:opacity-50"
               >
                 {submitting ? "Submitting Order…" : "Submit Purchase Order"}
               </button>

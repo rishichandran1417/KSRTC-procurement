@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { TopBar } from "../components/layout/TopBar";
-import { LoadingState, ErrorState } from "../components/ui/States";
+import { LoadingState, ErrorState, EmptyState } from "../components/ui/States";
 import { getSuppliers } from "../services/supplierApi";
-import { mockPriceHistory } from "../mock/inventory";
-import { MOCK_PURCHASE_ORDERS } from "../mock/purchaseOrders";
+import { getPurchaseOrders } from "../services/purchaseOrderApi";
+import { getPriceHistory } from "../services/inventoryApi";
 import type { Supplier, PriceRecord, PurchaseOrder } from "../types";
 import { Phone, Mail, ChevronRight, X } from "lucide-react";
 
@@ -25,15 +25,20 @@ export default function Suppliers() {
     <div>
       <TopBar title="Supplier Dashboard" subtitle="Who are we buying from? — Performance & delivery reliability" />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         {loading ? (
           <LoadingState label="Loading registered supplier metrics…" />
         ) : error ? (
           <ErrorState title="Suppliers unavailable." message={error} onRetry={load} />
+        ) : suppliers.length === 0 ? (
+          <EmptyState
+            title="No registered suppliers"
+            message="No supplier performance data currently available. Connect your supplier database or create purchase orders."
+          />
         ) : (
           <>
             {/* CARDS LIST */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {suppliers.map((s) => (
                 <div
                   key={s.id}
@@ -62,7 +67,7 @@ export default function Suppliers() {
             <div className="rounded-md border border-[--color-border] bg-[--color-surface-0] p-4">
               <h2 className="text-sm font-semibold text-[--color-ink-900] mb-3">Supplier Performance Comparison Matrix</h2>
               <div className="overflow-x-auto">
-                <table className="w-full text-xs">
+                <table className="w-full text-xs min-w-[620px]">
                   <thead>
                     <tr className="border-b border-[--color-border] text-left uppercase text-[--color-ink-500]">
                       <th className="py-2 pr-3">Supplier Name</th>
@@ -121,13 +126,18 @@ function Row({ label, value, highlight }: { label: string; value: string; highli
 }
 
 function SupplierDetailDrawer({ supplier, onClose }: { supplier: Supplier; onClose: () => void }) {
-  const priceHistory: PriceRecord[] = mockPriceHistory("Brake Pad").filter((p) => p.supplier === supplier.name || true);
-  const purchaseOrders: PurchaseOrder[] = MOCK_PURCHASE_ORDERS.filter((po) => po.supplier === supplier.name);
+  const [priceHistory, setPriceHistory] = useState<PriceRecord[]>([]);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
+
+  useEffect(() => {
+    getPurchaseOrders().then((pos) => setPurchaseOrders(pos.filter((po) => po.supplier === supplier.name)));
+    getPriceHistory(supplier.name).then(setPriceHistory);
+  }, [supplier.name]);
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-md" onClick={onClose}>
       <div
-        className="h-full w-full max-w-md overflow-y-auto border-l border-[--color-border] bg-[--color-surface-0] p-5 space-y-4"
+        className="h-full w-full sm:max-w-md overflow-y-auto border-l border-[--color-border-strong] bg-[#121620] p-5 sm:p-6 space-y-4 shadow-2xl text-[--color-ink-900]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between border-b border-[--color-border] pb-3">

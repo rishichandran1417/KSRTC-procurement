@@ -10,9 +10,11 @@ const nextId = () => `msg-${Date.now()}-${counter++}`;
  * Sends a user message to the secure server-side /api/chat endpoint.
  */
 export async function sendChatMessage(userMessageText: string): Promise<ChatMessage> {
-  // 1. Gather live operational context from inventory & POs if available
-  const inventory = await getInventory().catch(() => []);
-  const orders = await getPurchaseOrders().catch(() => []);
+  // 1. Gather live operational context from inventory & POs in parallel
+  const [inventory, orders] = await Promise.all([
+    getInventory().catch(() => []),
+    getPurchaseOrders().catch(() => []),
+  ]);
 
   const contextSummary = `
 Operational Context:
@@ -37,11 +39,21 @@ Operational Context:
       };
     }
 
+    const rawText = res.text || "No response received from Gemini API.";
+    // Clean any boilerplate self-intro lines from reaching the chat display
+    const cleanedText = rawText.replace(
+      /^(\s*[*#_>`"'-]*\s*(?:(?:Hello|Hi|Greetings|Welcome)[^.\n]*[.,!?:;\n]+)?\s*[*#_>`"'-]*\s*(?:I am|I'm|This is|As)\s+(?:the\s+)?(?:KSRTC\s+SCION|SCION|Kerala State Road Transport Corporation)[^\n]*?(?:[.:!\n]|\s*\n)\s*[*#_>`"'-]*\s*)+/i,
+      ""
+    ).replace(
+      /^[*#_>`"'\s]*I am KSRTC SCION \(Supply Chain Intelligence & Operational Network\) for Kerala State Road Transport Corporation\.?[*#_>`"'\s]*/i,
+      ""
+    ).trim();
+
     return {
       id: nextId(),
       role: "assistant",
       type: "text",
-      text: res.text || "No response received from Gemini API.",
+      text: cleanedText || rawText,
     };
   } catch (err: any) {
     // 2. Direct backend REST integration fallback if external backend URL is provided and not demo mode

@@ -18,6 +18,7 @@ export function KpiCard({
   accent = "neutral",
   icon: Icon,
   helpText,
+  onClick,
 }: {
   label: string;
   value: string;
@@ -25,9 +26,15 @@ export function KpiCard({
   accent?: Accent;
   icon?: LucideIcon;
   helpText?: string;
+  onClick?: () => void;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-md border border-[--color-border] bg-[--color-surface-0] p-4">
+    <div
+      onClick={onClick}
+      className={`relative overflow-hidden rounded-md border border-[--color-border] bg-[--color-surface-0] p-4 ${
+        onClick ? "cursor-pointer hover:border-[--color-forecast-500]/60 hover:shadow-xs transition-all active:scale-[0.99]" : ""
+      }`}
+    >
       <div className={`absolute inset-x-0 top-0 h-0.5 ${ACCENT_BAR[accent]}`} />
       <div className="flex items-start justify-between">
         <p className="text-xs font-medium uppercase tracking-wide text-[--color-ink-500]">{label}</p>
