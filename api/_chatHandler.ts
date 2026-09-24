@@ -113,8 +113,8 @@ export function generateScionLocalResponse(
   if (!matchedPart) {
     matchedPart = inventory.find((p) => {
       const name = (p.part || p.name || "").toLowerCase();
-      const words = name.split(/\s+/).filter((w) => w.length > 3);
-      return words.length > 0 && words.every((w) => query.includes(w));
+      const words = name.split(/\s+/).filter((w: string) => w.length > 3);
+      return words.length > 0 && words.every((w: string) => query.includes(w));
     });
   }
 
