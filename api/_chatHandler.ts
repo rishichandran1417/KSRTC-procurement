@@ -4,11 +4,11 @@ COMMUNICATION STYLE (ChatGPT Style):
 - Converse naturally, politely, and intelligently like ChatGPT.
 - When the user asks about a specific spare part, answer directly with that part's stock level, safety stock, reorder point, risk level, and depot recommendations.
 - When answering operational or technical questions, provide clear, well-structured, executive-grade answers using clean Markdown.
-- Maintain domain expertise in KSRTC bus fleet maintenance (Ashok Leyland, Tata), depot management, EOQ calculations, and procurement.`;
+- Maintain domain expertise in KSRTC bus fleet maintenance (Ashok Leyland, Tata), inventory management, EOQ calculations, and procurement.`;
 
 const GREETING_REGEX = /^(hi|hello|hey|good\s*(morning|afternoon|evening)|howdy|greetings|namaste|vanakkam|who are you|what is scion)[!.\s]*$/i;
 
-// Comprehensive 24-part KSRTC Central Depot catalog for guaranteed accuracy
+// Comprehensive 24-part KSRTC catalog for guaranteed accuracy
 const DEFAULT_KSRTC_INVENTORY = [
   { part: "Air Filter", category: "Engine", currentStock: 0, safetyStock: 5, reorderPoint: 10, status: "Critical", stockoutRisk: "High" },
   { part: "Alternator", category: "Electrical", currentStock: 0, safetyStock: 5, reorderPoint: 10, status: "Critical", stockoutRisk: "High" },
@@ -39,20 +39,20 @@ const DEFAULT_KSRTC_INVENTORY = [
 function getQuickGreetingResponse(message: string): string | null {
   const clean = message.trim().toLowerCase();
   if (clean === "who are you" || clean.includes("what is scion") || clean.includes("identify yourself")) {
-    return "I am **KSRTC SCION** (Supply Chain Intelligence & Operational Network), the specialized AI assistant for Kerala State Road Transport Corporation.\n\nI monitor real-time depot inventory, calculate stockout risks, track purchase orders, forecast spare parts demand for Ashok Leyland and Tata bus fleets, and assist with PuLP linear programming procurement optimizations.\n\nHow can I help you today?";
+    return "I am **KSRTC SCION** (Supply Chain Intelligence & Operational Network), the specialized AI assistant for Kerala State Road Transport Corporation.\n\nI monitor real-time fleet inventory, calculate stockout risks, track purchase orders, forecast spare parts demand for Ashok Leyland and Tata bus fleets, and assist with PuLP linear programming procurement optimizations.\n\nHow can I help you today?";
   }
 
   if (GREETING_REGEX.test(clean)) {
     if (clean.includes("morning")) {
-      return "Good morning! How can I assist you with KSRTC bus fleet inventory, purchase orders, depot supply chain, or spare parts analytics today?";
+      return "Good morning! How can I assist you with KSRTC bus fleet inventory, purchase orders, supply chain, or spare parts analytics today?";
     }
     if (clean.includes("evening")) {
-      return "Good evening! How can I assist you with KSRTC bus fleet inventory, purchase orders, depot supply chain, or spare parts analytics today?";
+      return "Good evening! How can I assist you with KSRTC bus fleet inventory, purchase orders, supply chain, or spare parts analytics today?";
     }
     if (clean.includes("afternoon")) {
-      return "Good afternoon! How can I assist you with KSRTC bus fleet inventory, purchase orders, depot supply chain, or spare parts analytics today?";
+      return "Good afternoon! How can I assist you with KSRTC bus fleet inventory, purchase orders, supply chain, or spare parts analytics today?";
     }
-    return "Hello! How can I assist you with KSRTC bus fleet inventory, purchase orders, depot supply chain, or spare parts analytics today?";
+    return "Hello! How can I assist you with KSRTC bus fleet inventory, purchase orders, supply chain, or spare parts analytics today?";
   }
   return null;
 }
@@ -134,7 +134,6 @@ export function generateScionLocalResponse(
     reply += `- **Reorder Point**: ${reorder} units\n`;
     reply += `- **Estimated Days of Supply**: ${days} days\n`;
     reply += `- **Category**: ${matchedPart.category || "Engine & Mechanical"}\n`;
-    reply += `- **Depot**: KSRTC Central Depot, Thiruvananthapuram\n\n`;
 
     if (stock <= safety) {
       reply += `**🚨 Immediate Action Required:**\n`;
@@ -164,11 +163,11 @@ export function generateScionLocalResponse(
       (item) => item.status === "Critical" || item.stockoutRisk === "High" || (item.currentStock ?? item.quantity ?? 0) <= (item.safetyStock ?? 5)
     );
 
-    let res = "### KSRTC Central Depot — Inventory Health & Stockout Analysis\n\n";
+    let res = "### KSRTC Inventory Health & Stockout Analysis\n\n";
     const totalCount = inventory.length;
     const critCount = criticalItems.length;
 
-    res += `Central Depot currently tracks **${totalCount} active components**. Telemetry indicates **${critCount} items** are in critical stockout status.\n\n`;
+    res += `Currently tracking **${totalCount} active components**. Telemetry indicates **${critCount} items** are in critical stockout status.\n\n`;
 
     if (criticalItems.length > 0) {
       res += "#### Critical Stock Components Requiring Immediate PO:\n";
@@ -200,7 +199,7 @@ export function generateScionLocalResponse(
     query.includes("supplier") ||
     query.includes("delivery")
   ) {
-    let res = "### KSRTC Central Depot — Purchase Orders & Supplier Status\n\n";
+    let res = "### KSRTC Purchase Orders & Supplier Status\n\n";
 
     if (orders.length > 0) {
       res += "Here are the registered purchase orders currently tracked in the procurement cell:\n\n";
@@ -235,17 +234,17 @@ export function generateScionLocalResponse(
     query.includes("maintenance") ||
     query.includes("km")
   ) {
-    return "### KSRTC Fleet Maintenance & Depot Operations\n\n" +
+    return "### KSRTC Fleet Maintenance Operations\n\n" +
       "- **Fleet Profile**: Ashok Leyland 'H' Series 6-Cylinder BS-IV/BS-VI and Tata 1512 diesel bus chassis.\n" +
       "- **Maintenance Interval**: Scheduled dock inspections every 10,000 km; oil and filter renewals at 20,000 km.\n" +
       "- **Critical Consumables**: Spin-on oil filters, air filters, brake linings, and radial bus tyres (295/80R22.5).\n" +
-      "- **Depot Target**: Maintain zero grounded bus days due to consumable spare-parts stockouts.\n\n" +
+      "- **Operations Target**: Maintain zero grounded bus days due to consumable spare-parts stockouts.\n\n" +
       "Ask me about any specific component (e.g. *\"Stock of Brake Pad Set\"*) or view inventory records in the **Inventory** tab.";
   }
 
   // 5. DEFAULT CONCISE OPERATIONAL GUIDE
   return `### KSRTC SCION Supply Chain Assistant\n\n` +
-    `I am actively tracking inventory and procurement for **KSRTC Central Depot, Thiruvananthapuram**.\n\n` +
+    `I am actively tracking inventory and procurement for **KSRTC Fleet Operations**.\n\n` +
     `You can ask me questions like:\n` +
     `- *"Current stock of Air Filter"* (or Alternator, Brake Disc, Battery)\n` +
     `- *"Which items are critical or low in stock?"*\n` +

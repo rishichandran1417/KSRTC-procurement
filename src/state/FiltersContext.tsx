@@ -2,7 +2,7 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from "re
 import type { GlobalFilters, Horizon } from "../types";
 import { CATEGORIES } from "../constants";
 
-export const SINGLE_DEPOT_NAME = "KSRTC Central Depot, Thiruvananthapuram";
+export const SINGLE_DEPOT_NAME = "KSRTC Central Stores";
 export const ALL_CATEGORIES_LABEL = "All Categories";
 
 const DEFAULT_FILTERS: GlobalFilters = {
