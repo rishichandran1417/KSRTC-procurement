@@ -56,10 +56,14 @@ Operational Context:
     }
   }
 
+  const { inventory, orders } = await getCachedContext();
+
   try {
     const res = await apiClient.post<{ text?: string; error?: string }>("/api/chat", {
       message: userMessageText,
       context: contextSummary,
+      inventory,
+      orders,
     });
 
     if (res.error) {

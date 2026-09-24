@@ -47,7 +47,7 @@ export default defineConfig(({ mode }) => {
               });
               req.on('end', async () => {
                 try {
-                  const { message, context } = JSON.parse(bodyStr || '{}');
+                  const { message, context, inventory, orders } = JSON.parse(bodyStr || '{}');
                   if (!message || typeof message !== 'string') {
                     res.statusCode = 400;
                     res.setHeader('Content-Type', 'application/json');
@@ -55,7 +55,7 @@ export default defineConfig(({ mode }) => {
                     return;
                   }
 
-                  const result = await processChatRequest(message, context);
+                  const result = await processChatRequest(message, context, inventory, orders);
                   res.statusCode = 200;
                   res.setHeader('Content-Type', 'application/json');
                   res.end(
