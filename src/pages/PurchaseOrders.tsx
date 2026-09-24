@@ -124,29 +124,30 @@ export default function PurchaseOrders() {
       {/* PO DETAIL VIEW MODAL */}
       {viewing ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-3 sm:p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4"
           onClick={() => setViewing(null)}
         >
           <div
-            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 shadow-xl text-sm space-y-4 text-[--color-ink-900]"
+            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 sm:p-6 shadow-2xl text-sm space-y-4 text-slate-900 dark:text-zinc-100"
+            style={{ backgroundColor: "#ffffff" }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex justify-between items-start border-b border-[--color-border] pb-3">
+            <div className="flex justify-between items-start border-b border-slate-200 dark:border-zinc-800 pb-3">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+                  <span className="font-mono text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
                     {viewing.poNumber}
                   </span>
                   <StatusBadge label={viewing.status} />
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-[--color-ink-900] leading-tight">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100 leading-tight">
                   {viewing.supplier}
                 </h3>
               </div>
               <button
                 onClick={() => setViewing(null)}
-                className="rounded-full p-1.5 text-[--color-ink-400] hover:text-[--color-ink-900] hover:bg-[--color-surface-2] transition-colors cursor-pointer"
+                className="rounded-full p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                 title="Close"
               >
                 <X size={18} />
@@ -155,19 +156,19 @@ export default function PurchaseOrders() {
 
             {/* Metadata Badges */}
             <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="rounded-lg border border-[--color-border] bg-[--color-surface-1] p-2.5">
-                <span className="text-[--color-ink-500] block mb-0.5 font-medium">PO Date</span>
-                <span className="font-semibold text-[--color-ink-900]">{viewing.poDate}</span>
+              <div className="rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/80 p-2.5">
+                <span className="text-slate-500 dark:text-zinc-400 block mb-0.5 font-medium">PO Date</span>
+                <span className="font-semibold text-slate-900 dark:text-zinc-100">{viewing.poDate}</span>
               </div>
-              <div className="rounded-lg border border-[--color-border] bg-[--color-surface-1] p-2.5">
-                <span className="text-[--color-ink-500] block mb-0.5 font-medium">Expected Delivery</span>
-                <span className="font-semibold text-[--color-ink-900]">{viewing.expectedDelivery}</span>
+              <div className="rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/80 p-2.5">
+                <span className="text-slate-500 dark:text-zinc-400 block mb-0.5 font-medium">Expected Delivery</span>
+                <span className="font-semibold text-slate-900 dark:text-zinc-100">{viewing.expectedDelivery}</span>
               </div>
             </div>
 
             {viewing.notes ? (
-              <div className="rounded-lg border border-[--color-border] bg-[--color-surface-1] p-3 text-xs text-[--color-ink-700]">
-                <span className="font-semibold text-[--color-ink-500] block mb-0.5">Order Notes:</span>
+              <div className="rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/80 p-3 text-xs text-slate-700 dark:text-zinc-300">
+                <span className="font-semibold text-slate-900 dark:text-zinc-100 block mb-0.5">Order Notes:</span>
                 {viewing.notes}
               </div>
             ) : null}

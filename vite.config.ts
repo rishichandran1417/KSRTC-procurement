@@ -19,6 +19,13 @@ export default defineConfig(({ mode }) => {
         host: 'localhost',
         clientPort: 5173,
       },
+      proxy: {
+        '/api/v1/db': {
+          target: 'https://database-5oe4.onrender.com',
+          changeOrigin: true,
+          secure: false,
+        },
+      },
     },
     plugins: [
       react(),

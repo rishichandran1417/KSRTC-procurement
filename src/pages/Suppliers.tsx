@@ -135,38 +135,39 @@ function SupplierDetailDrawer({ supplier, onClose }: { supplier: Supplier; onClo
   }, [supplier.name]);
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="h-full w-full sm:max-w-md overflow-y-auto border-l border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 space-y-4 shadow-xl text-[--color-ink-900]"
+        className="h-full w-full sm:max-w-md overflow-y-auto border-l border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 sm:p-6 space-y-4 shadow-2xl text-slate-900 dark:text-zinc-100"
+        style={{ backgroundColor: "#ffffff" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between border-b border-[--color-border] pb-3">
+        <div className="flex items-start justify-between border-b border-slate-200 dark:border-zinc-800 pb-3">
           <div>
-            <p className="text-xs text-[--color-forecast-600] font-semibold uppercase">{supplier.category}</p>
-            <h2 className="text-lg font-bold text-[--color-ink-900]">{supplier.name}</h2>
+            <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold uppercase">{supplier.category}</p>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-zinc-100">{supplier.name}</h2>
           </div>
-          <button onClick={onClose} className="rounded p-1 text-[--color-ink-500] hover:bg-[--color-surface-1]">
+          <button onClick={onClose} className="rounded p-1 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer">
             <X size={18} />
           </button>
         </div>
 
         {/* METRICS */}
         <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="rounded border border-[--color-border] bg-[--color-surface-1] p-2.5">
-            <p className="text-[10px] text-[--color-ink-500]">Reliability Rating</p>
-            <p className="text-base font-bold text-[--color-forecast-600]">{supplier.reliabilityScore}/100</p>
+          <div className="rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/80 p-2.5">
+            <p className="text-[10px] text-slate-500 dark:text-zinc-400">Reliability Rating</p>
+            <p className="text-base font-bold text-blue-600 dark:text-blue-400">{supplier.reliabilityScore}/100</p>
           </div>
-          <div className="rounded border border-[--color-border] bg-[--color-surface-1] p-2.5">
-            <p className="text-[10px] text-[--color-ink-500]">On-Time Delivery</p>
-            <p className="text-base font-bold text-[--color-ink-900]">{supplier.onTimeDeliveryRate}%</p>
+          <div className="rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/80 p-2.5">
+            <p className="text-[10px] text-slate-500 dark:text-zinc-400">On-Time Delivery</p>
+            <p className="text-base font-bold text-slate-900 dark:text-zinc-100">{supplier.onTimeDeliveryRate}%</p>
           </div>
-          <div className="rounded border border-[--color-border] bg-[--color-surface-1] p-2.5">
-            <p className="text-[10px] text-[--color-ink-500]">Avg Lead Time</p>
-            <p className="text-sm font-semibold text-[--color-ink-900]">{supplier.avgLeadTimeDays} days</p>
+          <div className="rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/80 p-2.5">
+            <p className="text-[10px] text-slate-500 dark:text-zinc-400">Avg Lead Time</p>
+            <p className="text-sm font-semibold text-slate-900 dark:text-zinc-100">{supplier.avgLeadTimeDays} days</p>
           </div>
-          <div className="rounded border border-[--color-border] bg-[--color-surface-1] p-2.5">
-            <p className="text-[10px] text-[--color-ink-500]">Open Orders</p>
-            <p className="text-sm font-semibold text-[--color-ink-900]">{supplier.openOrders}</p>
+          <div className="rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/80 p-2.5">
+            <p className="text-[10px] text-slate-500 dark:text-zinc-400">Open Orders</p>
+            <p className="text-sm font-semibold text-slate-900 dark:text-zinc-100">{supplier.openOrders}</p>
           </div>
         </div>
 

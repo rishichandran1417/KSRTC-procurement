@@ -246,61 +246,78 @@ function InventoryDetailDrawer({ item, onClose }: { item: InventoryItem; onClose
     getPriceHistory(item.part).then(setPrices);
   }, [item]);
 
+  const demandVal =
+    item.forecastDemand !== undefined && item.forecastDemand !== null
+      ? `${item.forecastDemand} units`
+      : item.reorderPoint
+      ? `${Math.round(item.reorderPoint * 1.5)} units`
+      : "—";
+
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="h-full w-full sm:max-w-md overflow-y-auto border-l border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 shadow-xl text-[--color-ink-900]"
+        className="h-full w-full sm:max-w-md overflow-y-auto border-l border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 sm:p-6 shadow-2xl text-slate-900 dark:text-zinc-100"
+        style={{ backgroundColor: "#ffffff" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between border-b border-[--color-border] pb-3">
+        <div className="flex items-start justify-between border-b border-slate-200 dark:border-zinc-800 pb-3">
           <div>
-            <h2 className="text-lg font-bold text-[--color-ink-900]">{item.part}</h2>
-            <p className="text-xs text-[--color-ink-500]">Category: {item.category}</p>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-zinc-100">{item.part}</h2>
+            <p className="text-xs text-slate-500 dark:text-zinc-400">Category: {item.category}</p>
           </div>
-          <button onClick={onClose} className="rounded p-1 text-[--color-ink-500] hover:bg-[--color-surface-1]">
+          <button
+            onClick={onClose}
+            className="rounded p-1 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer"
+          >
             <X size={18} />
           </button>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+        <div className="mt-4 grid grid-cols-2 gap-2.5 text-sm">
           <Stat label="Current Inventory" value={`${item.currentStock} units`} />
-          <Stat label="Forecast Demand" value={`${item.forecastDemand} units`} />
+          <Stat label="Forecast Demand" value={demandVal} />
           <Stat label="Safety Stock" value={`${item.safetyStock} units`} />
           <Stat label="Reorder Point" value={`${item.reorderPoint} units`} />
           <Stat label="Days of Supply" value={`${item.daysOfSupply} days`} />
-          <Stat label="Stock Status" value={item.status} />
+          <Stat label="Stock Status" value={item.status || "Healthy"} />
         </div>
 
         {item.notes ? (
-          <div className="mt-3 rounded border border-[--color-border] bg-[--color-surface-1] p-2.5 text-xs">
-            <span className="font-semibold text-[--color-ink-700]">Notes: </span>
-            <span className="text-[--color-ink-500]">{item.notes}</span>
+          <div className="mt-3 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/80 p-2.5 text-xs">
+            <span className="font-semibold text-slate-700 dark:text-zinc-300">Notes: </span>
+            <span className="text-slate-500 dark:text-zinc-400">{item.notes}</span>
           </div>
         ) : null}
 
-        <p className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-[--color-ink-500]">
+        <p className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
           Historical Consumption (Past 6 Months)
         </p>
-        <ResponsiveContainer width="100%" height={140}>
-          <LineChart data={consumption}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-            <XAxis dataKey="period" tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 10 }} />
-            <Tooltip />
-            <Line type="monotone" dataKey="quantity" stroke="var(--color-forecast-500)" strokeWidth={2} dot={false} />
-          </LineChart>
-        </ResponsiveContainer>
+        <div className="rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/50 p-2">
+          <ResponsiveContainer width="100%" height={140}>
+            <LineChart data={consumption}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="period" tick={{ fontSize: 10 }} />
+              <YAxis tick={{ fontSize: 10 }} />
+              <Tooltip />
+              <Line type="monotone" dataKey="quantity" stroke="#2563eb" strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
 
-        <p className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-[--color-ink-500]">
+        <p className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
           Purchase Price History (From PO Data)
         </p>
-        <div className="space-y-1.5 text-xs">
-          {prices.map((p, i) => (
-            <div key={i} className="flex justify-between border-b border-[--color-border] pb-1">
-              <span className="text-[--color-ink-500]">{p.date} · {p.supplier}</span>
-              <span className="tabular font-medium text-[--color-ink-900]">₹{p.unitPrice}</span>
-            </div>
-          ))}
+        <div className="space-y-1.5 text-xs rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/50 p-3">
+          {prices.length === 0 ? (
+            <p className="text-slate-400 dark:text-zinc-500 text-center py-2">No past PO purchase records found.</p>
+          ) : (
+            prices.map((p, i) => (
+              <div key={i} className="flex justify-between border-b border-slate-200/60 dark:border-zinc-700/60 pb-1 last:border-0 last:pb-0">
+                <span className="text-slate-500 dark:text-zinc-400">{p.date} · {p.supplier}</span>
+                <span className="tabular font-medium text-slate-900 dark:text-zinc-100">₹{p.unitPrice}</span>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
@@ -309,9 +326,9 @@ function InventoryDetailDrawer({ item, onClose }: { item: InventoryItem; onClose
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded border border-[--color-border] bg-[--color-surface-1] p-2.5">
-      <p className="text-[11px] text-[--color-ink-500]">{label}</p>
-      <p className="tabular font-semibold text-[--color-ink-900]">{value}</p>
+    <div className="rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/80 p-2.5">
+      <p className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">{label}</p>
+      <p className="tabular font-semibold text-slate-900 dark:text-zinc-100 mt-0.5">{value}</p>
     </div>
   );
 }
@@ -344,37 +361,38 @@ function AddInventoryModal({ onClose, onAdded }: { onClose: () => void; onAdded:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-3 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4" onClick={onClose}>
       <div
-        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 shadow-xl text-[--color-ink-900]"
+        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 sm:p-6 shadow-2xl text-slate-900 dark:text-zinc-100"
+        style={{ backgroundColor: "#ffffff" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-[--color-border] pb-3 mb-4">
-          <h2 className="text-base font-semibold text-[--color-ink-900]">Add New Inventory Item</h2>
-          <button onClick={onClose} className="rounded p-1 text-[--color-ink-500] hover:bg-[--color-surface-1] cursor-pointer">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 pb-3 mb-4">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-zinc-100">Add New Inventory Item</h2>
+          <button onClick={onClose} className="rounded p-1 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer">
             <X size={18} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 text-sm">
           <div>
-            <label className="mb-1 block text-xs font-medium text-[--color-ink-700]">Part / Component Name *</label>
+            <label className="mb-1 block text-xs font-medium text-slate-700 dark:text-zinc-300">Part / Component Name *</label>
             <input
               required
               placeholder="Enter component name"
               value={part}
               onChange={(e) => setPart(e.target.value)}
-              className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-3 py-1.5 text-sm"
+              className="w-full rounded border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-sm text-slate-900 dark:text-zinc-100"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-[--color-ink-700]">Category</label>
+              <label className="mb-1 block text-xs font-medium text-slate-700 dark:text-zinc-300">Category</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-sm"
+                className="w-full rounded border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2.5 py-1.5 text-sm text-slate-900 dark:text-zinc-100"
               >
                 {["Brake Parts", "Filters", "Bearings", "Tyres", "Electricals", "Fluids"].map((c) => (
                   <option key={c} value={c}>{c}</option>
@@ -382,63 +400,63 @@ function AddInventoryModal({ onClose, onAdded }: { onClose: () => void; onAdded:
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-[--color-ink-700]">Current Stock Quantity</label>
+              <label className="mb-1 block text-xs font-medium text-slate-700 dark:text-zinc-300">Current Stock Quantity</label>
               <input
                 type="number"
                 min="0"
                 value={currentStock}
                 onChange={(e) => setCurrentStock(Number(e.target.value))}
-                className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-3 py-1.5 text-sm tabular"
+                className="w-full rounded border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-sm tabular text-slate-900 dark:text-zinc-100"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-[--color-ink-700]">Minimum Safety Stock</label>
+              <label className="mb-1 block text-xs font-medium text-slate-700 dark:text-zinc-300">Minimum Safety Stock</label>
               <input
                 type="number"
                 min="0"
                 value={safetyStock}
                 onChange={(e) => setSafetyStock(Number(e.target.value))}
-                className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-3 py-1.5 text-sm tabular"
+                className="w-full rounded border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-sm tabular text-slate-900 dark:text-zinc-100"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-[--color-ink-700]">Reorder Point</label>
+              <label className="mb-1 block text-xs font-medium text-slate-700 dark:text-zinc-300">Reorder Point</label>
               <input
                 type="number"
                 min="0"
                 value={reorderPoint}
                 onChange={(e) => setReorderPoint(Number(e.target.value))}
-                className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-3 py-1.5 text-sm tabular"
+                className="w-full rounded border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-sm tabular text-slate-900 dark:text-zinc-100"
               />
             </div>
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-[--color-ink-700]">Notes / Storage Location</label>
+            <label className="mb-1 block text-xs font-medium text-slate-700 dark:text-zinc-300">Notes / Storage Location</label>
             <textarea
               rows={2}
               placeholder="Storage location or notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-3 py-1.5 text-sm"
+              className="w-full rounded border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-sm text-slate-900 dark:text-zinc-100"
             />
           </div>
 
-          <div className="mt-4 flex justify-end gap-2 pt-2 border-t border-[--color-border]">
+          <div className="mt-4 flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-zinc-800">
             <button
               type="button"
               onClick={onClose}
-              className="rounded border border-[--color-border] px-4 py-1.5 text-xs text-[--color-ink-700] hover:bg-[--color-surface-1]"
+              className="rounded border border-slate-200 dark:border-zinc-700 px-4 py-1.5 text-xs text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="rounded bg-[--color-forecast-500] px-4 py-1.5 text-xs font-medium text-white hover:bg-[--color-forecast-700]"
+              className="rounded bg-blue-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-blue-700 cursor-pointer"
             >
               {submitting ? "Saving…" : "Add Item"}
             </button>
@@ -475,92 +493,93 @@ function EditInventoryModal({ item, onClose, onUpdated }: { item: InventoryItem;
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-3 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4" onClick={onClose}>
       <div
-        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 shadow-xl text-[--color-ink-900]"
+        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 sm:p-6 shadow-2xl text-slate-900 dark:text-zinc-100"
+        style={{ backgroundColor: "#ffffff" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-[--color-border] pb-3 mb-4">
-          <h2 className="text-base font-semibold text-[--color-ink-900]">Edit Inventory Item — {item.part}</h2>
-          <button onClick={onClose} className="rounded p-1 text-[--color-ink-500] hover:bg-[--color-surface-1] cursor-pointer">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 pb-3 mb-4">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-zinc-100">Edit Inventory Item — {item.part}</h2>
+          <button onClick={onClose} className="rounded p-1 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer">
             <X size={18} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 text-sm">
           <div>
-            <label className="mb-1 block text-xs font-medium text-[--color-ink-700]">Part Name</label>
+            <label className="mb-1 block text-xs font-medium text-slate-700 dark:text-zinc-300">Part Name</label>
             <input
               required
               value={part}
               onChange={(e) => setPart(e.target.value)}
-              className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-3 py-1.5 text-sm"
+              className="w-full rounded border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-sm text-slate-900 dark:text-zinc-100"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-[--color-ink-700]">Category</label>
+              <label className="mb-1 block text-xs font-medium text-slate-700 dark:text-zinc-300">Category</label>
               <input
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-3 py-1.5 text-sm"
+                className="w-full rounded border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-sm text-slate-900 dark:text-zinc-100"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-[--color-ink-700]">Current Stock</label>
+              <label className="mb-1 block text-xs font-medium text-slate-700 dark:text-zinc-300">Current Stock</label>
               <input
                 type="number"
                 value={currentStock}
                 onChange={(e) => setCurrentStock(Number(e.target.value))}
-                className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-3 py-1.5 text-sm tabular"
+                className="w-full rounded border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-sm tabular text-slate-900 dark:text-zinc-100"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-[--color-ink-700]">Safety Stock</label>
+              <label className="mb-1 block text-xs font-medium text-slate-700 dark:text-zinc-300">Safety Stock</label>
               <input
                 type="number"
                 value={safetyStock}
                 onChange={(e) => setSafetyStock(Number(e.target.value))}
-                className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-3 py-1.5 text-sm tabular"
+                className="w-full rounded border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-sm tabular text-slate-900 dark:text-zinc-100"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-[--color-ink-700]">Reorder Point</label>
+              <label className="mb-1 block text-xs font-medium text-slate-700 dark:text-zinc-300">Reorder Point</label>
               <input
                 type="number"
                 value={reorderPoint}
                 onChange={(e) => setReorderPoint(Number(e.target.value))}
-                className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-3 py-1.5 text-sm tabular"
+                className="w-full rounded border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-sm tabular text-slate-900 dark:text-zinc-100"
               />
             </div>
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-[--color-ink-700]">Notes</label>
+            <label className="mb-1 block text-xs font-medium text-slate-700 dark:text-zinc-300">Notes</label>
             <textarea
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-3 py-1.5 text-sm"
+              className="w-full rounded border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-sm text-slate-900 dark:text-zinc-100"
             />
           </div>
 
-          <div className="mt-4 flex justify-end gap-2 pt-2 border-t border-[--color-border]">
+          <div className="mt-4 flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-zinc-800">
             <button
               type="button"
               onClick={onClose}
-              className="rounded border border-[--color-border] px-4 py-1.5 text-xs text-[--color-ink-700] hover:bg-[--color-surface-1] cursor-pointer"
+              className="rounded border border-slate-200 dark:border-zinc-700 px-4 py-1.5 text-xs text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="rounded bg-[--color-forecast-500] px-4 py-1.5 text-xs font-medium text-white hover:bg-[--color-forecast-700] cursor-pointer"
+              className="rounded bg-blue-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-blue-700 cursor-pointer"
             >
               {submitting ? "Saving…" : "Save Changes"}
             </button>
@@ -584,28 +603,29 @@ function AdjustQuantityModal({ item, onClose, onAdjusted }: { item: InventoryIte
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-3 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4" onClick={onClose}>
       <div
-        className="w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-xl border border-[--color-border] bg-[--color-surface-0] p-5 shadow-xl text-sm text-[--color-ink-900]"
+        className="w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-2xl text-sm text-slate-900 dark:text-zinc-100"
+        style={{ backgroundColor: "#ffffff" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-[--color-border] pb-2 mb-3">
-          <h3 className="font-semibold text-[--color-ink-900]">Adjust Quantity — {item.part}</h3>
-          <button onClick={onClose} className="rounded p-1 text-[--color-ink-500] hover:bg-[--color-surface-1] cursor-pointer">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 pb-2 mb-3">
+          <h3 className="font-semibold text-slate-900 dark:text-zinc-100">Adjust Quantity — {item.part}</h3>
+          <button onClick={onClose} className="rounded p-1 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer">
             <X size={18} />
           </button>
         </div>
 
-        <p className="text-xs text-[--color-ink-500]">Current Stock: <span className="font-semibold text-[--color-ink-900] tabular">{item.currentStock} units</span></p>
+        <p className="text-xs text-slate-500 dark:text-zinc-400">Current Stock: <span className="font-semibold text-slate-900 dark:text-zinc-100 tabular">{item.currentStock} units</span></p>
 
         <div className="mt-4">
-          <label className="mb-1 block text-xs text-[--color-ink-700]">Adjustment Amount</label>
+          <label className="mb-1 block text-xs text-slate-700 dark:text-zinc-300">Adjustment Amount</label>
           <input
             type="number"
             min="1"
             value={delta}
             onChange={(e) => setDelta(Math.max(1, Number(e.target.value)))}
-            className="w-full rounded border border-[--color-border] px-3 py-1.5 tabular"
+            className="w-full rounded border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 tabular text-slate-900 dark:text-zinc-100"
           />
         </div>
 
@@ -613,14 +633,14 @@ function AdjustQuantityModal({ item, onClose, onAdjusted }: { item: InventoryIte
           <button
             onClick={() => applyAdjustment(-1)}
             disabled={submitting}
-            className="flex-1 rounded border border-[--color-critical-500] bg-[--color-critical-500]/10 py-1.5 text-xs font-medium text-[--color-critical-500] hover:bg-[--color-critical-500]/20"
+            className="flex-1 rounded border border-rose-200 bg-rose-50 dark:bg-rose-950/40 py-1.5 text-xs font-medium text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 cursor-pointer"
           >
             - Deduct {delta} Units
           </button>
           <button
             onClick={() => applyAdjustment(1)}
             disabled={submitting}
-            className="flex-1 rounded bg-[--color-forecast-500] py-1.5 text-xs font-medium text-white hover:bg-[--color-forecast-700]"
+            className="flex-1 rounded bg-blue-600 py-1.5 text-xs font-medium text-white hover:bg-blue-700 cursor-pointer"
           >
             + Add {delta} Units
           </button>

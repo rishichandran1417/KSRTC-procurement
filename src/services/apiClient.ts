@@ -72,10 +72,21 @@ export class ApiError extends Error {
   }
 }
 
+function resolveUrl(url: string): string {
+  if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+    // If targeting the Render backend directly from localhost, route through Vite proxy to bypass browser CORS
+    if (url.startsWith("https://database-5oe4.onrender.com/api/v1/db")) {
+      return url.replace("https://database-5oe4.onrender.com/api/v1/db", "/api/v1/db");
+    }
+  }
+  return url;
+}
+
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
+  const targetUrl = resolveUrl(url);
   let response: Response;
   try {
-    response = await fetch(url, {
+    response = await fetch(targetUrl, {
       headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
       ...init,
     });
@@ -135,7 +146,7 @@ export async function testEndpoint(rawUrl: string, probePath = ""): Promise<Conn
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 7000);
 
-    const res = await fetch(targetUrl, {
+    const res = await fetch(resolveUrl(targetUrl), {
       method: "GET",
       headers: { Accept: "application/json, text/plain, */*" },
       signal: controller.signal,

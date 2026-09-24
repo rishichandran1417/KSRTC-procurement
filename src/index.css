@@ -137,3 +137,50 @@ body {
 .scion-loader-logo {
   animation: scionGlow 2s ease-in-out infinite;
 }
+
+/* Ensure solid surface backgrounds and text colors across the entire application */
+.bg-\[--color-surface-0\],
+[class*="bg-[--color-surface-0]"] {
+  background-color: var(--color-surface-0, #ffffff) !important;
+}
+
+.bg-\[--color-surface-1\],
+[class*="bg-[--color-surface-1]"] {
+  background-color: var(--color-surface-1, #f8fafc) !important;
+}
+
+.bg-\[--color-surface-2\],
+[class*="bg-[--color-surface-2]"] {
+  background-color: var(--color-surface-2, #f1f5f9) !important;
+}
+
+.text-\[--color-ink-900\],
+[class*="text-[--color-ink-900]"] {
+  color: var(--color-ink-900, #0f172a) !important;
+}
+
+.text-\[--color-ink-700\],
+[class*="text-[--color-ink-700]"] {
+  color: var(--color-ink-700, #334155) !important;
+}
+
+.text-\[--color-ink-500\],
+[class*="text-[--color-ink-500]"] {
+  color: var(--color-ink-500, #64748b) !important;
+}
+
+.text-\[--color-ink-400\],
+[class*="text-[--color-ink-400]"] {
+  color: var(--color-ink-400, #94a3b8) !important;
+}
+
+.border-\[--color-border\],
+[class*="border-[--color-border]"] {
+  border-color: var(--color-border, #e2e8f0) !important;
+}
+
+.border-\[--color-border-strong\],
+[class*="border-[--color-border-strong]"] {
+  border-color: var(--color-border-strong, #cbd5e1) !important;
+}
+
