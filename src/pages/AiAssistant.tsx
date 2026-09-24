@@ -516,15 +516,12 @@ function FormattedContent({ text }: { text: string }) {
     });
   };
 
-  let orderedItemCounter = 0;
-
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmed = line.trim();
 
     // Code blocks
     if (trimmed.startsWith("```")) {
-      orderedItemCounter = 0;
       if (inCodeBlock) {
         flushList();
         elements.push(
@@ -552,7 +549,6 @@ function FormattedContent({ text }: { text: string }) {
     // Headings (###, ##, #)
     if (trimmed.startsWith("### ")) {
       flushList();
-      orderedItemCounter = 0;
       elements.push(
         <h4
           key={`h4-${elements.length}`}
@@ -566,7 +562,6 @@ function FormattedContent({ text }: { text: string }) {
 
     if (trimmed.startsWith("## ")) {
       flushList();
-      orderedItemCounter = 0;
       elements.push(
         <h3
           key={`h3-${elements.length}`}
@@ -580,7 +575,6 @@ function FormattedContent({ text }: { text: string }) {
 
     if (trimmed.startsWith("# ")) {
       flushList();
-      orderedItemCounter = 0;
       elements.push(
         <h2 key={`h2-${elements.length}`} className="text-base sm:text-lg font-bold text-[--color-ink-900] mt-5 mb-2">
           {parseInline(trimmed.slice(2))}
@@ -592,7 +586,6 @@ function FormattedContent({ text }: { text: string }) {
     // Horizontal rule
     if (trimmed === "---" || trimmed === "***") {
       flushList();
-      orderedItemCounter = 0;
       elements.push(
         <hr key={`hr-${elements.length}`} className="my-3 border-t border-[--color-border]" />
       );
@@ -615,22 +608,13 @@ function FormattedContent({ text }: { text: string }) {
     // Ordered lists / numbered points (1., 2.)
     const numMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
     if (numMatch) {
-      flushList();
-      orderedItemCounter += 1;
-      const title = numMatch[2];
-      elements.push(
-        <div
-          key={`num-heading-${elements.length}`}
-          className="mt-2.5 mb-1 flex items-start gap-2 text-xs sm:text-sm text-[--color-ink-900]"
-        >
-          <span className="shrink-0 flex items-center justify-center h-4.5 w-4.5 rounded bg-[--color-surface-2] border border-[--color-border] text-[10px] font-semibold text-[--color-ink-700] mt-0.5">
-            {orderedItemCounter}
-          </span>
-          <div className="leading-relaxed">
-            {parseInline(title)}
-          </div>
-        </div>
-      );
+      const itemContent = parseInline(numMatch[2]);
+      if (!currentList || currentList.type !== "ol") {
+        flushList();
+        currentList = { type: "ol", items: [itemContent] };
+      } else {
+        currentList.items.push(itemContent);
+      }
       continue;
     }
 

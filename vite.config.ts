@@ -26,6 +26,13 @@ export default defineConfig(({ mode }) => {
         name: 'local-api-chat-middleware',
         configureServer(server) {
           server.middlewares.use(async (req, res, next) => {
+            if (req.url === '/api/chat' && req.method === 'GET') {
+              res.statusCode = 200;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ status: 'ok', service: 'KSRTC SCION Intelligence Engine' }));
+              return;
+            }
+
             if (req.url === '/api/chat' && req.method === 'POST') {
               let bodyStr = '';
               req.on('data', (chunk) => {

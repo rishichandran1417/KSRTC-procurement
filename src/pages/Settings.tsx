@@ -69,6 +69,7 @@ const INTEGRATIONS: IntegrationConfig[] = [
   },
   {
     id: "scion",
+    endpointKey: "chat",
     name: "KSRTC SCION Intelligence Engine",
     description: "Conversational AI Copilot processing user supply chain queries via Gemini API.",
     icon: Sparkles,

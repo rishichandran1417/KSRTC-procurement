@@ -1,7 +1,7 @@
 // Central HTTP client. Every service module goes through here — no component
 // should ever call fetch() directly.
 
-export type EndpointKey = "base" | "forecast" | "optimization" | "powerbi";
+export type EndpointKey = "base" | "forecast" | "optimization" | "powerbi" | "chat";
 
 // Clean up any legacy demo mode storage
 if (typeof window !== "undefined") {
@@ -17,6 +17,7 @@ const DEFAULT_ENDPOINTS: Record<EndpointKey, string> = {
   forecast: "",
   optimization: "",
   powerbi: "",
+  chat: "/api/chat",
 };
 
 export function getEndpoint(key: EndpointKey): string {
@@ -31,6 +32,7 @@ export function getEndpoint(key: EndpointKey): string {
     forecast: import.meta.env.VITE_FORECAST_API_URL,
     optimization: import.meta.env.VITE_OPTIMIZATION_API_URL,
     powerbi: import.meta.env.VITE_POWERBI_EMBED_URL,
+    chat: undefined,
   };
   const val = envMap[key] || DEFAULT_ENDPOINTS[key] || "";
   return val.trim().replace(/\/+$/, "");
@@ -55,6 +57,9 @@ export const ENDPOINTS = {
   },
   get powerbi() {
     return getEndpoint("powerbi");
+  },
+  get chat() {
+    return getEndpoint("chat");
   },
 };
 
@@ -114,7 +119,7 @@ export async function testEndpoint(rawUrl: string, probePath = ""): Promise<Conn
     return { ok: false, latencyMs: 0, message: "URL is empty." };
   }
 
-  // Check protocol mismatch
+  // Check protocol mismatch for absolute URLs
   if (typeof window !== "undefined" && window.location.protocol === "https:" && cleanUrl.startsWith("http://")) {
     return {
       ok: false,
@@ -165,7 +170,7 @@ export async function testEndpoint(rawUrl: string, probePath = ""): Promise<Conn
     return {
       ok: false,
       latencyMs: latency,
-      message: `Failed to connect (${err.message || "Network Error"}). Check if CORS is enabled on your backend allowing this origin.`,
+      message: `Failed to connect (${err.message || "Network Error"}). Check if endpoint is running and CORS is enabled.`,
     };
   }
 }
