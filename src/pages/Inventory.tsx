@@ -247,9 +247,9 @@ function InventoryDetailDrawer({ item, onClose }: { item: InventoryItem; onClose
   }, [item]);
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-md" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs" onClick={onClose}>
       <div
-        className="h-full w-full sm:max-w-md overflow-y-auto border-l border-[--color-border-strong] bg-[#121620] p-5 sm:p-6 shadow-2xl text-[--color-ink-900]"
+        className="h-full w-full sm:max-w-md overflow-y-auto border-l border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 shadow-xl text-[--color-ink-900]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between border-b border-[--color-border] pb-3">
@@ -344,9 +344,9 @@ function AddInventoryModal({ onClose, onAdded }: { onClose: () => void; onAdded:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-3 sm:p-4" onClick={onClose}>
       <div
-        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-[--color-border-strong] bg-[#121620] p-5 sm:p-6 shadow-2xl text-[--color-ink-900]"
+        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 shadow-xl text-[--color-ink-900]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-[--color-border] pb-3 mb-4">
@@ -475,9 +475,9 @@ function EditInventoryModal({ item, onClose, onUpdated }: { item: InventoryItem;
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-3 sm:p-4" onClick={onClose}>
       <div
-        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-[--color-border-strong] bg-[#121620] p-5 sm:p-6 shadow-2xl text-[--color-ink-900]"
+        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 shadow-xl text-[--color-ink-900]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-[--color-border] pb-3 mb-4">
@@ -584,9 +584,9 @@ function AdjustQuantityModal({ item, onClose, onAdjusted }: { item: InventoryIte
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-3 sm:p-4" onClick={onClose}>
       <div
-        className="w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-2xl border border-[--color-border-strong] bg-[#121620] p-5 shadow-2xl text-sm text-[--color-ink-900]"
+        className="w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-xl border border-[--color-border] bg-[--color-surface-0] p-5 shadow-xl text-sm text-[--color-ink-900]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-[--color-border] pb-2 mb-3">

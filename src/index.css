@@ -1,50 +1,109 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", "SF Mono", ui-monospace, monospace;
 
-  --color-surface-0: #121620;
-  --color-surface-1: #0a0d14;
-  --color-surface-2: #191f2e;
-  --color-border: #242c3d;
-  --color-border-strong: #364157;
-  --color-ink-900: #f8fafc;
-  --color-ink-700: #cbd5e1;
-  --color-ink-500: #94a3b8;
-  --color-ink-400: #64748b;
+  --color-surface-0: #ffffff;
+  --color-surface-1: #f8fafc;
+  --color-surface-2: #f1f5f9;
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+  --color-ink-900: #0f172a;
+  --color-ink-700: #334155;
+  --color-ink-500: #64748b;
+  --color-ink-400: #94a3b8;
 
-  --color-forecast-50: #172554;
-  --color-forecast-500: #3b82f6;
-  --color-forecast-600: #2563eb;
-  --color-forecast-700: #1d4ed8;
+  --color-forecast-50: #eff6ff;
+  --color-forecast-500: #2563eb;
+  --color-forecast-600: #1d4ed8;
+  --color-forecast-700: #1e40af;
 
-  --color-optimize-50: #2e1065;
-  --color-optimize-500: #8b5cf6;
+  --color-optimize-50: #f5f3ff;
+  --color-optimize-500: #7c3aed;
   --color-optimize-700: #6d28d9;
 
-  --color-healthy-50: #052e16;
-  --color-healthy-500: #10b981;
-  --color-healthy-600: #059669;
-  --color-healthy-700: #047857;
+  --color-healthy-50: #ecfdf5;
+  --color-healthy-500: #059669;
+  --color-healthy-600: #047857;
+  --color-healthy-700: #065f46;
 
-  --color-warning-50: #451a03;
-  --color-warning-500: #f59e0b;
-  --color-critical-50: #450a0a;
-  --color-critical-500: #ef4444;
+  --color-warning-50: #fffbeb;
+  --color-warning-500: #d97706;
+  --color-warning-600: #b45309;
+
+  --color-critical-50: #fff1f2;
+  --color-critical-500: #e11d48;
+  --color-critical-600: #be123c;
 }
 
-@media (prefers-color-scheme: light) {
+:root {
+  --color-surface-0: #ffffff;
+  --color-surface-1: #f8fafc;
+  --color-surface-2: #f1f5f9;
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+  --color-ink-900: #0f172a;
+  --color-ink-700: #334155;
+  --color-ink-500: #64748b;
+  --color-ink-400: #94a3b8;
+
+  --color-forecast-50: #eff6ff;
+  --color-forecast-500: #2563eb;
+  --color-forecast-600: #1d4ed8;
+  --color-forecast-700: #1e40af;
+
+  --color-optimize-50: #f5f3ff;
+  --color-optimize-500: #7c3aed;
+  --color-optimize-700: #6d28d9;
+
+  --color-healthy-50: #ecfdf5;
+  --color-healthy-500: #059669;
+  --color-healthy-600: #047857;
+  --color-healthy-700: #065f46;
+
+  --color-warning-50: #fffbeb;
+  --color-warning-500: #d97706;
+  --color-warning-600: #b45309;
+
+  --color-critical-50: #fff1f2;
+  --color-critical-500: #e11d48;
+  --color-critical-600: #be123c;
+}
+
+@media (prefers-color-scheme: dark) {
   :root {
-    --color-surface-0: #ffffff;
-    --color-surface-1: #f8fafc;
-    --color-surface-2: #f1f5f9;
-    --color-border: #e2e8f0;
-    --color-border-strong: #cbd5e1;
-    --color-ink-900: #0f172a;
-    --color-ink-700: #334155;
-    --color-ink-500: #64748b;
-    --color-ink-400: #94a3b8;
+    --color-surface-0: #18181b;
+    --color-surface-1: #09090b;
+    --color-surface-2: #27272a;
+    --color-border: #27272a;
+    --color-border-strong: #3f3f46;
+    --color-ink-900: #f4f4f5;
+    --color-ink-700: #d4d4d8;
+    --color-ink-500: #a1a1aa;
+    --color-ink-400: #71717a;
+
+    --color-forecast-50: #1e293b;
+    --color-forecast-500: #3b82f6;
+    --color-forecast-600: #60a5fa;
+    --color-forecast-700: #93c5fd;
+
+    --color-optimize-50: #2e1065;
+    --color-optimize-500: #8b5cf6;
+    --color-optimize-700: #a78bfa;
+
+    --color-healthy-50: #064e3b;
+    --color-healthy-500: #10b981;
+    --color-healthy-600: #34d399;
+    --color-healthy-700: #6ee7b7;
+
+    --color-warning-50: #451a03;
+    --color-warning-500: #f59e0b;
+    --color-warning-600: #fbbf24;
+
+    --color-critical-50: #4c0519;
+    --color-critical-500: #f43f5e;
+    --color-critical-600: #fb7185;
   }
 }
 
@@ -57,8 +116,8 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: 4px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: 9999px; }
 ::-webkit-scrollbar-track { background: transparent; }
 
 .tabular { font-variant-numeric: tabular-nums; }
@@ -66,15 +125,15 @@ body {
 /* Custom SCION Logo Glow Loader Animation */
 @keyframes scionGlow {
   0%, 100% {
-    filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.5)) drop-shadow(0 0 14px rgba(20, 184, 166, 0.4));
+    filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.4));
     transform: scale(1);
   }
   50% {
-    filter: drop-shadow(0 0 16px rgba(6, 182, 212, 0.9)) drop-shadow(0 0 28px rgba(45, 212, 191, 0.7));
-    transform: scale(1.09);
+    filter: drop-shadow(0 0 14px rgba(37, 99, 235, 0.7));
+    transform: scale(1.05);
   }
 }
 
 .scion-loader-logo {
-  animation: scionGlow 1.8s ease-in-out infinite;
+  animation: scionGlow 2s ease-in-out infinite;
 }

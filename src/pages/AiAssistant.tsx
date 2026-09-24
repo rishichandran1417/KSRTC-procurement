@@ -368,11 +368,11 @@ export default function AiAssistant() {
       {/* RECENT CHATS DRAWER */}
       {showHistoryDrawer ? (
         <div
-          className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-md transition-opacity"
+          className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs transition-opacity"
           onClick={() => setShowHistoryDrawer(false)}
         >
           <div
-            className="h-full w-full max-w-sm overflow-y-auto border-l border-[--color-border] bg-[#121620] text-[--color-ink-900] p-5 space-y-4 shadow-2xl"
+            className="h-full w-full max-w-sm overflow-y-auto border-l border-[--color-border] bg-[--color-surface-0] text-[--color-ink-900] p-5 space-y-4 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-[--color-border] pb-3">

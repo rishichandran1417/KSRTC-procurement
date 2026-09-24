@@ -135,9 +135,9 @@ function SupplierDetailDrawer({ supplier, onClose }: { supplier: Supplier; onClo
   }, [supplier.name]);
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-md" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs" onClick={onClose}>
       <div
-        className="h-full w-full sm:max-w-md overflow-y-auto border-l border-[--color-border-strong] bg-[#121620] p-5 sm:p-6 space-y-4 shadow-2xl text-[--color-ink-900]"
+        className="h-full w-full sm:max-w-md overflow-y-auto border-l border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 space-y-4 shadow-xl text-[--color-ink-900]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between border-b border-[--color-border] pb-3">

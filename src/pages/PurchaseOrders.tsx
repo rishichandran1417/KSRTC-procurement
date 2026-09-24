@@ -124,11 +124,11 @@ export default function PurchaseOrders() {
       {/* PO DETAIL VIEW MODAL */}
       {viewing ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-3 sm:p-4"
           onClick={() => setViewing(null)}
         >
           <div
-            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-[--color-border-strong] bg-[#121620] p-5 sm:p-6 shadow-2xl text-sm space-y-4 text-[--color-ink-900]"
+            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 shadow-xl text-sm space-y-4 text-[--color-ink-900]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}

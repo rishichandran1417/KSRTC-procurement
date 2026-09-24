@@ -1,4 +1,4 @@
-import { Menu, AlertTriangle, ShieldCheck } from "lucide-react";
+import { Menu, ShieldCheck } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { useSidebar } from "../../state/SidebarContext";
 import { useAlerts } from "../../state/AlertsContext";
@@ -15,7 +15,7 @@ export function TopBar({
   showAlerts?: boolean;
 }) {
   const { toggleMobile } = useSidebar();
-  const { totalAlerts, criticalItems, openAlertModal } = useAlerts();
+  const { totalAlerts, openAlertModal } = useAlerts();
   const location = useLocation();
 
   const isRelevantPage =
@@ -50,26 +50,22 @@ export function TopBar({
               {totalAlerts > 0 ? (
                 <button
                   onClick={openAlertModal}
-                  className="group flex items-center gap-2 rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-500/20 active:scale-98 transition-all shadow-xs cursor-pointer"
-                  title={`${totalAlerts} items below safety thresholds (${criticalItems.length} Critical stockout risk). Click to review & reorder.`}
+                  className="flex items-center gap-2 rounded-lg border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-300 hover:bg-amber-500/15 transition-colors cursor-pointer"
+                  title={`${totalAlerts} items below safety thresholds. Click to review.`}
                 >
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
-                  </span>
-                  <AlertTriangle size={15} className="text-red-500 shrink-0" />
-                  <span className="hidden sm:inline">Low Stock Alert</span>
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-bold text-white shadow-xs">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                  <span className="hidden sm:inline">Low Stock</span>
+                  <span className="flex h-4 min-w-4 items-center justify-center rounded-md bg-amber-500/20 px-1 text-[10px] font-semibold text-amber-800 dark:text-amber-200">
                     {totalAlerts}
                   </span>
                 </button>
               ) : (
                 <button
                   onClick={openAlertModal}
-                  className="flex items-center gap-1.5 rounded-full border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-xs font-medium text-[--color-healthy-500] hover:bg-[--color-surface-2] transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 rounded-lg border border-[--color-border] bg-[--color-surface-1] px-2.5 py-1 text-xs font-medium text-[--color-healthy-600] hover:bg-[--color-surface-2] transition-colors cursor-pointer"
                   title="All inventory stock levels are healthy"
                 >
-                  <ShieldCheck size={14} className="text-[--color-healthy-500]" />
+                  <ShieldCheck size={14} />
                   <span className="hidden sm:inline">Stock Healthy</span>
                 </button>
               )}
