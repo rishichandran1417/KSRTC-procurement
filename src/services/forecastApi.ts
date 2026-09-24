@@ -1,4 +1,4 @@
-import { apiClient, isDemoMode, ENDPOINTS, simulateLatency } from "./apiClient";
+import { apiClient, ENDPOINTS, simulateLatency } from "./apiClient";
 import type { ForecastRequest, ForecastResult } from "../types";
 
 /**
@@ -6,20 +6,19 @@ import type { ForecastRequest, ForecastResult } from "../types";
  * Never computes the forecast in the frontend.
  */
 export async function getForecast(req: ForecastRequest): Promise<ForecastResult> {
-  if (isDemoMode() || !ENDPOINTS.forecast) {
-    return simulateLatency(
-      {
-        modelName: "ML Forecasting Engine",
-        mae: 0,
-        rmse: 0,
-        mape: 0,
-        bias: 0,
-        horizon: req.horizon,
-        series: [],
-      },
-      300
-    );
+  if (ENDPOINTS.forecast) {
+    return apiClient.post<ForecastResult>(`${ENDPOINTS.forecast}/forecast`, req);
   }
-  return apiClient.post<ForecastResult>(`${ENDPOINTS.forecast}/forecast`, req);
+  return simulateLatency(
+    {
+      modelName: "ML Forecasting Engine",
+      mae: 0,
+      rmse: 0,
+      mape: 0,
+      bias: 0,
+      horizon: req.horizon,
+      series: [],
+    },
+    200
+  );
 }
-

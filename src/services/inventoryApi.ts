@@ -1,4 +1,4 @@
-import { apiClient, isDemoMode, ENDPOINTS, simulateLatency } from "./apiClient";
+import { apiClient, ENDPOINTS, simulateLatency } from "./apiClient";
 import { SINGLE_DEPOT } from "../constants";
 import type { InventoryItem, AddInventoryPayload, UpdateInventoryPayload, ConsumptionRecord, PriceRecord } from "../types";
 
@@ -64,10 +64,14 @@ export function clearInventory(): InventoryItem[] {
 }
 
 export async function getInventory(): Promise<InventoryItem[]> {
-  if (isDemoMode() || !ENDPOINTS.base) {
-    return simulateLatency([...activeInventory], 300);
+  if (ENDPOINTS.base) {
+    try {
+      return await apiClient.get<InventoryItem[]>(`${ENDPOINTS.base}/inventory`);
+    } catch (err) {
+      console.warn("API call to /inventory failed, using cached inventory:", err);
+    }
   }
-  return apiClient.get<InventoryItem[]>(`${ENDPOINTS.base}/inventory`);
+  return simulateLatency([...activeInventory], 100);
 }
 
 export async function addInventoryItem(payload: AddInventoryPayload): Promise<InventoryItem> {
@@ -96,54 +100,72 @@ export async function addInventoryItem(payload: AddInventoryPayload): Promise<In
     notes: payload.notes || "Added manually",
   };
 
-  if (isDemoMode() || !ENDPOINTS.base) {
-    activeInventory.unshift(newItem);
-    saveStoredInventory(activeInventory);
-    return simulateLatency(newItem, 400);
+  if (ENDPOINTS.base) {
+    try {
+      return await apiClient.post<InventoryItem>(`${ENDPOINTS.base}/inventory`, payload);
+    } catch (err) {
+      console.warn("API call to create inventory item failed, saving locally:", err);
+    }
   }
-  return apiClient.post<InventoryItem>(`${ENDPOINTS.base}/inventory`, payload);
+
+  activeInventory.unshift(newItem);
+  saveStoredInventory(activeInventory);
+  return simulateLatency(newItem, 100);
 }
 
 export async function updateInventoryItem(id: string, payload: UpdateInventoryPayload): Promise<InventoryItem> {
-  if (isDemoMode() || !ENDPOINTS.base) {
-    const idx = activeInventory.findIndex((i) => i.id === id);
-    if (idx !== -1) {
-      const existing = activeInventory[idx];
-      const current = payload.currentStock ?? existing.currentStock;
-      const safety = payload.safetyStock ?? existing.safetyStock;
-      const reorder = payload.reorderPoint ?? existing.reorderPoint;
-      let status: InventoryItem["status"] = "Healthy";
-      if (current <= safety) status = "Critical";
-      else if (current <= reorder) status = "Warning";
-
-      const updated: InventoryItem = {
-        ...existing,
-        ...payload,
-        currentStock: current,
-        safetyStock: safety,
-        reorderPoint: reorder,
-        status,
-        stockoutRisk: status === "Critical" ? "High" : status === "Warning" ? "Medium" : "Low",
-        daysOfSupply: Math.round((current / Math.max(existing.forecastDemand, 1)) * 30),
-        lastUpdated: new Date().toISOString().slice(0, 10),
-      };
-      activeInventory[idx] = updated;
-      saveStoredInventory(activeInventory);
-      return simulateLatency(updated, 300);
+  if (ENDPOINTS.base) {
+    try {
+      return await apiClient.put<InventoryItem>(`${ENDPOINTS.base}/inventory/${id}`, payload);
+    } catch (err) {
+      console.warn("API call to update inventory item failed, saving locally:", err);
     }
   }
-  return apiClient.put<InventoryItem>(`${ENDPOINTS.base}/inventory/${id}`, payload);
+
+  const idx = activeInventory.findIndex((i) => i.id === id);
+  if (idx !== -1) {
+    const existing = activeInventory[idx];
+    const current = payload.currentStock ?? existing.currentStock;
+    const safety = payload.safetyStock ?? existing.safetyStock;
+    const reorder = payload.reorderPoint ?? existing.reorderPoint;
+    let status: InventoryItem["status"] = "Healthy";
+    if (current <= safety) status = "Critical";
+    else if (current <= reorder) status = "Warning";
+
+    const updated: InventoryItem = {
+      ...existing,
+      ...payload,
+      currentStock: current,
+      safetyStock: safety,
+      reorderPoint: reorder,
+      status,
+      stockoutRisk: status === "Critical" ? "High" : status === "Warning" ? "Medium" : "Low",
+      daysOfSupply: Math.round((current / Math.max(existing.forecastDemand, 1)) * 30),
+      lastUpdated: new Date().toISOString().slice(0, 10),
+    };
+    activeInventory[idx] = updated;
+    saveStoredInventory(activeInventory);
+    return simulateLatency(updated, 100);
+  }
+
+  throw new Error(`Inventory item ${id} not found`);
 }
 
 export async function adjustInventoryQuantity(id: string, delta: number): Promise<InventoryItem> {
-  if (isDemoMode() || !ENDPOINTS.base) {
-    const item = activeInventory.find((i) => i.id === id);
-    if (item) {
-      const newQty = Math.max(0, item.currentStock + delta);
-      return updateInventoryItem(id, { currentStock: newQty });
+  if (ENDPOINTS.base) {
+    try {
+      return await apiClient.post<InventoryItem>(`${ENDPOINTS.base}/inventory/${id}/adjust`, { delta });
+    } catch (err) {
+      console.warn("API call to adjust inventory quantity failed, updating locally:", err);
     }
   }
-  return apiClient.post<InventoryItem>(`${ENDPOINTS.base}/inventory/${id}/adjust`, { delta });
+
+  const item = activeInventory.find((i) => i.id === id);
+  if (item) {
+    const newQty = Math.max(0, item.currentStock + delta);
+    return updateInventoryItem(id, { currentStock: newQty });
+  }
+  throw new Error(`Inventory item ${id} not found`);
 }
 
 export async function receiveItemStockIntoInventory(partName: string, quantityReceived: number): Promise<void> {
@@ -163,15 +185,23 @@ export async function receiveItemStockIntoInventory(partName: string, quantityRe
 }
 
 export async function getConsumptionHistory(partId: string): Promise<ConsumptionRecord[]> {
-  if (isDemoMode() || !ENDPOINTS.base) {
-    return simulateLatency([], 200);
+  if (ENDPOINTS.base) {
+    try {
+      return await apiClient.get<ConsumptionRecord[]>(`${ENDPOINTS.base}/inventory/${partId}/consumption`);
+    } catch {
+      return simulateLatency([], 100);
+    }
   }
-  return apiClient.get<ConsumptionRecord[]>(`${ENDPOINTS.base}/inventory/${partId}/consumption`);
+  return simulateLatency([], 100);
 }
 
 export async function getPriceHistory(partIdOrName: string): Promise<PriceRecord[]> {
-  if (isDemoMode() || !ENDPOINTS.base) {
-    return simulateLatency([], 200);
+  if (ENDPOINTS.base) {
+    try {
+      return await apiClient.get<PriceRecord[]>(`${ENDPOINTS.base}/inventory/${partIdOrName}/prices`);
+    } catch {
+      return simulateLatency([], 100);
+    }
   }
-  return apiClient.get<PriceRecord[]>(`${ENDPOINTS.base}/inventory/${partIdOrName}/prices`);
+  return simulateLatency([], 100);
 }

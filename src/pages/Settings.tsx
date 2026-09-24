@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { TopBar } from "../components/layout/TopBar";
 import {
-  isDemoMode,
-  setDemoMode,
   getEndpoint,
   setEndpoint,
   testEndpoint,
@@ -37,10 +35,10 @@ const INTEGRATIONS: IntegrationConfig[] = [
     id: "database",
     endpointKey: "base",
     name: "Database (PostgreSQL / REST API)",
-    description: "Backend service exposing endpoints for inventory, purchase orders, and supplier catalogs.",
+    description: "Central source-of-truth backend exposing endpoints for inventory, purchase orders, and supplier catalogs.",
     icon: Database,
-    probePath: "/inventory",
-    defaultPlaceholder: "https://your-api.com/api/v1",
+    probePath: "/health",
+    defaultPlaceholder: "https://database-5oe4.onrender.com/api/v1/db",
   },
   {
     id: "forecast",
@@ -72,7 +70,7 @@ const INTEGRATIONS: IntegrationConfig[] = [
   {
     id: "scion",
     name: "KSRTC SCION Intelligence Engine",
-    description: "Conversational AI Copilot processing user supply chain queries via Gemini 2.5 API.",
+    description: "Conversational AI Copilot processing user supply chain queries via Gemini API.",
     icon: Sparkles,
     probePath: "",
     defaultPlaceholder: "/api/chat",
@@ -80,66 +78,19 @@ const INTEGRATIONS: IntegrationConfig[] = [
 ];
 
 export default function Settings() {
-  const [demoActive, setDemoActive] = useState<boolean>(isDemoMode());
   const [showApiDoc, setShowApiDoc] = useState<boolean>(false);
-
-  useEffect(() => {
-    const handleConfigChange = () => {
-      setDemoActive(isDemoMode());
-    };
-    window.addEventListener("ksrtc_config_changed", handleConfigChange);
-    return () => window.removeEventListener("ksrtc_config_changed", handleConfigChange);
-  }, []);
-
-  const toggleDemoMode = () => {
-    const next = !demoActive;
-    setDemoMode(next);
-    setDemoActive(next);
-  };
 
   return (
     <div>
       <TopBar title="Settings → System Integrations" subtitle="Configure and monitor connection status for external services" />
 
       <div className="p-4 sm:p-6 space-y-5 max-w-6xl">
-        {/* Environment Mode Banner */}
-        <div className={`rounded-lg border p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-colors ${
-          demoActive
-            ? "border-[--color-forecast-500]/40 bg-[--color-forecast-500]/10"
-            : "border-[--color-healthy-500]/40 bg-[--color-healthy-500]/10"
-        }`}>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className={`h-2.5 w-2.5 rounded-full ${demoActive ? "bg-amber-400" : "bg-emerald-400 animate-pulse"}`} />
-              <p className="font-bold text-sm text-[--color-ink-900]">
-                {demoActive ? "Demo Mode Active (Simulated Mock Data)" : "Live Production Mode Active (Real Endpoints)"}
-              </p>
-            </div>
-            <p className="mt-1 text-xs text-[--color-ink-600] max-w-2xl leading-relaxed">
-              {demoActive
-                ? "The application is currently using in-memory mock data so you can safely demo workflows. Toggle to Live Mode to make the frontend call your real hosted API endpoints."
-                : "The application is sending all data requests to your configured Service Endpoint URLs. If an endpoint is unreachable, please check CORS and HTTPS settings."}
-            </p>
-          </div>
-
-          <button
-            onClick={toggleDemoMode}
-            className={`shrink-0 px-4 py-2 rounded-md font-semibold text-xs border transition-all shadow-sm ${
-              demoActive
-                ? "bg-[--color-forecast-600] text-white hover:bg-[--color-forecast-700] border-transparent"
-                : "bg-[--color-surface-0] text-[--color-ink-800] hover:bg-[--color-surface-1] border-[--color-border]"
-            }`}
-          >
-            {demoActive ? "Switch to Live Backend Mode" : "Switch to Demo Mode"}
-          </button>
-        </div>
-
         {/* API Specification Helper Drawer */}
         <div className="rounded-lg border border-[--color-border] bg-[--color-surface-0] p-4 text-xs">
           <div className="flex items-center justify-between">
             <button
               onClick={() => setShowApiDoc(!showApiDoc)}
-              className="flex items-center gap-2 font-semibold text-[--color-ink-800] hover:text-[--color-forecast-600]"
+              className="flex items-center gap-2 font-semibold text-[--color-ink-800] hover:text-[--color-forecast-600] cursor-pointer"
             >
               <HelpCircle size={15} />
               <span>How your hosted database API should be structured {showApiDoc ? "▲" : "▼"}</span>
@@ -150,12 +101,13 @@ export default function Settings() {
           {showApiDoc && (
             <div className="mt-3 pt-3 border-t border-[--color-border] space-y-3 text-[--color-ink-600] leading-relaxed">
               <p>
-                <strong>Important:</strong> The frontend cannot connect to a raw PostgreSQL connection string (like <code className="bg-[--color-surface-2] px-1 py-0.5 rounded">postgresql://...:5432</code>) directly from the browser. Your hosted database must be wrapped in a REST API (e.g. Node, Python/FastAPI) that exposes HTTP endpoints.
+                <strong>Central Source of Truth:</strong> The frontend connects directly to your hosted FastAPI backend at <code className="bg-[--color-surface-2] px-1 py-0.5 rounded text-[--color-ink-900]">/api/v1/db</code>. All inventory, suppliers, and purchase orders are persisted in PostgreSQL.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
                 <div className="bg-[--color-surface-1] p-3 rounded border border-[--color-border]">
                   <p className="font-bold text-[--color-ink-900] mb-1">Expected Endpoints:</p>
                   <ul className="list-disc pl-4 space-y-1 font-mono text-[11px]">
+                    <li><strong className="text-emerald-500">GET</strong> /health - verifies database connectivity</li>
                     <li><strong className="text-emerald-500">GET</strong> /inventory - returns item list</li>
                     <li><strong className="text-blue-500">POST</strong> /inventory - creates new item</li>
                     <li><strong className="text-emerald-500">GET</strong> /purchase-orders - returns PO list</li>
@@ -166,8 +118,8 @@ export default function Settings() {
                 <div className="bg-[--color-surface-1] p-3 rounded border border-[--color-border]">
                   <p className="font-bold text-[--color-ink-900] mb-1">Critical Setup for Hosted APIs:</p>
                   <ul className="list-disc pl-4 space-y-1 text-[11px]">
-                    <li><strong>HTTPS Required:</strong> On Vercel, requests to <code className="text-red-400">http://</code> are blocked by browsers (Mixed Content). Use an <code className="text-emerald-400">https://</code> URL.</li>
-                    <li><strong>Enable CORS:</strong> Allow header <code className="text-amber-400">Access-Control-Allow-Origin: *</code> (or <code className="text-amber-400">https://ksrtc-procurement.vercel.app</code>).</li>
+                    <li><strong>HTTPS Required:</strong> Browsers block unencrypted <code className="text-red-400">http://</code> endpoints (Mixed Content). Always use an <code className="text-emerald-400">https://</code> URL.</li>
+                    <li><strong>Enable CORS:</strong> Allow origin <code className="text-amber-400">Access-Control-Allow-Origin: *</code> on your FastAPI backend.</li>
                   </ul>
                 </div>
               </div>
@@ -178,7 +130,7 @@ export default function Settings() {
         {/* Integration Cards */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {INTEGRATIONS.map((item) => (
-            <IntegrationCard key={item.id} integration={item} demoActive={demoActive} />
+            <IntegrationCard key={item.id} integration={item} />
           ))}
         </div>
       </div>
@@ -188,10 +140,8 @@ export default function Settings() {
 
 function IntegrationCard({
   integration,
-  demoActive,
 }: {
   integration: IntegrationConfig;
-  demoActive: boolean;
 }) {
   const initialUrl = integration.endpointKey ? getEndpoint(integration.endpointKey) : "";
   const [url, setUrl] = useState<string>(initialUrl);
@@ -237,14 +187,14 @@ function IntegrationCard({
   };
 
   const IconComp = integration.icon;
-  const isConnected = testResult ? testResult.ok : Boolean(url.trim());
+  const isConfigured = Boolean(url.trim());
 
   return (
     <div className="rounded-lg border border-[--color-border] bg-[--color-surface-0] p-4 sm:p-5 flex flex-col justify-between space-y-4 shadow-xs">
       <div>
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
           <div className="flex items-start gap-2.5">
-            <div className="rounded-md p-2.5 bg-[--color-surface-1] text-[--color-forecast-600] shrink-0 mt-0.5">
+            <div className="rounded-md p-2.5 bg-[--color-surface-1] text-blue-500 shrink-0 mt-0.5">
               <IconComp size={20} />
             </div>
             <div>
@@ -255,19 +205,33 @@ function IntegrationCard({
 
           <div
             className={`self-start shrink-0 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
-              demoActive
-                ? "bg-amber-500/10 text-amber-500"
-                : isConnected
-                ? "bg-emerald-500/10 text-emerald-500"
-                : "bg-red-500/10 text-red-500"
+              testResult
+                ? testResult.ok
+                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  : "bg-red-500/10 text-red-600 dark:text-red-400"
+                : isConfigured
+                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                : "bg-zinc-500/10 text-zinc-500 dark:text-zinc-400"
             }`}
           >
             <span
               className={`h-2 w-2 rounded-full ${
-                demoActive ? "bg-amber-400" : isConnected ? "bg-emerald-400" : "bg-red-400"
+                testResult
+                  ? testResult.ok
+                    ? "bg-emerald-500"
+                    : "bg-red-500"
+                  : isConfigured
+                  ? "bg-blue-500"
+                  : "bg-zinc-400"
               }`}
             />
-            {demoActive ? "Demo Mock" : isConnected ? "Connected" : "Disconnected"}
+            {testResult
+              ? testResult.ok
+                ? `Connected (${testResult.latencyMs}ms)`
+                : "Connection Error"
+              : isConfigured
+              ? "Configured"
+              : "Not Configured"}
           </div>
         </div>
 
@@ -276,7 +240,7 @@ function IntegrationCard({
             <label className="text-xs font-semibold text-[--color-ink-700]">Service Endpoint URL</label>
             {integration.probePath && (
               <span className="text-[10px] text-[--color-ink-400] font-mono">
-                Probe test: {integration.probePath}
+                Probe: {integration.probePath}
               </span>
             )}
           </div>
@@ -291,13 +255,13 @@ function IntegrationCard({
                 if (e.key === "Enter") handleSave();
               }}
               placeholder={integration.defaultPlaceholder}
-              className="flex-1 rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-xs font-mono text-[--color-ink-900] focus:outline-hidden focus:border-[--color-forecast-500]"
+              className="flex-1 rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-xs font-mono text-[--color-ink-900] focus:outline-hidden focus:border-blue-500"
             />
             {integration.endpointKey && (
               <button
                 onClick={handleSave}
                 title="Save URL to browser storage"
-                className={`flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium border transition-colors shrink-0 ${
+                className={`flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium border transition-colors shrink-0 cursor-pointer ${
                   isSaved
                     ? "bg-emerald-600 text-white border-emerald-600"
                     : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-700] hover:bg-[--color-surface-2]"
@@ -315,8 +279,8 @@ function IntegrationCard({
           <div
             className={`mt-3 rounded p-2.5 text-xs flex items-start gap-2 border ${
               testResult.ok
-                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700"
-                : "bg-red-500/10 border-red-500/20 text-red-700"
+                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-300"
+                : "bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-300"
             }`}
           >
             {testResult.ok ? (
@@ -339,7 +303,7 @@ function IntegrationCard({
         <button
           onClick={handleTestConnection}
           disabled={testing}
-          className="flex items-center gap-1.5 rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-xs font-medium text-[--color-ink-700] hover:bg-[--color-surface-2] disabled:opacity-50 w-full sm:w-auto justify-center transition-colors"
+          className="flex items-center gap-1.5 rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-xs font-medium text-[--color-ink-700] hover:bg-[--color-surface-2] disabled:opacity-50 w-full sm:w-auto justify-center transition-colors cursor-pointer"
         >
           <RefreshCw size={12} className={testing ? "animate-spin" : ""} />
           {testing ? "Testing Endpoint…" : "Test Connection"}
@@ -348,4 +312,3 @@ function IntegrationCard({
     </div>
   );
 }
-

@@ -1,4 +1,4 @@
-import { apiClient, isDemoMode, ENDPOINTS, simulateLatency } from "./apiClient";
+import { apiClient, ENDPOINTS, simulateLatency } from "./apiClient";
 import type { ProcurementRequest, ProcurementResult } from "../types";
 
 /**
@@ -6,17 +6,16 @@ import type { ProcurementRequest, ProcurementResult } from "../types";
  * Never runs optimization logic in the frontend.
  */
 export async function runOptimization(req: ProcurementRequest): Promise<ProcurementResult> {
-  if (isDemoMode() || !ENDPOINTS.optimization) {
-    return simulateLatency(
-      {
-        budget: req.budget,
-        recommended_spend: 0,
-        remaining_budget: req.budget,
-        items: [],
-      },
-      300
-    );
+  if (ENDPOINTS.optimization) {
+    return apiClient.post<ProcurementResult>(`${ENDPOINTS.optimization}/optimize`, req);
   }
-  return apiClient.post<ProcurementResult>(`${ENDPOINTS.optimization}/optimize`, req);
+  return simulateLatency(
+    {
+      budget: req.budget,
+      recommended_spend: 0,
+      remaining_budget: req.budget,
+      items: [],
+    },
+    200
+  );
 }
-

@@ -1,4 +1,4 @@
-import { apiClient, isDemoMode, ENDPOINTS, simulateLatency } from "./apiClient";
+import { apiClient, ENDPOINTS, simulateLatency } from "./apiClient";
 import { receiveItemStockIntoInventory } from "./inventoryApi";
 import type { PurchaseOrder, PoStatus } from "../types";
 
@@ -38,41 +38,55 @@ function saveStoredOrders(orders: PurchaseOrder[]): void {
 let activeOrders: PurchaseOrder[] = loadStoredOrders();
 
 export async function getPurchaseOrders(): Promise<PurchaseOrder[]> {
-  if (isDemoMode() || !ENDPOINTS.base) {
-    return simulateLatency([...activeOrders], 300);
+  if (ENDPOINTS.base) {
+    try {
+      return await apiClient.get<PurchaseOrder[]>(`${ENDPOINTS.base}/purchase-orders`);
+    } catch (err) {
+      console.warn("API call to /purchase-orders failed, using cached orders:", err);
+    }
   }
-  return apiClient.get<PurchaseOrder[]>(`${ENDPOINTS.base}/purchase-orders`);
+  return simulateLatency([...activeOrders], 100);
 }
 
 export async function createPurchaseOrder(po: PurchaseOrder): Promise<PurchaseOrder> {
-  if (isDemoMode() || !ENDPOINTS.base) {
-    activeOrders.unshift(po);
-    saveStoredOrders(activeOrders);
-    return simulateLatency(po, 400);
+  if (ENDPOINTS.base) {
+    try {
+      return await apiClient.post<PurchaseOrder>(`${ENDPOINTS.base}/purchase-orders`, po);
+    } catch (err) {
+      console.warn("API call to create purchase order failed, saving locally:", err);
+    }
   }
-  return apiClient.post<PurchaseOrder>(`${ENDPOINTS.base}/purchase-orders`, po);
+  activeOrders.unshift(po);
+  saveStoredOrders(activeOrders);
+  return simulateLatency(po, 100);
 }
 
 export async function updatePoStatus(poNumber: string, status: PoStatus): Promise<PurchaseOrder> {
-  if (isDemoMode() || !ENDPOINTS.base) {
-    const idx = activeOrders.findIndex((p) => p.poNumber === poNumber);
-    if (idx !== -1) {
-      const existing = activeOrders[idx];
-      const updated = { ...existing, status };
-      activeOrders[idx] = updated;
-      saveStoredOrders(activeOrders);
-
-      // When PO is received, update inventory stock
-      if (status === "Received") {
-        for (const line of existing.lines) {
-          await receiveItemStockIntoInventory(line.part, line.quantity);
-        }
-      }
-
-      return simulateLatency(updated, 300);
+  if (ENDPOINTS.base) {
+    try {
+      const res = await apiClient.put<PurchaseOrder>(`${ENDPOINTS.base}/purchase-orders/${poNumber}/status`, { status });
+      return res;
+    } catch (err) {
+      console.warn("API call to update purchase order status failed, saving locally:", err);
     }
   }
-  return apiClient.put<PurchaseOrder>(`${ENDPOINTS.base}/purchase-orders/${poNumber}/status`, { status });
+  const idx = activeOrders.findIndex((p) => p.poNumber === poNumber);
+  if (idx !== -1) {
+    const existing = activeOrders[idx];
+    const updated = { ...existing, status };
+    activeOrders[idx] = updated;
+    saveStoredOrders(activeOrders);
+
+    // When PO is received, update inventory stock
+    if (status === "Received") {
+      for (const line of existing.lines) {
+        await receiveItemStockIntoInventory(line.part, line.quantity);
+      }
+    }
+
+    return simulateLatency(updated, 100);
+  }
+  throw new Error(`Order ${poNumber} not found`);
 }
 
 export async function receivePurchaseOrder(poNumber: string): Promise<PurchaseOrder> {

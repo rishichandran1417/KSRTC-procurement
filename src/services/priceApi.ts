@@ -1,10 +1,13 @@
-import { apiClient, isDemoMode, ENDPOINTS, simulateLatency } from "./apiClient";
+import { apiClient, ENDPOINTS, simulateLatency } from "./apiClient";
 import type { PriceRecord } from "../types";
 
 export async function getPriceHistoryForPart(part: string): Promise<PriceRecord[]> {
-  if (isDemoMode() || !ENDPOINTS.base) {
-    return simulateLatency([], 300);
+  if (ENDPOINTS.base) {
+    try {
+      return await apiClient.get<PriceRecord[]>(`${ENDPOINTS.base}/prices?part=${encodeURIComponent(part)}`);
+    } catch {
+      return simulateLatency([], 100);
+    }
   }
-  return apiClient.get<PriceRecord[]>(`${ENDPOINTS.base}/prices?part=${encodeURIComponent(part)}`);
+  return simulateLatency([], 100);
 }
-

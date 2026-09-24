@@ -1,4 +1,4 @@
-import { apiClient, isDemoMode, ENDPOINTS } from "./apiClient";
+import { apiClient, ENDPOINTS } from "./apiClient";
 import type { ChatMessage } from "../types";
 import { getInventory } from "./inventoryApi";
 import { getPurchaseOrders } from "./purchaseOrderApi";
@@ -56,8 +56,8 @@ Operational Context:
       text: cleanedText || rawText,
     };
   } catch (err: any) {
-    // 2. Direct backend REST integration fallback if external backend URL is provided and not demo mode
-    if (!isDemoMode() && ENDPOINTS.base) {
+    // 2. Direct backend REST integration fallback if external backend URL is provided
+    if (ENDPOINTS.base) {
       try {
         return await apiClient.post<ChatMessage>(`${ENDPOINTS.base}/chat`, { message: userMessageText });
       } catch (backendErr: any) {

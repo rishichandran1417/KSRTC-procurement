@@ -3,22 +3,21 @@
 
 export type EndpointKey = "base" | "forecast" | "optimization" | "powerbi";
 
-export function isDemoMode(): boolean {
-  if (typeof window !== "undefined") {
-    const override = localStorage.getItem("ksrtc_demo_mode");
-    if (override !== null) {
-      return override === "true";
-    }
+// Clean up any legacy demo mode storage
+if (typeof window !== "undefined") {
+  try {
+    localStorage.removeItem("ksrtc_demo_mode");
+  } catch {
+    // Ignore localStorage access issues
   }
-  return String(import.meta.env.VITE_DEMO_MODE ?? "true") === "true";
 }
 
-export function setDemoMode(enabled: boolean): void {
-  if (typeof window !== "undefined") {
-    localStorage.setItem("ksrtc_demo_mode", String(enabled));
-    window.dispatchEvent(new Event("ksrtc_config_changed"));
-  }
-}
+const DEFAULT_ENDPOINTS: Record<EndpointKey, string> = {
+  base: "https://database-5oe4.onrender.com/api/v1/db",
+  forecast: "",
+  optimization: "",
+  powerbi: "",
+};
 
 export function getEndpoint(key: EndpointKey): string {
   if (typeof window !== "undefined") {
@@ -33,7 +32,8 @@ export function getEndpoint(key: EndpointKey): string {
     optimization: import.meta.env.VITE_OPTIMIZATION_API_URL,
     powerbi: import.meta.env.VITE_POWERBI_EMBED_URL,
   };
-  return (envMap[key] || "").trim().replace(/\/+$/, "");
+  const val = envMap[key] || DEFAULT_ENDPOINTS[key] || "";
+  return val.trim().replace(/\/+$/, "");
 }
 
 export function setEndpoint(key: EndpointKey, url: string): void {
@@ -57,9 +57,6 @@ export const ENDPOINTS = {
     return getEndpoint("powerbi");
   },
 };
-
-// Deprecated static export for backward compatibility where needed
-export const DEMO_MODE = isDemoMode();
 
 export class ApiError extends Error {
   status?: number;
@@ -98,7 +95,7 @@ export const apiClient = {
     request<T>(url, { method: "PUT", body: JSON.stringify(body) }),
 };
 
-/** Simulates realistic network latency for mock/demo responses. */
+/** Simulates network latency when needed */
 export function simulateLatency<T>(value: T, ms = 500): Promise<T> {
   return new Promise((resolve) => setTimeout(() => resolve(value), ms));
 }
@@ -172,4 +169,3 @@ export async function testEndpoint(rawUrl: string, probePath = ""): Promise<Conn
     };
   }
 }
-

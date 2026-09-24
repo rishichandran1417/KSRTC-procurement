@@ -1,4 +1,4 @@
-import { apiClient, isDemoMode, ENDPOINTS, simulateLatency } from "./apiClient";
+import { apiClient, ENDPOINTS, simulateLatency } from "./apiClient";
 import type { Supplier } from "../types";
 
 const SUPPLIER_STORAGE_KEY = "ksrtc_suppliers_clean_v1";
@@ -30,9 +30,12 @@ function loadStoredSuppliers(): Supplier[] {
 let activeSuppliers: Supplier[] = loadStoredSuppliers();
 
 export async function getSuppliers(): Promise<Supplier[]> {
-  if (isDemoMode() || !ENDPOINTS.base) {
-    return simulateLatency(activeSuppliers, 300);
+  if (ENDPOINTS.base) {
+    try {
+      return await apiClient.get<Supplier[]>(`${ENDPOINTS.base}/suppliers`);
+    } catch (err) {
+      console.warn("API call to /suppliers failed, using cached suppliers:", err);
+    }
   }
-  return apiClient.get<Supplier[]>(`${ENDPOINTS.base}/suppliers`);
+  return simulateLatency(activeSuppliers, 100);
 }
-
