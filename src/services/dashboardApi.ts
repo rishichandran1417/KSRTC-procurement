@@ -1,10 +1,10 @@
-import { DEMO_MODE, ENDPOINTS, apiClient, simulateLatency } from "./apiClient";
+import { isDemoMode, ENDPOINTS, apiClient, simulateLatency } from "./apiClient";
 import { getInventory } from "./inventoryApi";
 import { getPurchaseOrders } from "./purchaseOrderApi";
 import type { DashboardKpis, GlobalFilters } from "../types";
 
 export async function getDashboardKpis(_filters: GlobalFilters): Promise<DashboardKpis> {
-  if (DEMO_MODE || !ENDPOINTS.base) {
+  if (isDemoMode() || !ENDPOINTS.base) {
     const inventory = await getInventory();
     const orders = await getPurchaseOrders();
 
@@ -34,3 +34,4 @@ export async function getDashboardKpis(_filters: GlobalFilters): Promise<Dashboa
   }
   return apiClient.post<DashboardKpis>(`${ENDPOINTS.base}/dashboard/kpis`, _filters);
 }
+

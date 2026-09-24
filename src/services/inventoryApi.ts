@@ -1,4 +1,4 @@
-import { apiClient, DEMO_MODE, ENDPOINTS, simulateLatency } from "./apiClient";
+import { apiClient, isDemoMode, ENDPOINTS, simulateLatency } from "./apiClient";
 import { SINGLE_DEPOT } from "../constants";
 import type { InventoryItem, AddInventoryPayload, UpdateInventoryPayload, ConsumptionRecord, PriceRecord } from "../types";
 
@@ -64,7 +64,7 @@ export function clearInventory(): InventoryItem[] {
 }
 
 export async function getInventory(): Promise<InventoryItem[]> {
-  if (DEMO_MODE || !ENDPOINTS.base) {
+  if (isDemoMode() || !ENDPOINTS.base) {
     return simulateLatency([...activeInventory], 300);
   }
   return apiClient.get<InventoryItem[]>(`${ENDPOINTS.base}/inventory`);
@@ -96,7 +96,7 @@ export async function addInventoryItem(payload: AddInventoryPayload): Promise<In
     notes: payload.notes || "Added manually",
   };
 
-  if (DEMO_MODE || !ENDPOINTS.base) {
+  if (isDemoMode() || !ENDPOINTS.base) {
     activeInventory.unshift(newItem);
     saveStoredInventory(activeInventory);
     return simulateLatency(newItem, 400);
@@ -105,7 +105,7 @@ export async function addInventoryItem(payload: AddInventoryPayload): Promise<In
 }
 
 export async function updateInventoryItem(id: string, payload: UpdateInventoryPayload): Promise<InventoryItem> {
-  if (DEMO_MODE || !ENDPOINTS.base) {
+  if (isDemoMode() || !ENDPOINTS.base) {
     const idx = activeInventory.findIndex((i) => i.id === id);
     if (idx !== -1) {
       const existing = activeInventory[idx];
@@ -136,7 +136,7 @@ export async function updateInventoryItem(id: string, payload: UpdateInventoryPa
 }
 
 export async function adjustInventoryQuantity(id: string, delta: number): Promise<InventoryItem> {
-  if (DEMO_MODE || !ENDPOINTS.base) {
+  if (isDemoMode() || !ENDPOINTS.base) {
     const item = activeInventory.find((i) => i.id === id);
     if (item) {
       const newQty = Math.max(0, item.currentStock + delta);
@@ -163,14 +163,14 @@ export async function receiveItemStockIntoInventory(partName: string, quantityRe
 }
 
 export async function getConsumptionHistory(partId: string): Promise<ConsumptionRecord[]> {
-  if (DEMO_MODE || !ENDPOINTS.base) {
+  if (isDemoMode() || !ENDPOINTS.base) {
     return simulateLatency([], 200);
   }
   return apiClient.get<ConsumptionRecord[]>(`${ENDPOINTS.base}/inventory/${partId}/consumption`);
 }
 
 export async function getPriceHistory(partIdOrName: string): Promise<PriceRecord[]> {
-  if (DEMO_MODE || !ENDPOINTS.base) {
+  if (isDemoMode() || !ENDPOINTS.base) {
     return simulateLatency([], 200);
   }
   return apiClient.get<PriceRecord[]>(`${ENDPOINTS.base}/inventory/${partIdOrName}/prices`);

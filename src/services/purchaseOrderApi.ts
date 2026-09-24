@@ -1,4 +1,4 @@
-import { apiClient, DEMO_MODE, ENDPOINTS, simulateLatency } from "./apiClient";
+import { apiClient, isDemoMode, ENDPOINTS, simulateLatency } from "./apiClient";
 import { receiveItemStockIntoInventory } from "./inventoryApi";
 import type { PurchaseOrder, PoStatus } from "../types";
 
@@ -38,14 +38,14 @@ function saveStoredOrders(orders: PurchaseOrder[]): void {
 let activeOrders: PurchaseOrder[] = loadStoredOrders();
 
 export async function getPurchaseOrders(): Promise<PurchaseOrder[]> {
-  if (DEMO_MODE || !ENDPOINTS.base) {
+  if (isDemoMode() || !ENDPOINTS.base) {
     return simulateLatency([...activeOrders], 300);
   }
   return apiClient.get<PurchaseOrder[]>(`${ENDPOINTS.base}/purchase-orders`);
 }
 
 export async function createPurchaseOrder(po: PurchaseOrder): Promise<PurchaseOrder> {
-  if (DEMO_MODE || !ENDPOINTS.base) {
+  if (isDemoMode() || !ENDPOINTS.base) {
     activeOrders.unshift(po);
     saveStoredOrders(activeOrders);
     return simulateLatency(po, 400);
@@ -54,7 +54,7 @@ export async function createPurchaseOrder(po: PurchaseOrder): Promise<PurchaseOr
 }
 
 export async function updatePoStatus(poNumber: string, status: PoStatus): Promise<PurchaseOrder> {
-  if (DEMO_MODE || !ENDPOINTS.base) {
+  if (isDemoMode() || !ENDPOINTS.base) {
     const idx = activeOrders.findIndex((p) => p.poNumber === poNumber);
     if (idx !== -1) {
       const existing = activeOrders[idx];
