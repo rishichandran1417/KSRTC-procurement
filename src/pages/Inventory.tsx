@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Edit3, Sliders, X, AlertTriangle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Search, Edit3, Sliders, X, AlertTriangle, Zap } from "lucide-react";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
@@ -15,6 +16,7 @@ import {
 import type { InventoryItem, AddInventoryPayload, ConsumptionRecord, PriceRecord } from "../types";
 
 export default function Inventory() {
+  const navigate = useNavigate();
   const { filters } = useFilters();
   const { openAlertModal, totalAlerts, criticalItems, warningItems } = useAlerts();
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -68,18 +70,47 @@ export default function Inventory() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
               <button
                 onClick={() => setStatusFilter("Critical")}
-                className="rounded border border-red-500/30 bg-[--color-surface-0] px-2.5 py-1 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                className="rounded-lg border border-red-500/30 bg-[--color-surface-0] px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
               >
                 Filter Critical
               </button>
               <button
-                onClick={openAlertModal}
-                className="rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white shadow-xs hover:bg-red-700 transition-colors cursor-pointer"
+                onClick={() => {
+                  const target = criticalItems.length > 0 ? criticalItems : items.filter((i) => i.status === "Critical");
+                  const poItems = target.map((item) => {
+                    const neededQty = Math.max(item.reorderPoint * 2 - item.currentStock, 1);
+                    const unitPrice = item.unitCost || 0;
+                    return {
+                      part: item.part,
+                      quantity: neededQty,
+                      unit_price: unitPrice,
+                      total_cost: neededQty * unitPrice,
+                      supplier: item.primarySupplier || "KSRTC Central Stores / Urgent Vendor",
+                      priority: "High" as const,
+                    };
+                  });
+                  navigate("/purchase-orders/new", {
+                    state: {
+                      items: poItems,
+                      source: "critical",
+                      isCritical: true,
+                      notes: "Emergency Critical Stockout Procurement (Critical Buy)",
+                    },
+                  });
+                }}
+                className="flex items-center gap-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 active:scale-95 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition-all cursor-pointer"
               >
-                Review & Reorder All →
+                <Zap size={13} className="fill-white" />
+                <span>⚡ Critical Buy ({criticalItems.length > 0 ? criticalItems.length : totalAlerts})</span>
+              </button>
+              <button
+                onClick={openAlertModal}
+                className="rounded-lg bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-3 py-1.5 text-xs font-semibold shadow-xs hover:bg-slate-800 dark:hover:bg-white transition-colors cursor-pointer"
+              >
+                Review All Alerts →
               </button>
             </div>
           </div>
@@ -110,7 +141,7 @@ export default function Inventory() {
 
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center justify-center gap-1.5 rounded bg-[--color-forecast-500] px-3.5 py-1.5 text-sm font-medium text-white hover:bg-[--color-forecast-700] w-full sm:w-auto cursor-pointer shadow-xs active:scale-98 transition-all"
+            className="flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all cursor-pointer w-full sm:w-auto"
           >
             <Plus size={16} /> Add Inventory
           </button>

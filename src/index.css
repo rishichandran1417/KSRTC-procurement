@@ -154,6 +154,80 @@ body {
   background-color: var(--color-surface-2, #f1f5f9) !important;
 }
 
+/* Forecast colors and primary action button fallbacks */
+.bg-\[--color-forecast-50\],
+[class*="bg-[--color-forecast-50]"] {
+  background-color: var(--color-forecast-50, #eff6ff) !important;
+}
+
+.bg-\[--color-forecast-500\],
+[class*="bg-[--color-forecast-500]"] {
+  background-color: var(--color-forecast-500, #2563eb) !important;
+}
+
+.bg-\[--color-forecast-600\],
+[class*="bg-[--color-forecast-600]"] {
+  background-color: var(--color-forecast-600, #1d4ed8) !important;
+}
+
+.bg-\[--color-forecast-700\],
+[class*="bg-[--color-forecast-700]"] {
+  background-color: var(--color-forecast-700, #1e40af) !important;
+}
+
+.hover\:bg-\[--color-forecast-700\]:hover,
+[class*="hover:bg-[--color-forecast-700]"]:hover {
+  background-color: var(--color-forecast-700, #1e40af) !important;
+}
+
+/* Optimize colors */
+.bg-\[--color-optimize-50\],
+[class*="bg-[--color-optimize-50]"] {
+  background-color: var(--color-optimize-50, #f5f3ff) !important;
+}
+
+.bg-\[--color-optimize-500\],
+[class*="bg-[--color-optimize-500]"] {
+  background-color: var(--color-optimize-500, #7c3aed) !important;
+}
+
+.hover\:bg-\[--color-optimize-700\]:hover,
+[class*="hover:bg-[--color-optimize-700]"]:hover {
+  background-color: var(--color-optimize-700, #6d28d9) !important;
+}
+
+/* Critical, healthy, and warning backgrounds */
+.bg-\[--color-critical-50\],
+[class*="bg-[--color-critical-50]"] {
+  background-color: var(--color-critical-50, #fff1f2) !important;
+}
+
+.bg-\[--color-critical-500\],
+[class*="bg-[--color-critical-500]"] {
+  background-color: var(--color-critical-500, #e11d48) !important;
+}
+
+.bg-\[--color-healthy-50\],
+[class*="bg-[--color-healthy-50]"] {
+  background-color: var(--color-healthy-50, #ecfdf5) !important;
+}
+
+.bg-\[--color-healthy-500\],
+[class*="bg-[--color-healthy-500]"] {
+  background-color: var(--color-healthy-500, #059669) !important;
+}
+
+.bg-\[--color-warning-50\],
+[class*="bg-[--color-warning-50]"] {
+  background-color: var(--color-warning-50, #fffbeb) !important;
+}
+
+.bg-\[--color-warning-500\],
+[class*="bg-[--color-warning-500]"] {
+  background-color: var(--color-warning-500, #d97706) !important;
+}
+
+/* Ink text fallbacks */
 .text-\[--color-ink-900\],
 [class*="text-[--color-ink-900]"] {
   color: var(--color-ink-900, #0f172a) !important;
@@ -162,6 +236,11 @@ body {
 .text-\[--color-ink-700\],
 [class*="text-[--color-ink-700]"] {
   color: var(--color-ink-700, #334155) !important;
+}
+
+.text-\[--color-ink-600\],
+[class*="text-[--color-ink-600]"] {
+  color: var(--color-ink-600, #475569) !important;
 }
 
 .text-\[--color-ink-500\],
@@ -174,6 +253,58 @@ body {
   color: var(--color-ink-400, #94a3b8) !important;
 }
 
+/* Accent text fallbacks */
+.text-\[--color-forecast-500\],
+[class*="text-[--color-forecast-500]"] {
+  color: var(--color-forecast-500, #2563eb) !important;
+}
+
+.text-\[--color-forecast-600\],
+[class*="text-[--color-forecast-600]"] {
+  color: var(--color-forecast-600, #1d4ed8) !important;
+}
+
+.text-\[--color-forecast-700\],
+[class*="text-[--color-forecast-700]"] {
+  color: var(--color-forecast-700, #1e40af) !important;
+}
+
+.text-\[--color-optimize-500\],
+[class*="text-[--color-optimize-500]"] {
+  color: var(--color-optimize-500, #7c3aed) !important;
+}
+
+.text-\[--color-optimize-600\],
+[class*="text-[--color-optimize-600]"] {
+  color: var(--color-optimize-600, #6d28d9) !important;
+}
+
+.text-\[--color-optimize-700\],
+[class*="text-[--color-optimize-700]"] {
+  color: var(--color-optimize-700, #6d28d9) !important;
+}
+
+.text-\[--color-critical-500\],
+[class*="text-[--color-critical-500]"] {
+  color: var(--color-critical-500, #e11d48) !important;
+}
+
+.text-\[--color-critical-600\],
+[class*="text-[--color-critical-600]"] {
+  color: var(--color-critical-600, #be123c) !important;
+}
+
+.text-\[--color-healthy-600\],
+[class*="text-[--color-healthy-600]"] {
+  color: var(--color-healthy-600, #047857) !important;
+}
+
+.text-\[--color-warning-600\],
+[class*="text-[--color-warning-600]"] {
+  color: var(--color-warning-600, #b45309) !important;
+}
+
+/* Border fallbacks */
 .border-\[--color-border\],
 [class*="border-[--color-border]"] {
   border-color: var(--color-border, #e2e8f0) !important;

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, PackageCheck, XCircle, Plus, X } from "lucide-react";
 import { TopBar } from "../components/layout/TopBar";
-import { LoadingState, ErrorState, EmptyState } from "../components/ui/States";
+import { LoadingState, ErrorState } from "../components/ui/States";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { getPurchaseOrders, updatePoStatus } from "../services/purchaseOrderApi";
 import type { PurchaseOrder, PoStatus } from "../types";
@@ -40,7 +40,7 @@ export default function PurchaseOrders() {
         <div className="mb-4 flex items-center justify-end">
           <button
             onClick={() => navigate("/purchase-orders/new")}
-            className="flex items-center justify-center gap-1.5 rounded bg-[--color-forecast-500] px-3.5 py-1.5 text-sm font-medium text-white hover:bg-[--color-forecast-700] w-full sm:w-auto"
+            className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all cursor-pointer w-full sm:w-auto"
           >
             <Plus size={16} /> Create New PO
           </button>
@@ -51,7 +51,31 @@ export default function PurchaseOrders() {
         ) : error ? (
           <ErrorState title="Purchase orders unavailable." message={error} onRetry={load} />
         ) : orders.length === 0 ? (
-          <EmptyState title="No purchase orders recorded yet" message="Run PuLP optimization or click Create New PO." />
+          <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-[--color-border] bg-[--color-surface-0] p-8 text-center sm:p-12">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
+              <Plus size={24} />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-[--color-ink-900]">No purchase orders recorded yet</h3>
+              <p className="mt-1 max-w-md text-xs text-[--color-ink-500]">
+                Create a new purchase order manually or populate from PuLP optimization recommendations or critical low-stock alerts.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <button
+                onClick={() => navigate("/purchase-orders/new")}
+                className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 active:scale-95 transition-all cursor-pointer"
+              >
+                <Plus size={16} /> Create New PO
+              </button>
+              <button
+                onClick={() => navigate("/procurement")}
+                className="flex items-center gap-2 rounded-lg border border-[--color-border] bg-[--color-surface-0] px-4 py-2 text-sm font-medium text-[--color-ink-700] hover:bg-[--color-surface-1] transition-all cursor-pointer"
+              >
+                Run PuLP Optimizer
+              </button>
+            </div>
+          </div>
         ) : (
           <div className="rounded-md border border-[--color-border] bg-[--color-surface-0] overflow-hidden">
             <div className="overflow-x-auto">

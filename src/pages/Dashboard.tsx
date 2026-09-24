@@ -65,7 +65,13 @@ export default function Dashboard() {
 
   const handleCreatePoFromPulp = () => {
     if (!pulpResult) return;
-    navigate("/purchase-orders/new", { state: { items: pulpResult.items } });
+    navigate("/purchase-orders/new", {
+      state: {
+        items: pulpResult.items,
+        source: "pulp",
+        notes: "Pre-populated from PuLP Optimization Model Recommendation",
+      },
+    });
   };
 
   return (
@@ -321,7 +327,7 @@ export default function Dashboard() {
 
                       <button
                         onClick={handleCreatePoFromPulp}
-                        className="w-full flex items-center justify-center gap-2 rounded bg-[--color-forecast-500] py-2 text-xs font-medium text-white hover:bg-[--color-forecast-700]"
+                        className="w-full flex items-center justify-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 py-2.5 text-xs font-bold text-white shadow-sm transition-all cursor-pointer"
                       >
                         <Play size={12} /> Create Purchase Order from Recommendation
                       </button>

@@ -38,7 +38,13 @@ export default function Procurement() {
   const createPO = () => {
     if (!result) return;
     const items = result.items.filter((_, i) => selected.has(i));
-    navigate("/purchase-orders/new", { state: { items } });
+    navigate("/purchase-orders/new", {
+      state: {
+        items,
+        source: "pulp",
+        notes: "Pre-populated from PuLP Optimization Model Recommendation",
+      },
+    });
   };
 
   return (
@@ -144,7 +150,7 @@ export default function Procurement() {
                 <button
                   onClick={createPO}
                   disabled={selected.size === 0}
-                  className="flex items-center justify-center gap-2 rounded bg-[--color-forecast-500] px-4 py-2 text-sm font-medium text-white hover:bg-[--color-forecast-700] disabled:opacity-40 w-full sm:w-auto"
+                  className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 px-5 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer w-full sm:w-auto"
                 >
                   <CheckSquare size={16} /> Create Purchase Order ({selected.size} items) <ArrowRight size={14} />
                 </button>
