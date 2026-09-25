@@ -283,17 +283,17 @@ export default function NewPurchaseOrder() {
           {/* BOTTOM SUBMISSION ROW */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-[--color-border] pt-5">
             <div>
-              <p className="text-xs font-medium text-[--color-ink-500]">Total Purchase Order Cost</p>
-              <p className="text-2xl font-bold tabular text-blue-600 dark:text-blue-400">
+              <p className="text-xs text-[--color-ink-500]">Total PO Value</p>
+              <p className="text-2xl font-bold tabular text-[--color-ink-900]">
                 ₹{total.toLocaleString("en-IN")}
               </p>
             </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="flex items-center gap-2.5 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => navigate("/purchase-orders")}
-                className="flex-1 sm:flex-none rounded-lg border border-[--color-border] px-5 py-2.5 text-sm font-medium text-[--color-ink-700] hover:bg-[--color-surface-1] transition-all cursor-pointer text-center"
+                className="flex-1 sm:flex-none rounded-md border border-[--color-border] bg-[--color-surface-0] hover:bg-[--color-surface-1] px-4 py-2 text-xs font-medium text-[--color-ink-700] transition-colors cursor-pointer text-center"
               >
                 Cancel
               </button>
@@ -302,18 +302,15 @@ export default function NewPurchaseOrder() {
                 id="submit-po-button-bottom"
                 onClick={submit}
                 disabled={submitting || lines.length === 0}
-                className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-lg px-6 py-2.5 text-sm font-bold text-white shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-md px-5 py-2 text-xs font-semibold text-white shadow-2xs active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer ${
                   isCriticalBuy ? "bg-rose-600 hover:bg-rose-700" : "bg-blue-600 hover:bg-blue-700"
                 }`}
               >
-                <CheckCircle2 size={16} />
-                <span>
-                  {submitting
-                    ? "Submitting Order…"
-                    : isCriticalBuy
-                    ? `Submit Critical PO (${lines.length} items)`
-                    : `Submit Purchase Order (${lines.length} items)`}
-                </span>
+                {submitting ? (
+                  <span>Creating PO…</span>
+                ) : (
+                  <span>{isCriticalBuy ? "Create Emergency PO" : "Create Purchase Order"}</span>
+                )}
               </button>
             </div>
           </div>

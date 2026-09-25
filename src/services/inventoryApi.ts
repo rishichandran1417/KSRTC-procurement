@@ -86,9 +86,19 @@ export async function getInventory(): Promise<InventoryItem[]> {
         }
 
         const merged = Array.from(mergedMap.values());
-        saveStoredInventory(merged);
-        activeInventory = merged;
-        return simulateLatency(merged, 10);
+        const seenIds = new Set<string>();
+        const uniqueMerged = merged.map((item, idx) => {
+          let uid = String(item.id || `inv-${idx}`);
+          if (seenIds.has(uid)) {
+            uid = `${uid}-${idx}`;
+          }
+          seenIds.add(uid);
+          return { ...item, id: uid };
+        });
+
+        saveStoredInventory(uniqueMerged);
+        activeInventory = uniqueMerged;
+        return simulateLatency(uniqueMerged, 10);
       }
     } catch (err) {
       console.warn("API call to /inventory failed, using cached inventory:", err);
@@ -212,18 +222,20 @@ export async function updateInventoryItem(id: string, payload: UpdateInventoryPa
   if (ENDPOINTS.base) {
     const numId = Number(id);
     if (!isNaN(numId)) {
-      try {
-        await apiClient.put<any>(`${ENDPOINTS.base}/inventory/${numId}`, {
-          reorder_point: reorder,
-          safety_stock: safety,
-        });
-      } catch (err) {
-        console.warn("API call to update inventory thresholds failed:", err);
-      }
+      (async () => {
+        try {
+          await apiClient.put<any>(`${ENDPOINTS.base}/inventory/${numId}`, {
+            reorder_point: reorder,
+            safety_stock: safety,
+          });
+        } catch (err) {
+          console.warn("API call to update inventory thresholds failed:", err);
+        }
+      })();
     }
   }
 
-  return simulateLatency(updated, 50);
+  return simulateLatency(updated, 20);
 }
 
 export async function adjustInventoryQuantity(id: string, delta: number): Promise<InventoryItem> {
@@ -234,16 +246,18 @@ export async function adjustInventoryQuantity(id: string, delta: number): Promis
 
     const numId = Number(id);
     if (ENDPOINTS.base && !isNaN(numId)) {
-      try {
-        await apiClient.post<any>(`${ENDPOINTS.base}/inventory-transactions`, {
-          part_id: numId,
-          transaction_type: "ADJUSTMENT",
-          quantity: delta,
-          notes: `Stock adjustment of ${delta > 0 ? "+" : ""}${delta} units`,
-        });
-      } catch (err) {
-        console.warn("Could not post inventory transaction adjustment to server:", err);
-      }
+      (async () => {
+        try {
+          await apiClient.post<any>(`${ENDPOINTS.base}/inventory-transactions`, {
+            part_id: numId,
+            transaction_type: "ADJUSTMENT",
+            quantity: delta,
+            notes: `Stock adjustment of ${delta > 0 ? "+" : ""}${delta} units`,
+          });
+        } catch (err) {
+          console.warn("Could not post inventory transaction adjustment to server:", err);
+        }
+      })();
     }
 
     return updateInventoryItem(id, { currentStock: newQty });

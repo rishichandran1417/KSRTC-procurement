@@ -48,10 +48,22 @@ export default function Dashboard() {
 
         if (invData.length > 0) {
           const firstPart = invData[0].part;
-          const fcData = await getForecast({ part: firstPart, start_date: filters.startDate, end_date: filters.endDate, horizon: filters.horizon });
-          const pulpData = await runOptimization({ budget: 0, forecast_horizon: filters.horizon, service_level: 0.95 });
-          setLatestForecast(fcData.series.length > 0 ? fcData : null);
-          setPulpResult(pulpData.items.length > 0 ? pulpData : null);
+          let fcData: ForecastResult | null = null;
+          try {
+            fcData = await getForecast({ part: firstPart, start_date: filters.startDate, end_date: filters.endDate, horizon: filters.horizon });
+          } catch {
+            fcData = null;
+          }
+
+          let pulpData: ProcurementResult | null = null;
+          try {
+            pulpData = await runOptimization({ budget: 0, forecast_horizon: filters.horizon, service_level: 0.95 });
+          } catch {
+            pulpData = null;
+          }
+
+          setLatestForecast(fcData && fcData.series && fcData.series.length > 0 ? fcData : null);
+          setPulpResult(pulpData && pulpData.items && pulpData.items.length > 0 ? pulpData : null);
         } else {
           setLatestForecast(null);
           setPulpResult(null);
@@ -177,8 +189,8 @@ export default function Dashboard() {
                           </tr>
                         </thead>
                         <tbody>
-                          {criticalInventory.map((item) => (
-                            <tr key={item.id} className="border-b border-[--color-border] last:border-0 hover:bg-[--color-surface-1]">
+                          {criticalInventory.map((item, idx) => (
+                            <tr key={`dash-crit-${item.id}-${idx}`} className="border-b border-[--color-border] last:border-0 hover:bg-[--color-surface-1]">
                               <td className="py-2 pr-2 font-medium text-[--color-ink-900]">{item.part}</td>
                               <td className="py-2 px-2 tabular font-semibold">{item.currentStock}</td>
                               <td className="py-2 px-2 tabular text-[--color-ink-500]">{item.safetyStock}</td>
@@ -227,8 +239,8 @@ export default function Dashboard() {
                           </tr>
                         </thead>
                         <tbody>
-                          {recentPos.map((po) => (
-                            <tr key={po.poNumber} className="border-b border-[--color-border] last:border-0 hover:bg-[--color-surface-1]">
+                          {recentPos.map((po, idx) => (
+                            <tr key={`dash-po-${po.poNumber}-${idx}`} className="border-b border-[--color-border] last:border-0 hover:bg-[--color-surface-1]">
                               <td className="py-2 pr-2 font-medium text-[--color-ink-900]">{po.poNumber}</td>
                               <td className="py-2 px-2 text-[--color-ink-700]">{po.supplier}</td>
                               <td className="py-2 px-2 tabular font-medium">₹{po.total.toLocaleString("en-IN")}</td>

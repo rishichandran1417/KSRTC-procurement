@@ -106,6 +106,24 @@ export async function createPurchaseOrder(po: PurchaseOrder): Promise<PurchaseOr
   return simulateLatency(po, 10);
 }
 
+export async function updatePurchaseOrder(updated: PurchaseOrder): Promise<PurchaseOrder> {
+  activeOrders = loadStoredOrders();
+  activeOrders = [updated, ...activeOrders.filter((p) => p.poNumber !== updated.poNumber)];
+  saveStoredOrders(activeOrders);
+
+  if (ENDPOINTS.base) {
+    (async () => {
+      try {
+        await apiClient.put<PurchaseOrder>(`${ENDPOINTS.base}/purchase-orders/${updated.poNumber}`, updated);
+      } catch (err) {
+        console.warn("API call to update purchase order background notice:", err);
+      }
+    })();
+  }
+
+  return simulateLatency(updated, 10);
+}
+
 export async function updatePoStatus(poNumber: string, status: PoStatus): Promise<PurchaseOrder> {
   activeOrders = loadStoredOrders();
   const allOrders = await getPurchaseOrders();

@@ -1,29 +1,29 @@
-type Tone = "healthy" | "warning" | "critical" | "neutral" | "forecast" | "optimize";
+type Tone = "healthy" | "warning" | "critical" | "neutral" | "info" | "submitted";
 
-const TONE_CLASSES: Record<Tone, string> = {
-  healthy: "bg-[--color-healthy-50] text-[--color-healthy-600] border-[--color-healthy-500]/25",
-  warning: "bg-[--color-warning-50] text-[--color-warning-600] border-[--color-warning-500]/25",
-  critical: "bg-[--color-critical-50] text-[--color-critical-600] border-[--color-critical-500]/25",
-  neutral: "bg-[--color-surface-2] text-[--color-ink-500] border-[--color-border]",
-  forecast: "bg-[--color-forecast-50] text-[--color-forecast-700] border-[--color-forecast-500]/25",
-  optimize: "bg-[--color-optimize-50] text-[--color-optimize-700] border-[--color-optimize-500]/25",
+const STATUS_STYLES: Record<Tone, string> = {
+  submitted: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+  healthy: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+  warning: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+  critical: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+  neutral: "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/20",
+  info: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
 };
 
 export function toneForStatus(status: string): Tone {
   const s = status.toLowerCase();
+  if (s === "submitted" || s === "ordered") return "submitted";
   if (["healthy", "received", "closed", "connected", "low"].includes(s)) return "healthy";
-  if (["warning", "medium", "partially received", "submitted", "draft"].includes(s)) return "warning";
+  if (["warning", "medium", "partially received"].includes(s)) return "warning";
   if (["critical", "high", "cancelled"].includes(s)) return "critical";
   return "neutral";
 }
 
 export function StatusBadge({ label, tone }: { label: string; tone?: Tone }) {
   const resolved = tone ?? toneForStatus(label);
+  const style = STATUS_STYLES[resolved] || STATUS_STYLES.neutral;
+
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium tracking-tight ${TONE_CLASSES[resolved]}`}
-    >
-      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80" />
+    <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-normal border ${style}`}>
       {label}
     </span>
   );

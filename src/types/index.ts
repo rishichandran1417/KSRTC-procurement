@@ -179,6 +179,7 @@ export interface Supplier {
   onTimeDeliveryRate: number; // 0-100
   openOrders: number;
   avgLeadTimeDays: number;
+  contactName?: string;
   contactEmail?: string;
   contactPhone?: string;
 }

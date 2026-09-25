@@ -136,9 +136,9 @@ export function LowStockAlertModal() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
-                  {lowStockItems.map((item) => (
+                  {lowStockItems.map((item, idx) => (
                     <tr
-                      key={item.id}
+                      key={`low-alert-${item.id}-${idx}`}
                       className="hover:bg-slate-50 dark:hover:bg-zinc-800/40 transition-colors"
                     >
                       <td className="py-3 px-3.5">
