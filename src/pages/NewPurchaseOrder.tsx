@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Plus, Trash2, CheckCircle2, AlertTriangle, Send, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, AlertTriangle, ArrowLeft, FileText } from "lucide-react";
 import { TopBar } from "../components/layout/TopBar";
 import { SINGLE_DEPOT_NAME } from "../state/FiltersContext";
 import { createPurchaseOrder } from "../services/purchaseOrderApi";
+import { PurchaseOrderPdfModal } from "../components/ui/PurchaseOrderPdfModal";
 import type { ProcurementItem, PurchaseOrder, PurchaseOrderLine } from "../types";
 
 interface NavState {
@@ -46,6 +47,7 @@ export default function NewPurchaseOrder() {
         : "")
   );
   const [submitting, setSubmitting] = useState(false);
+  const [showPdf, setShowPdf] = useState(false);
 
   const updateLineQty = (idx: number, qty: number) => {
     setLines((prev) =>
@@ -76,23 +78,33 @@ export default function NewPurchaseOrder() {
   const total = lines.reduce((sum, l) => sum + l.totalCost, 0);
 
   const submit = () => {
-    if (lines.length === 0) return;
+    const validLines = lines.filter((l) => l.part.trim().length > 0);
+    if (validLines.length === 0) {
+      alert("Please enter a part name for at least one line item.");
+      return;
+    }
     setSubmitting(true);
     const po: PurchaseOrder = {
       poNumber: `PO-2026-${Date.now().toString().slice(-4)}`,
-      supplier: supplier.trim() || (isCriticalBuy ? "Emergency Procurement Vendor" : "KSRTC Depot Vendor"),
+      supplier: supplier.trim() || (isCriticalBuy ? "Emergency Procurement Vendor" : "KSRTC Central Stores"),
       depot: SINGLE_DEPOT_NAME,
       poDate: new Date().toISOString().slice(0, 10),
       expectedDelivery,
       total,
       status: "Submitted",
-      lines: lines.filter((l) => l.part.trim().length > 0),
+      lines: validLines,
       notes,
     };
-    createPurchaseOrder(po).then(() => {
-      setSubmitting(false);
-      navigate("/purchase-orders");
-    });
+    createPurchaseOrder(po)
+      .then(() => {
+        setSubmitting(false);
+        navigate("/purchase-orders");
+      })
+      .catch((err) => {
+        console.error("Error creating PO:", err);
+        setSubmitting(false);
+        navigate("/purchase-orders");
+      });
   };
 
   return (
@@ -118,14 +130,11 @@ export default function NewPurchaseOrder() {
             </span>
             <button
               type="button"
-              onClick={submit}
-              disabled={submitting || lines.length === 0}
-              className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-1.5 text-xs font-bold text-white shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer ${
-                isCriticalBuy ? "bg-rose-600 hover:bg-rose-700" : "bg-blue-600 hover:bg-blue-700"
-              }`}
+              onClick={() => setShowPdf(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[--color-border] bg-[--color-surface-1] hover:bg-[--color-surface-2] px-3 py-1.5 text-xs font-semibold text-[--color-ink-700] hover:text-[--color-ink-900] active:scale-95 transition-all cursor-pointer shadow-2xs"
             >
-              <Send size={13} />
-              <span>{submitting ? "Submitting…" : isCriticalBuy ? "Submit Critical PO" : "Submit PO"}</span>
+              <FileText size={13} className="text-blue-600 dark:text-blue-400" />
+              <span>View PDF</span>
             </button>
           </div>
         </div>
@@ -310,6 +319,23 @@ export default function NewPurchaseOrder() {
           </div>
         </div>
       </div>
+
+      {showPdf && (
+        <PurchaseOrderPdfModal
+          po={{
+            poNumber: `PO-2026-DRAFT`,
+            supplier: supplier.trim() || (isCriticalBuy ? "Emergency Procurement Vendor" : "KSRTC Central Stores"),
+            depot: SINGLE_DEPOT_NAME,
+            poDate: new Date().toISOString().slice(0, 10),
+            expectedDelivery,
+            total,
+            status: "Draft",
+            lines: lines.filter((l) => l.part.trim().length > 0),
+            notes,
+          }}
+          onClose={() => setShowPdf(false)}
+        />
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import {
+  Menu,
   ArrowUp,
   History,
   Plus,
@@ -9,6 +10,7 @@ import {
   Check,
   RotateCcw,
 } from "lucide-react";
+import { useSidebar } from "../state/SidebarContext";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { ScionLoader } from "../components/ui/ScionLoader";
 import { sendChatMessage } from "../services/chatApi";
@@ -31,6 +33,7 @@ interface ChatSession {
 const STORAGE_KEY = "ksrtc_chat_sessions_v1";
 
 export default function AiAssistant() {
+  const { toggleMobile } = useSidebar();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [input, setInput] = useState("");
@@ -170,8 +173,16 @@ export default function AiAssistant() {
   return (
     <div className="flex h-full flex-col relative bg-white dark:bg-[#212121]">
       {/* CHATGPT-STYLE TOP HEADER */}
-      <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 bg-white dark:bg-[#212121] px-4 py-2.5">
+      <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 bg-white dark:bg-[#212121] px-3 sm:px-4 py-2.5">
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleMobile}
+            className="rounded-md p-1.5 text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 active:scale-95 transition-transform lg:hidden shrink-0 cursor-pointer"
+            aria-label="Open navigation menu"
+          >
+            <Menu size={20} />
+          </button>
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-600 text-white p-1">
             <img src="/scion-logo.png" alt="SCION" className="h-4 w-4 object-contain brightness-0 invert" />
           </div>

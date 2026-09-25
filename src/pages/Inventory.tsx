@@ -190,7 +190,22 @@ export default function Inventory() {
                       {item.part}
                     </td>
                     <td className="px-2 py-2.5 text-[--color-ink-700]">{item.category}</td>
-                    <td className="tabular px-2 py-2.5 font-semibold">{item.currentStock}</td>
+                    <td className="px-2 py-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="tabular font-bold text-sm text-[--color-ink-900]">{item.currentStock}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAdjustingItem(item);
+                          }}
+                          title="Change Stock Quantity"
+                          className="inline-flex items-center gap-1 rounded bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/80 border border-blue-200 dark:border-blue-900/60 cursor-pointer shadow-2xs"
+                        >
+                          <Sliders size={11} />
+                          <span>Change</span>
+                        </button>
+                      </div>
+                    </td>
                     <td className="tabular px-2 py-2.5 text-[--color-ink-500]">{item.safetyStock}</td>
                     <td className="tabular px-2 py-2.5 text-[--color-ink-500]">{item.reorderPoint}</td>
                     <td className="tabular px-2 py-2.5 text-[--color-ink-700]">{item.forecastDemand}</td>
@@ -199,20 +214,20 @@ export default function Inventory() {
                       <StatusBadge label={item.status} />
                     </td>
                     <td className="px-2 py-2.5 text-right pr-4">
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => setAdjustingItem(item)}
-                          title="Adjust Quantity"
-                          className="rounded p-1 text-[--color-ink-600] hover:bg-[--color-surface-2]"
+                          className="inline-flex items-center gap-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 text-xs font-bold shadow-2xs active:scale-95 transition-all cursor-pointer"
                         >
-                          <Sliders size={14} />
+                          <Sliders size={12} />
+                          <span>Change Stock</span>
                         </button>
                         <button
                           onClick={() => setEditingItem(item)}
-                          title="Edit Item"
-                          className="rounded p-1 text-[--color-forecast-600] hover:bg-[--color-surface-2]"
+                          title="Edit Part Details"
+                          className="rounded-md border border-[--color-border] bg-[--color-surface-2] p-1.5 text-[--color-ink-700] hover:text-[--color-ink-900] active:scale-95 transition-all cursor-pointer shadow-2xs"
                         >
-                          <Edit3 size={14} />
+                          <Edit3 size={13} />
                         </button>
                       </div>
                     </td>
@@ -227,7 +242,15 @@ export default function Inventory() {
 
       {/* DETAIL DRAWER */}
       {selectedDetail ? (
-        <InventoryDetailDrawer item={selectedDetail} onClose={() => setSelectedDetail(null)} />
+        <InventoryDetailDrawer
+          item={selectedDetail}
+          onClose={() => setSelectedDetail(null)}
+          onAdjustStock={() => {
+            const cur = selectedDetail;
+            setSelectedDetail(null);
+            setAdjustingItem(cur);
+          }}
+        />
       ) : null}
 
       {/* ADD ITEM MODAL */}
@@ -268,7 +291,7 @@ export default function Inventory() {
   );
 }
 
-function InventoryDetailDrawer({ item, onClose }: { item: InventoryItem; onClose: () => void }) {
+function InventoryDetailDrawer({ item, onClose, onAdjustStock }: { item: InventoryItem; onClose: () => void; onAdjustStock: () => void }) {
   const [consumption, setConsumption] = useState<ConsumptionRecord[]>([]);
   const [prices, setPrices] = useState<PriceRecord[]>([]);
 
@@ -312,6 +335,15 @@ function InventoryDetailDrawer({ item, onClose }: { item: InventoryItem; onClose
           <Stat label="Days of Supply" value={`${item.daysOfSupply} days`} />
           <Stat label="Stock Status" value={item.status || "Healthy"} />
         </div>
+
+        <button
+          type="button"
+          onClick={onAdjustStock}
+          className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white py-2 text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
+        >
+          <Sliders size={14} />
+          <span>Change / Adjust Stock Count</span>
+        </button>
 
         {item.notes ? (
           <div className="mt-3 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/80 p-2.5 text-xs">
@@ -385,10 +417,16 @@ function AddInventoryModal({ onClose, onAdded }: { onClose: () => void; onAdded:
       reorderPoint,
       notes,
     };
-    addInventoryItem(payload).then(() => {
-      setSubmitting(false);
-      onAdded();
-    });
+    addInventoryItem(payload)
+      .then(() => {
+        setSubmitting(false);
+        onAdded();
+      })
+      .catch((err) => {
+        console.error("Error adding item:", err);
+        setSubmitting(false);
+        onAdded();
+      });
   };
 
   return (
@@ -622,59 +660,120 @@ function EditInventoryModal({ item, onClose, onUpdated }: { item: InventoryItem;
 }
 
 function AdjustQuantityModal({ item, onClose, onAdjusted }: { item: InventoryItem; onClose: () => void; onAdjusted: () => void }) {
+  const [exactStock, setExactStock] = useState<number>(item.currentStock);
   const [delta, setDelta] = useState(10);
   const [submitting, setSubmitting] = useState(false);
 
-  const applyAdjustment = (dir: 1 | -1) => {
+  const applyDelta = (dir: 1 | -1) => {
     setSubmitting(true);
-    adjustInventoryQuantity(item.id, dir * delta).then(() => {
-      setSubmitting(false);
-      onAdjusted();
-    });
+    adjustInventoryQuantity(item.id, dir * delta)
+      .then(() => {
+        setSubmitting(false);
+        onAdjusted();
+      })
+      .catch((err) => {
+        console.error("Adjustment error:", err);
+        setSubmitting(false);
+        onAdjusted();
+      });
+  };
+
+  const applyExact = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    updateInventoryItem(item.id, { currentStock: Math.max(0, exactStock) })
+      .then(() => {
+        setSubmitting(false);
+        onAdjusted();
+      })
+      .catch((err) => {
+        console.error("Exact stock error:", err);
+        setSubmitting(false);
+        onAdjusted();
+      });
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4" onClick={onClose}>
       <div
-        className="w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-2xl text-sm text-slate-900 dark:text-zinc-100"
+        className="w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 sm:p-6 shadow-2xl text-sm text-slate-900 dark:text-zinc-100"
         style={{ backgroundColor: "#ffffff" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 pb-2 mb-3">
-          <h3 className="font-semibold text-slate-900 dark:text-zinc-100">Adjust Quantity — {item.part}</h3>
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 pb-2.5 mb-3">
+          <div>
+            <h3 className="font-bold text-slate-900 dark:text-zinc-100">Change Stock Quantity</h3>
+            <p className="text-xs text-slate-500 dark:text-zinc-400">{item.part}</p>
+          </div>
           <button onClick={onClose} className="rounded p-1 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer">
             <X size={18} />
           </button>
         </div>
 
-        <p className="text-xs text-slate-500 dark:text-zinc-400">Current Stock: <span className="font-semibold text-slate-900 dark:text-zinc-100 tabular">{item.currentStock} units</span></p>
-
-        <div className="mt-4">
-          <label className="mb-1 block text-xs text-slate-700 dark:text-zinc-300">Adjustment Amount</label>
-          <input
-            type="number"
-            min="1"
-            value={delta}
-            onChange={(e) => setDelta(Math.max(1, Number(e.target.value)))}
-            className="w-full rounded border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 tabular text-slate-900 dark:text-zinc-100"
-          />
+        <div className="rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 p-3 mb-4">
+          <p className="text-xs text-blue-700 dark:text-blue-300">Current On-Hand Stock</p>
+          <p className="text-2xl font-bold tabular text-blue-900 dark:text-blue-200 mt-0.5">{item.currentStock} units</p>
         </div>
 
-        <div className="mt-5 flex gap-2">
-          <button
-            onClick={() => applyAdjustment(-1)}
-            disabled={submitting}
-            className="flex-1 rounded border border-rose-200 bg-rose-50 dark:bg-rose-950/40 py-1.5 text-xs font-medium text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 cursor-pointer"
-          >
-            - Deduct {delta} Units
-          </button>
-          <button
-            onClick={() => applyAdjustment(1)}
-            disabled={submitting}
-            className="flex-1 rounded bg-blue-600 py-1.5 text-xs font-medium text-white hover:bg-blue-700 cursor-pointer"
-          >
-            + Add {delta} Units
-          </button>
+        {/* Set Exact New Stock */}
+        <form onSubmit={applyExact} className="space-y-3 pb-4 border-b border-slate-200 dark:border-zinc-800">
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-slate-700 dark:text-zinc-300 uppercase tracking-wider">
+              Set Exact New Stock Count
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                min="0"
+                value={exactStock}
+                onChange={(e) => setExactStock(Math.max(0, Number(e.target.value)))}
+                className="flex-1 rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm tabular font-semibold text-slate-900 dark:text-zinc-100 focus:border-blue-500 focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={submitting}
+                className="rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 text-xs font-bold active:scale-95 transition-all cursor-pointer shadow-xs"
+              >
+                {submitting ? "Saving…" : "Set Stock"}
+              </button>
+            </div>
+          </div>
+        </form>
+
+        {/* Quick Adjustment Options */}
+        <div className="mt-4 space-y-2.5">
+          <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 uppercase tracking-wider">
+            Or Quick Add / Deduct
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min="1"
+              value={delta}
+              onChange={(e) => setDelta(Math.max(1, Number(e.target.value)))}
+              className="w-24 rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2.5 py-1.5 text-xs tabular font-medium text-slate-900 dark:text-zinc-100"
+            />
+            <span className="text-xs text-slate-500">units</span>
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => applyDelta(-1)}
+              disabled={submitting || item.currentStock === 0}
+              className="flex-1 rounded-lg border border-rose-300 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 py-2 text-xs font-bold text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 disabled:opacity-40 cursor-pointer transition-all"
+            >
+              - Deduct {delta}
+            </button>
+            <button
+              type="button"
+              onClick={() => applyDelta(1)}
+              disabled={submitting}
+              className="flex-1 rounded-lg border border-emerald-300 dark:border-emerald-900/60 bg-emerald-50 dark:bg-emerald-950/40 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 cursor-pointer transition-all"
+            >
+              + Add {delta}
+            </button>
+          </div>
         </div>
       </div>
     </div>

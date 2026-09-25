@@ -1,17 +1,9 @@
-import { ENDPOINTS, apiClient, simulateLatency } from "./apiClient";
+import { simulateLatency } from "./apiClient";
 import { getInventory } from "./inventoryApi";
 import { getPurchaseOrders } from "./purchaseOrderApi";
 import type { DashboardKpis, GlobalFilters } from "../types";
 
 export async function getDashboardKpis(_filters: GlobalFilters): Promise<DashboardKpis> {
-  if (ENDPOINTS.base) {
-    try {
-      return await apiClient.post<DashboardKpis>(`${ENDPOINTS.base}/dashboard/kpis`, _filters);
-    } catch {
-      // If endpoint is not yet implemented on the backend, calculate dynamically from active data
-    }
-  }
-
   const inventory = await getInventory();
   const orders = await getPurchaseOrders();
 

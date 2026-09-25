@@ -73,27 +73,30 @@ export class ApiError extends Error {
 }
 
 function resolveUrl(url: string): string {
-  if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
-    // If targeting the Render backend directly from localhost, route through Vite proxy to bypass browser CORS
-    if (url.startsWith("https://database-5oe4.onrender.com/api/v1/db")) {
-      return url.replace("https://database-5oe4.onrender.com/api/v1/db", "/api/v1/db");
-    }
-  }
   return url;
 }
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const targetUrl = resolveUrl(url);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
+
   let response: Response;
   try {
     response = await fetch(targetUrl, {
       headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+      signal: controller.signal,
       ...init,
     });
   } catch (err: any) {
+    if (err?.name === "AbortError") {
+      throw new ApiError(`Request to ${url} timed out after 12 seconds.`);
+    }
     throw new ApiError(
       `Could not reach ${url}. Check connection, CORS, or protocol (https). Original error: ${err?.message || err}`
     );
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   if (!response.ok) {
@@ -112,7 +115,7 @@ export const apiClient = {
 };
 
 /** Simulates network latency when needed */
-export function simulateLatency<T>(value: T, ms = 500): Promise<T> {
+export function simulateLatency<T>(value: T, ms = 50): Promise<T> {
   return new Promise((resolve) => setTimeout(() => resolve(value), ms));
 }
 

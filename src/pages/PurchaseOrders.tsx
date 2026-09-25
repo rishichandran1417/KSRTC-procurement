@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, PackageCheck, XCircle, Plus, X } from "lucide-react";
+import { Eye, PackageCheck, XCircle, Plus, X, FileText } from "lucide-react";
 import { TopBar } from "../components/layout/TopBar";
 import { LoadingState, ErrorState } from "../components/ui/States";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { getPurchaseOrders, updatePoStatus } from "../services/purchaseOrderApi";
+import { PurchaseOrderPdfModal } from "../components/ui/PurchaseOrderPdfModal";
 import type { PurchaseOrder, PoStatus } from "../types";
 
 export default function PurchaseOrders() {
@@ -13,6 +14,7 @@ export default function PurchaseOrders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewing, setViewing] = useState<PurchaseOrder | null>(null);
+  const [pdfPo, setPdfPo] = useState<PurchaseOrder | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -111,6 +113,15 @@ export default function PurchaseOrders() {
                             aria-label="View Details"
                           >
                             <Eye size={15} />
+                          </button>
+
+                          <button
+                            onClick={() => setPdfPo(po)}
+                            title="View & Print Official PDF"
+                            className="inline-flex items-center justify-center rounded-md border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/40 p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/60 active:scale-95 transition-all cursor-pointer shadow-2xs"
+                            aria-label="View PDF"
+                          >
+                            <FileText size={15} />
                           </button>
 
                           {["Ordered", "Approved", "Partially Received"].includes(po.status) && (
@@ -264,6 +275,14 @@ export default function PurchaseOrders() {
                 </button>
               )}
 
+              <button
+                onClick={() => setPdfPo(viewing)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2 text-xs font-semibold text-slate-800 dark:text-zinc-200 shadow-xs hover:bg-slate-50 dark:hover:bg-zinc-700 active:scale-95 transition-all cursor-pointer"
+              >
+                <FileText size={14} className="text-blue-600 dark:text-blue-400" />
+                <span>View & Print PDF</span>
+              </button>
+
               {["Ordered", "Approved", "Partially Received"].includes(viewing.status) && (
                 <button
                   onClick={() => {
@@ -280,6 +299,10 @@ export default function PurchaseOrders() {
           </div>
         </div>
       ) : null}
+
+      {pdfPo && (
+        <PurchaseOrderPdfModal po={pdfPo} onClose={() => setPdfPo(null)} />
+      )}
     </div>
   );
 }
