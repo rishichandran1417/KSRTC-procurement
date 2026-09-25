@@ -180,6 +180,7 @@ export function PurchaseOrderPdfModal({ po, onClose }: Props) {
               <div>
                 <div class="box-title">Vendor / Supplier</div>
                 <div class="box-val">${po.supplier || "KSRTC Authorized Vendor"}</div>
+                ${po.supplierAddress ? `<div class="box-desc" style="color: #334155; font-size: 11px; margin-top: 2px;">${po.supplierAddress}</div>` : ""}
                 <div class="box-desc">Approved Commercial Parts Supplier</div>
                 <div class="box-desc" style="color: #64748b;">Terms: 30 Days Net from GRN Acceptance</div>
               </div>
@@ -331,6 +332,9 @@ export function PurchaseOrderPdfModal({ po, onClose }: Props) {
               <div>
                 <p className="text-xs font-medium text-slate-500">Vendor / Supplier</p>
                 <p className="text-sm font-semibold text-slate-900 mt-0.5">{po.supplier || "KSRTC Authorized Vendor"}</p>
+                {po.supplierAddress && (
+                  <p className="text-xs text-slate-700 font-medium mt-0.5">{po.supplierAddress}</p>
+                )}
                 <p className="text-xs text-slate-600 mt-0.5">Approved Commercial Parts Supplier</p>
                 <p className="text-xs text-slate-500 mt-0.5">Payment Terms: 30 Days Net from GRN Acceptance</p>
               </div>

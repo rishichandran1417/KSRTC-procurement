@@ -1,8 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, PackageCheck, XCircle, Plus, X, FileText, Pencil, Trash2 } from "lucide-react";
+import {
+  Eye, PackageCheck, XCircle, Plus, X, FileText, Pencil, Trash2,
+  Search, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight,
+  ChevronsLeft, ChevronsRight, Sparkles, MapPin
+} from "lucide-react";
 import { TopBar } from "../components/layout/TopBar";
-import { LoadingState, ErrorState } from "../components/ui/States";
+import { LoadingState, ErrorState, EmptyState } from "../components/ui/States";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { getPurchaseOrders, updatePoStatus, updatePurchaseOrder } from "../services/purchaseOrderApi";
 import { PurchaseOrderPdfModal } from "../components/ui/PurchaseOrderPdfModal";
@@ -16,9 +20,18 @@ export default function PurchaseOrders() {
   const [viewing, setViewing] = useState<PurchaseOrder | null>(null);
   const [pdfPo, setPdfPo] = useState<PurchaseOrder | null>(null);
 
+  // Search, filter, sort and pagination states
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [sortField, setSortField] = useState<"poDate" | "poNumber" | "supplier" | "expectedDelivery" | "total" | "status">("poDate");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+
   // Edit PO state
   const [editingPo, setEditingPo] = useState<PurchaseOrder | null>(null);
   const [editSupplier, setEditSupplier] = useState("");
+  const [editSupplierAddress, setEditSupplierAddress] = useState("");
   const [editExpectedDelivery, setEditExpectedDelivery] = useState("");
   const [editStatus, setEditStatus] = useState<PoStatus>("Submitted");
   const [editNotes, setEditNotes] = useState("");
@@ -46,6 +59,7 @@ export default function PurchaseOrders() {
   const openEditModal = (po: PurchaseOrder) => {
     setEditingPo(po);
     setEditSupplier(po.supplier || "");
+    setEditSupplierAddress(po.supplierAddress || "");
     setEditExpectedDelivery(po.expectedDelivery || "");
     setEditStatus(po.status || "Submitted");
     setEditNotes(po.notes || "");
@@ -88,6 +102,7 @@ export default function PurchaseOrders() {
       const updated: PurchaseOrder = {
         ...editingPo,
         supplier: editSupplier.trim() || editingPo.supplier,
+        supplierAddress: editSupplierAddress.trim() || undefined,
         expectedDelivery: editExpectedDelivery || editingPo.expectedDelivery,
         status: editStatus,
         notes: editNotes.trim(),
@@ -113,15 +128,195 @@ export default function PurchaseOrders() {
     }
   };
 
+  const handleSort = (field: typeof sortField) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      if (field === "poDate" || field === "poNumber" || field === "total" || field === "expectedDelivery") {
+        setSortDirection("desc");
+      } else {
+        setSortDirection("asc");
+      }
+    }
+    setCurrentPage(1);
+  };
+
+  const sortedAndFilteredOrders = useMemo(() => {
+    let list = orders.filter((po) => {
+      if (statusFilter !== "All" && po.status !== statusFilter) return false;
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        const matchNumber = (po.poNumber || "").toLowerCase().includes(q);
+        const matchSupplier = (po.supplier || "").toLowerCase().includes(q);
+        const matchNotes = (po.notes || "").toLowerCase().includes(q);
+        const matchPart = po.lines?.some((l) => (l.part || "").toLowerCase().includes(q));
+        if (!matchNumber && !matchSupplier && !matchNotes && !matchPart) return false;
+      }
+      return true;
+    });
+
+    return [...list].sort((a, b) => {
+      let cmp = 0;
+      switch (sortField) {
+        case "poNumber": {
+          const numA = parseInt(a.poNumber.match(/(\d+)/g)?.pop() || "0", 10);
+          const numB = parseInt(b.poNumber.match(/(\d+)/g)?.pop() || "0", 10);
+          if (numA && numB && numA !== numB) {
+            cmp = numA - numB;
+          } else {
+            cmp = (a.poNumber || "").localeCompare(b.poNumber || "");
+          }
+          break;
+        }
+        case "supplier":
+          cmp = (a.supplier || "").localeCompare(b.supplier || "");
+          break;
+        case "poDate": {
+          const dateA = new Date(a.poDate).getTime() || 0;
+          const dateB = new Date(b.poDate).getTime() || 0;
+          cmp = dateA - dateB;
+          if (cmp === 0) {
+            const numA = parseInt(a.poNumber.match(/(\d+)/g)?.pop() || "0", 10);
+            const numB = parseInt(b.poNumber.match(/(\d+)/g)?.pop() || "0", 10);
+            cmp = numA - numB;
+          }
+          break;
+        }
+        case "expectedDelivery": {
+          const dateA = new Date(a.expectedDelivery).getTime() || 0;
+          const dateB = new Date(b.expectedDelivery).getTime() || 0;
+          cmp = dateA - dateB;
+          break;
+        }
+        case "total":
+          cmp = (a.total || 0) - (b.total || 0);
+          break;
+        case "status":
+          cmp = (a.status || "").localeCompare(b.status || "");
+          break;
+      }
+      return sortDirection === "asc" ? cmp : -cmp;
+    });
+  }, [orders, search, statusFilter, sortField, sortDirection]);
+
+  const totalItems = sortedAndFilteredOrders.length;
+  const totalPages = pageSize === -1 ? 1 : Math.max(1, Math.ceil(totalItems / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIdx = pageSize === -1 ? 0 : (safeCurrentPage - 1) * pageSize;
+  const paginatedOrders =
+    pageSize === -1
+      ? sortedAndFilteredOrders
+      : sortedAndFilteredOrders.slice(startIdx, startIdx + pageSize);
+
+  const getPageNumbers = () => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (safeCurrentPage <= 4) {
+      return [1, 2, 3, 4, 5, "...", totalPages];
+    }
+    if (safeCurrentPage >= totalPages - 3) {
+      return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+    return [1, "...", safeCurrentPage - 1, safeCurrentPage, safeCurrentPage + 1, "...", totalPages];
+  };
+
+  const renderSortHeader = (label: string, field: typeof sortField, className = "") => {
+    const isActive = sortField === field;
+    return (
+      <th
+        onClick={() => handleSort(field)}
+        className={`cursor-pointer py-2.5 px-3 transition-colors hover:text-blue-600 dark:hover:text-blue-400 group select-none ${
+          isActive ? "text-blue-600 dark:text-blue-400 font-semibold" : "text-[--color-ink-500]"
+        } ${className}`}
+      >
+        <div className="inline-flex items-center gap-1">
+          <span>{label}</span>
+          <span className="shrink-0">
+            {isActive ? (
+              sortDirection === "asc" ? (
+                <ArrowUp size={12} className="text-blue-600 dark:text-blue-400" />
+              ) : (
+                <ArrowDown size={12} className="text-blue-600 dark:text-blue-400" />
+              )
+            ) : (
+              <ArrowUpDown size={11} className="opacity-0 group-hover:opacity-60 transition-opacity" />
+            )}
+          </span>
+        </div>
+      </th>
+    );
+  };
+
   return (
     <div>
       <TopBar title="Purchase Orders" subtitle="What did we order? — Purchase order lifecycle management" />
 
-      <div className="p-4 sm:p-6">
-        <div className="mb-4 flex items-center justify-end">
+      <div className="p-4 sm:p-6 space-y-4">
+        {/* TOOLBAR */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2.5 flex-1">
+            <div className="relative flex-1 sm:w-64 min-w-[200px]">
+              <input
+                placeholder="Search PO #, supplier, part…"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full rounded-md border border-[--color-border] bg-[--color-surface-0] pl-8 pr-3 py-1.5 text-xs text-[--color-ink-900] placeholder:text-[--color-ink-400] focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <Search size={13} className="absolute left-2.5 top-2.5 text-[--color-ink-400]" />
+            </div>
+
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="rounded-md border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs text-[--color-ink-800] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+            >
+              <option value="All">All Statuses</option>
+              <option value="Submitted">Submitted</option>
+              <option value="Approved">Approved</option>
+              <option value="Ordered">Ordered</option>
+              <option value="Partially Received">Partially Received</option>
+              <option value="Received">Received</option>
+              <option value="Delayed">Delayed</option>
+              <option value="Closed">Closed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className="text-[--color-ink-500] hidden sm:inline">Sort:</span>
+              <select
+                value={`${sortField}-${sortDirection}`}
+                onChange={(e) => {
+                  const [f, d] = e.target.value.split("-") as [typeof sortField, typeof sortDirection];
+                  setSortField(f);
+                  setSortDirection(d);
+                  setCurrentPage(1);
+                }}
+                className="rounded-md border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs text-[--color-ink-800] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+              >
+                <option value="poDate-desc">PO Date (Newest First)</option>
+                <option value="poDate-asc">PO Date (Oldest First)</option>
+                <option value="poNumber-desc">PO Number (Newest / Desc)</option>
+                <option value="poNumber-asc">PO Number (Oldest / Asc)</option>
+                <option value="total-desc">Total Amount (High → Low)</option>
+                <option value="total-asc">Total Amount (Low → High)</option>
+                <option value="supplier-asc">Supplier (A → Z)</option>
+                <option value="supplier-desc">Supplier (Z → A)</option>
+                <option value="status-asc">Status</option>
+              </select>
+            </div>
+          </div>
+
           <button
             onClick={() => navigate("/purchase-orders/new")}
-            className="flex items-center justify-center gap-2 rounded-md bg-blue-600 hover:bg-blue-700 active:scale-95 px-3.5 py-1.5 text-xs font-medium text-white shadow-xs transition-all cursor-pointer w-full sm:w-auto"
+            className="flex items-center justify-center gap-2 rounded-md bg-blue-600 hover:bg-blue-700 active:scale-95 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition-all cursor-pointer w-full sm:w-auto"
           >
             <Plus size={14} /> Create New PO
           </button>
@@ -157,30 +352,52 @@ export default function PurchaseOrders() {
               </button>
             </div>
           </div>
+        ) : sortedAndFilteredOrders.length === 0 ? (
+          <EmptyState
+            title="No matching purchase orders"
+            message="No orders matched your search or status filter. Try clearing the search term or selecting 'All Statuses'."
+          />
         ) : (
-          <div className="rounded-md border border-[--color-border] bg-[--color-surface-0] overflow-hidden">
+          <div className="rounded-lg border border-[--color-border] bg-[--color-surface-0] overflow-hidden shadow-2xs">
             <div className="overflow-x-auto">
-              <table className="w-full text-xs min-w-[640px]">
+              <table className="w-full text-xs min-w-[680px]">
                 <thead>
-                  <tr className="border-b border-[--color-border] text-left text-xs font-medium text-[--color-ink-500]">
-                    <th className="px-4 py-2.5">PO Number</th>
-                    <th className="px-2 py-2.5">Supplier</th>
-                    <th className="px-2 py-2.5">PO Date</th>
-                    <th className="px-2 py-2.5">Expected Delivery</th>
-                    <th className="px-2 py-2.5">Total Amount</th>
-                    <th className="px-2 py-2.5">Status</th>
-                    <th className="px-2 py-2.5 text-right pr-4">Actions</th>
+                  <tr className="border-b border-[--color-border] bg-[--color-surface-1]/60 text-left text-xs font-medium text-[--color-ink-500]">
+                    {renderSortHeader("PO Number", "poNumber", "px-4")}
+                    {renderSortHeader("Supplier", "supplier", "px-3")}
+                    {renderSortHeader("PO Date", "poDate", "px-3")}
+                    {renderSortHeader("Expected Delivery", "expectedDelivery", "px-3")}
+                    {renderSortHeader("Total Amount", "total", "px-3")}
+                    {renderSortHeader("Status", "status", "px-3")}
+                    <th className="px-3 py-2.5 text-right pr-4 text-[--color-ink-500] font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[--color-border]">
-                  {orders.map((po, idx) => (
-                    <tr key={`po-list-${po.poNumber}-${idx}`} className="hover:bg-[--color-surface-1] transition-colors">
-                      <td className="px-4 py-2.5 font-medium text-[--color-ink-900]">{po.poNumber}</td>
-                      <td className="px-2 py-2.5 text-[--color-ink-700]">{po.supplier}</td>
-                      <td className="px-2 py-2.5 text-[--color-ink-600]">{po.poDate}</td>
-                      <td className="px-2 py-2.5 text-[--color-ink-600]">{po.expectedDelivery}</td>
-                      <td className="tabular px-2 py-2.5 font-medium text-[--color-ink-900]">₹{po.total.toLocaleString("en-IN")}</td>
-                      <td className="px-2 py-2.5">
+                  {paginatedOrders.map((po, idx) => (
+                    <tr
+                      key={`po-list-${po.poNumber}-${idx}`}
+                      className={`hover:bg-[--color-surface-1] transition-colors ${
+                        po.isNew ? "bg-blue-500/5 dark:bg-blue-500/10" : ""
+                      }`}
+                    >
+                      <td className="px-4 py-2.5 font-medium text-[--color-ink-900]">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs">{po.poNumber}</span>
+                          {po.isNew && (
+                            <span className="inline-flex items-center gap-1 rounded bg-blue-500/15 px-1.5 py-0.5 text-[9px] font-bold text-blue-600 dark:text-blue-400 border border-blue-500/30">
+                              <Sparkles size={10} className="text-blue-500" />
+                              NEW
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2.5 text-[--color-ink-700]">{po.supplier}</td>
+                      <td className="px-3 py-2.5 text-[--color-ink-600]">{po.poDate}</td>
+                      <td className="px-3 py-2.5 text-[--color-ink-600]">{po.expectedDelivery}</td>
+                      <td className="tabular px-3 py-2.5 font-semibold text-[--color-ink-900]">
+                        ₹{po.total.toLocaleString("en-IN")}
+                      </td>
+                      <td className="px-3 py-2.5">
                         <StatusBadge label={po.status} />
                       </td>
                       <td className="px-3 py-2.5 text-right pr-4">
@@ -240,6 +457,97 @@ export default function PurchaseOrders() {
                 </tbody>
               </table>
             </div>
+
+            {/* PAGINATION FOOTER */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[--color-border] px-4 py-3 bg-[--color-surface-0]">
+              <div className="flex items-center gap-3 text-xs text-[--color-ink-500]">
+                <span>
+                  Showing <strong className="text-[--color-ink-900]">{startIdx + 1}</strong> to{" "}
+                  <strong className="text-[--color-ink-900]">{Math.min(startIdx + (pageSize === -1 ? totalItems : pageSize), totalItems)}</strong> of{" "}
+                  <strong className="text-[--color-ink-900]">{totalItems.toLocaleString("en-IN")}</strong> purchase orders
+                </span>
+
+                <div className="hidden sm:flex items-center gap-1.5 pl-3 border-l border-[--color-border]">
+                  <span>Rows:</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="rounded border border-[--color-border] bg-[--color-surface-0] px-1.5 py-0.5 text-xs text-[--color-ink-800]"
+                  >
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                    <option value={200}>200</option>
+                    <option value={-1}>All</option>
+                  </select>
+                </div>
+              </div>
+
+              {totalPages > 1 && pageSize !== -1 && (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={safeCurrentPage === 1}
+                    className="p-1 rounded border border-[--color-border] text-[--color-ink-600] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[--color-surface-1]"
+                    title="First page"
+                  >
+                    <ChevronsLeft size={14} />
+                  </button>
+
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={safeCurrentPage === 1}
+                    className="p-1 rounded border border-[--color-border] text-[--color-ink-600] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[--color-surface-1]"
+                    title="Previous page"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+
+                  <div className="flex items-center gap-1 px-1">
+                    {getPageNumbers().map((num, i) =>
+                      num === "..." ? (
+                        <span key={`dots-${i}`} className="px-1 text-xs text-[--color-ink-400]">
+                          …
+                        </span>
+                      ) : (
+                        <button
+                          key={`page-${num}`}
+                          onClick={() => setCurrentPage(Number(num))}
+                          className={`min-w-[26px] h-[26px] rounded text-xs font-medium transition-colors ${
+                            safeCurrentPage === num
+                              ? "bg-blue-600 text-white font-semibold"
+                              : "border border-[--color-border] text-[--color-ink-700] hover:bg-[--color-surface-1]"
+                          }`}
+                        >
+                          {num}
+                        </button>
+                      )
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={safeCurrentPage === totalPages}
+                    className="p-1 rounded border border-[--color-border] text-[--color-ink-600] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[--color-surface-1]"
+                    title="Next page"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={safeCurrentPage === totalPages}
+                    className="p-1 rounded border border-[--color-border] text-[--color-ink-600] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[--color-surface-1]"
+                    title="Last page"
+                  >
+                    <ChevronsRight size={14} />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -266,6 +574,12 @@ export default function PurchaseOrders() {
                 <h3 className="text-base font-medium text-[--color-ink-900] leading-tight">
                   {viewing.supplier}
                 </h3>
+                {viewing.supplierAddress && (
+                  <p className="text-xs text-[--color-ink-500] flex items-center gap-1 mt-0.5">
+                    <MapPin size={11} className="text-blue-500 shrink-0" />
+                    <span>{viewing.supplierAddress}</span>
+                  </p>
+                )}
               </div>
               <button
                 onClick={() => setViewing(null)}
@@ -424,6 +738,17 @@ export default function PurchaseOrders() {
                   onChange={(e) => setEditSupplier(e.target.value)}
                   className="w-full rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-xs text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
                   placeholder="e.g. Ashok Leyland OEM Spares"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[--color-ink-700] mb-1">Supplier Address</label>
+                <input
+                  type="text"
+                  value={editSupplierAddress}
+                  onChange={(e) => setEditSupplierAddress(e.target.value)}
+                  className="w-full rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-xs text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
+                  placeholder="e.g. Industrial Development Area, Kochuveli, Thiruvananthapuram - 695021"
                 />
               </div>
 

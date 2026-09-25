@@ -15,10 +15,6 @@ export default defineConfig(({ mode }) => {
     server: {
       host: true,
       port: 5173,
-      hmr: {
-        host: 'localhost',
-        clientPort: 5173,
-      },
       proxy: {
         '/api/v1/db': {
           target: 'https://database-5oe4.onrender.com',

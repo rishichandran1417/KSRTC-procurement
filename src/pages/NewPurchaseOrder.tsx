@@ -1,11 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Plus, Trash2, CheckCircle2, AlertTriangle, ArrowLeft, FileText } from "lucide-react";
+import {
+  Plus, Trash2, CheckCircle2, AlertTriangle, ArrowLeft, FileText,
+  MapPin, Check, ChevronDown, Building2
+} from "lucide-react";
 import { TopBar } from "../components/layout/TopBar";
 import { SINGLE_DEPOT_NAME } from "../state/FiltersContext";
-import { createPurchaseOrder } from "../services/purchaseOrderApi";
+import { createPurchaseOrder, getNextPoNumber, getPurchaseOrders } from "../services/purchaseOrderApi";
+import { getSuppliers, DEFAULT_KSRTC_SUPPLIERS } from "../services/supplierApi";
+import { getInventory, DEFAULT_KSRTC_PARTS } from "../services/inventoryApi";
 import { PurchaseOrderPdfModal } from "../components/ui/PurchaseOrderPdfModal";
-import type { ProcurementItem, PurchaseOrder, PurchaseOrderLine } from "../types";
+import type { ProcurementItem, PurchaseOrder, PurchaseOrderLine, Supplier, InventoryItem } from "../types";
 
 interface NavState {
   items?: ProcurementItem[];
@@ -21,20 +26,20 @@ export default function NewPurchaseOrder() {
   const prefilledItems = state.items || [];
   const isCriticalBuy = Boolean(state.isCritical || state.source === "critical");
 
-  const [lines, setLines] = useState<PurchaseOrderLine[]>(
-    prefilledItems.length > 0
-      ? prefilledItems.map((i) => ({
-          part: i.part,
-          quantity: i.quantity,
-          unitPrice: i.unit_price || 0,
-          totalCost: (i.quantity || 1) * (i.unit_price || 0),
-        }))
-      : [{ part: "", quantity: 1, unitPrice: 0, totalCost: 0 }]
-  );
+  const [poNumber, setPoNumber] = useState(`KSRTC/PO/${new Date().getFullYear()}/03282`);
+  const [suppliersList, setSuppliersList] = useState<Supplier[]>(DEFAULT_KSRTC_SUPPLIERS);
+  const [inventoryList, setInventoryList] = useState<InventoryItem[]>(DEFAULT_KSRTC_PARTS);
 
-  const [supplier, setSupplier] = useState(
-    prefilledItems[0]?.supplier || (isCriticalBuy ? "KSRTC Central Stores / Urgent Vendor" : "")
-  );
+  const initialSupplier = prefilledItems[0]?.supplier || (isCriticalBuy ? "KSRTC Central Stores / Urgent Vendor" : "");
+  const [supplier, setSupplier] = useState(initialSupplier);
+  const [supplierAddress, setSupplierAddress] = useState(() => {
+    if (!initialSupplier) return "";
+    const found = DEFAULT_KSRTC_SUPPLIERS.find((s) => s.name.toLowerCase() === initialSupplier.toLowerCase());
+    return found?.address || "";
+  });
+  const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
+  const [activePartDropdown, setActivePartDropdown] = useState<number | null>(null);
+
   const [expectedDelivery, setExpectedDelivery] = useState(
     new Date(Date.now() + (isCriticalBuy ? 3 : 7) * 86400000).toISOString().slice(0, 10)
   );
@@ -46,8 +51,112 @@ export default function NewPurchaseOrder() {
         ? "Pre-populated from PuLP Optimization Model Recommendation"
         : "")
   );
+
+  const [lines, setLines] = useState<PurchaseOrderLine[]>(
+    prefilledItems.length > 0
+      ? prefilledItems.map((i) => ({
+          part: i.part,
+          quantity: i.quantity,
+          unitPrice: i.unit_price || 0,
+          totalCost: (i.quantity || 1) * (i.unit_price || 0),
+        }))
+      : [{ part: "", quantity: 1, unitPrice: 0, totalCost: 0 }]
+  );
+
   const [submitting, setSubmitting] = useState(false);
   const [showPdf, setShowPdf] = useState(false);
+
+  const supplierContainerRef = useRef<HTMLDivElement>(null);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  // Load PO number, suppliers, and inventory for autocompletion
+  useEffect(() => {
+    getPurchaseOrders().then((orders) => {
+      const next = getNextPoNumber(orders);
+      setPoNumber(next);
+    });
+
+    getSuppliers().then((sups) => {
+      setSuppliersList(sups);
+      if (supplier) {
+        const found = sups.find((s) => s.name.toLowerCase() === supplier.toLowerCase());
+        if (found?.address) {
+          setSupplierAddress(found.address);
+        }
+      }
+    });
+
+    getInventory().then((inv) => {
+      setInventoryList(inv);
+    });
+  }, []);
+
+  // Dismiss dropdowns when clicking outside
+  useEffect(() => {
+    const handleDocumentClick = (e: MouseEvent) => {
+      if (supplierContainerRef.current && !supplierContainerRef.current.contains(e.target as Node)) {
+        setShowSupplierDropdown(false);
+      }
+      if (tableContainerRef.current && !tableContainerRef.current.contains(e.target as Node)) {
+        setActivePartDropdown(null);
+      }
+    };
+    document.addEventListener("mousedown", handleDocumentClick);
+    return () => document.removeEventListener("mousedown", handleDocumentClick);
+  }, []);
+
+  // Filter matching suppliers
+  const filteredSuppliers = useMemo(() => {
+    const q = supplier.trim().toLowerCase();
+    if (!q) return suppliersList.slice(0, 8);
+    return suppliersList
+      .filter(
+        (s) =>
+          s.name.toLowerCase().includes(q) ||
+          (s.category && s.category.toLowerCase().includes(q)) ||
+          (s.address && s.address.toLowerCase().includes(q))
+      )
+      .slice(0, 8);
+  }, [suppliersList, supplier]);
+
+  // Select supplier handler
+  const handleSelectSupplier = (s: Supplier) => {
+    setSupplier(s.name);
+    if (s.address) {
+      setSupplierAddress(s.address);
+    }
+    setShowSupplierDropdown(false);
+  };
+
+  // Filter matching parts for a specific line item
+  const getMatchingParts = (query: string) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return inventoryList.slice(0, 10);
+    return inventoryList
+      .filter(
+        (item) =>
+          item.part.toLowerCase().includes(q) ||
+          (item.category && item.category.toLowerCase().includes(q))
+      )
+      .slice(0, 10);
+  };
+
+  const handleSelectPart = (idx: number, item: InventoryItem) => {
+    setLines((prev) => {
+      const updated = [...prev];
+      const cur = updated[idx];
+      const qty = Number(cur.quantity) || 1;
+      const price = item.unitCost || cur.unitPrice || 0;
+      updated[idx] = {
+        ...cur,
+        part: item.part,
+        unitPrice: price,
+        totalCost: qty * price,
+      };
+      return updated;
+    });
+    setActivePartDropdown(null);
+  };
 
   const updateLineQty = (idx: number, qty: number) => {
     setLines((prev) =>
@@ -62,9 +171,24 @@ export default function NewPurchaseOrder() {
   };
 
   const updateLinePart = (idx: number, partName: string) => {
-    setLines((prev) =>
-      prev.map((l, i) => (i === idx ? { ...l, part: partName } : l))
-    );
+    setLines((prev) => {
+      const updated = [...prev];
+      const cur = updated[idx];
+      const matched = inventoryList.find(
+        (item) => item.part.toLowerCase() === partName.trim().toLowerCase()
+      );
+      const price: number = (matched && typeof matched.unitCost === "number" && matched.unitCost > 0)
+        ? matched.unitCost
+        : (cur.unitPrice || 0);
+      const resolvedName = matched ? matched.part : partName;
+      updated[idx] = {
+        ...cur,
+        part: resolvedName,
+        unitPrice: price,
+        totalCost: (Number(cur.quantity) || 1) * price,
+      };
+      return updated;
+    });
   };
 
   const addLine = () => {
@@ -84,9 +208,11 @@ export default function NewPurchaseOrder() {
       return;
     }
     setSubmitting(true);
+    const resolvedPoNumber = poNumber.trim() || getNextPoNumber();
     const po: PurchaseOrder = {
-      poNumber: `PO-2026-${Date.now().toString().slice(-4)}`,
+      poNumber: resolvedPoNumber,
       supplier: supplier.trim() || (isCriticalBuy ? "Emergency Procurement Vendor" : "KSRTC Central Stores"),
+      supplierAddress: supplierAddress.trim() || undefined,
       depot: SINGLE_DEPOT_NAME,
       poDate: new Date().toISOString().slice(0, 10),
       expectedDelivery,
@@ -94,6 +220,8 @@ export default function NewPurchaseOrder() {
       status: "Submitted",
       lines: validLines,
       notes,
+      isNew: true,
+      createdAt: Date.now(),
     };
     createPurchaseOrder(po)
       .then(() => {
@@ -160,17 +288,21 @@ export default function NewPurchaseOrder() {
         ) : null}
 
         <div className="rounded-xl border border-[--color-border] bg-[--color-surface-0] p-4 sm:p-6 space-y-4 sm:space-y-6 shadow-2xs">
+          {/* TOP GRID: PO Number & Delivery Date */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[--color-ink-500]">
-                Supplier Name
-              </label>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[--color-ink-500]">
+                  PO Number
+                </label>
+                <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Auto-generated</span>
+              </div>
               <input
                 type="text"
-                value={supplier}
-                onChange={(e) => setSupplier(e.target.value)}
-                placeholder="Enter supplier name"
-                className="w-full rounded-lg border border-[--color-border] bg-[--color-surface-0] px-3 py-2 text-sm font-medium text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
+                value={poNumber}
+                onChange={(e) => setPoNumber(e.target.value)}
+                placeholder="e.g. KSRTC/PO/2026/03282"
+                className="w-full rounded-lg border border-[--color-border] bg-[--color-surface-0] px-3 py-2 text-sm font-medium font-mono text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
               />
             </div>
 
@@ -187,11 +319,134 @@ export default function NewPurchaseOrder() {
             </div>
           </div>
 
+          {/* SUPPLIER NAME & ADDRESS SECTION */}
+          <div className="rounded-xl border border-[--color-border] bg-[--color-surface-1]/50 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-[--color-ink-700] flex items-center gap-1.5">
+                <Building2 size={14} className="text-blue-600 dark:text-blue-400" />
+                <span>Supplier & Dispatch Details</span>
+              </span>
+              {supplierAddress ? (
+                <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <Check size={12} /> Address auto-filled from vendor master
+                </span>
+              ) : (
+                <span className="text-[10px] text-[--color-ink-400]">Select a supplier below to auto-fill address</span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {/* SUPPLIER NAME WITH AUTOCOMPLETE */}
+              <div ref={supplierContainerRef} className="relative">
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[--color-ink-500] flex items-center justify-between">
+                  <span>Supplier Name *</span>
+                  {supplier && (
+                    <span className="text-[10px] text-blue-600 dark:text-blue-400 font-normal">Approved KSRTC Vendor</span>
+                  )}
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    list="ksrtc-suppliers-datalist"
+                    value={supplier}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSupplier(val);
+                      setShowSupplierDropdown(true);
+                      const matched = suppliersList.find((s) => s.name.toLowerCase() === val.trim().toLowerCase());
+                      if (matched?.address) {
+                        setSupplierAddress(matched.address);
+                      }
+                    }}
+                    onFocus={() => setShowSupplierDropdown(true)}
+                    placeholder="Type to search standard suppliers…"
+                    className="w-full rounded-lg border border-[--color-border] bg-[--color-surface-0] px-3 py-2 text-sm font-medium text-[--color-ink-900] focus:border-blue-500 focus:outline-none pr-8"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSupplierDropdown(!showSupplierDropdown)}
+                    className="absolute right-2 top-2.5 text-[--color-ink-400] hover:text-[--color-ink-700] transition-colors cursor-pointer"
+                  >
+                    <ChevronDown size={14} />
+                  </button>
+                </div>
+
+                <datalist id="ksrtc-suppliers-datalist">
+                  {suppliersList.map((s) => (
+                    <option key={s.id || s.name} value={s.name}>
+                      {s.category ? `${s.name} (${s.category})` : s.name}
+                    </option>
+                  ))}
+                </datalist>
+
+                {/* SUPPLIER DROPDOWN POPUP */}
+                {showSupplierDropdown && (
+                  <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border border-[--color-border] bg-[--color-surface-0] shadow-2xl py-1 text-xs">
+                    <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[--color-ink-400] bg-[--color-surface-1] border-b border-[--color-border] flex items-center justify-between">
+                      <span>Registered Vendors ({filteredSuppliers.length})</span>
+                      <span className="text-[10px] font-normal text-blue-600 dark:text-blue-400">Click to fill</span>
+                    </div>
+                    {filteredSuppliers.length === 0 ? (
+                      <div className="px-3 py-2 text-xs text-[--color-ink-400] italic">
+                        No matching registered suppliers. You can keep typing custom supplier name.
+                      </div>
+                    ) : (
+                      filteredSuppliers.map((s) => (
+                        <button
+                          key={s.id || s.name}
+                          type="button"
+                          onClick={() => handleSelectSupplier(s)}
+                          className="w-full text-left px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-950/40 border-b border-[--color-border] last:border-0 transition-colors cursor-pointer group"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-semibold text-xs text-[--color-ink-900] group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                              {s.name}
+                            </p>
+                            <span className="rounded bg-[--color-surface-2] px-1.5 py-0.2 text-[10px] font-medium text-[--color-ink-600] shrink-0">
+                              {s.category}
+                            </span>
+                          </div>
+                          {s.address && (
+                            <p className="text-[11px] text-[--color-ink-500] truncate mt-0.5 flex items-center gap-1">
+                              <MapPin size={10} className="shrink-0 text-[--color-ink-400]" />
+                              <span>{s.address}</span>
+                            </p>
+                          )}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* SUPPLIER ADDRESS (AUTO-FILLED & EDITABLE) */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[--color-ink-500] flex items-center gap-1">
+                  <MapPin size={11} className="text-blue-600 dark:text-blue-400" />
+                  <span>Supplier Address (Auto-filled)</span>
+                </label>
+                <textarea
+                  rows={2}
+                  value={supplierAddress}
+                  onChange={(e) => setSupplierAddress(e.target.value)}
+                  placeholder="Auto-fills upon choosing supplier, or type full postal address..."
+                  className="w-full rounded-lg border border-[--color-border] bg-[--color-surface-0] px-3 py-2 text-xs font-medium text-[--color-ink-900] focus:border-blue-500 focus:outline-none resize-none leading-relaxed"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* LINE ITEMS TABLE WITH PART NAME AUTOCOMPLETE */}
           <div>
-            <div className="mb-2.5 flex items-center justify-between">
-              <label className="text-xs font-semibold uppercase tracking-wider text-[--color-ink-500]">
-                Order Line Items ({lines.length})
-              </label>
+            <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-semibold uppercase tracking-wider text-[--color-ink-500]">
+                  Order Line Items ({lines.length})
+                </label>
+                <span className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.2 rounded border border-blue-200 dark:border-blue-900/60 font-medium">
+                  Auto-suggests Uniform Spares & Cost
+                </span>
+              </div>
               <button
                 type="button"
                 onClick={addLine}
@@ -201,69 +456,166 @@ export default function NewPurchaseOrder() {
               </button>
             </div>
 
-            <div className="overflow-x-auto rounded-lg border border-[--color-border]">
-              <table className="w-full text-sm min-w-[550px]">
+            {/* QUICK-ADD POPULAR KSRTC SPARES BAR */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-2 text-xs">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[--color-ink-400] shrink-0">
+                Quick Add:
+              </span>
+              {[
+                "Brake Lining Set (Leyland Viking / Cheetah)",
+                "Clutch Plate Assembly 380mm (Organic)",
+                "Engine Oil Filter Spin-On",
+                "Primary Fuel Filter Water Separator Cartridge",
+                "Heavy Commercial Radial Bus Tyre 295/80 R22.5",
+                "Alternator 28V 80A Heavy Commercial Bus",
+              ].map((pName) => (
+                <button
+                  key={pName}
+                  type="button"
+                  onClick={() => {
+                    const item = inventoryList.find((i) => i.part.toLowerCase() === pName.toLowerCase());
+                    const price = item?.unitCost || 0;
+                    // If first line is empty, replace it; otherwise append
+                    setLines((prev) => {
+                      if (prev.length === 1 && !prev[0].part.trim()) {
+                        return [{ part: pName, quantity: 1, unitPrice: price, totalCost: price }];
+                      }
+                      return [...prev, { part: pName, quantity: 1, unitPrice: price, totalCost: price }];
+                    });
+                  }}
+                  className="shrink-0 rounded-full border border-[--color-border] bg-[--color-surface-1] hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2.5 py-0.5 text-[11px] font-medium text-[--color-ink-700] hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                >
+                  + {pName.split("(")[0].trim()}
+                </button>
+              ))}
+            </div>
+
+            {/* GLOBAL DATALIST FOR SPARES AUTOCOMPLETION */}
+            <datalist id="ksrtc-spares-catalog">
+              {inventoryList.map((item) => (
+                <option key={item.id || item.part} value={item.part}>
+                  {item.category ? `${item.part} (${item.category} - ₹${item.unitCost})` : item.part}
+                </option>
+              ))}
+            </datalist>
+
+            <div ref={tableContainerRef} className="rounded-lg border border-[--color-border]">
+              <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[--color-border] bg-[--color-surface-1] text-left text-xs uppercase tracking-wider text-[--color-ink-500]">
-                    <th className="px-3.5 py-2.5">Part / Item</th>
-                    <th className="px-3.5 py-2.5">Quantity</th>
-                    <th className="px-3.5 py-2.5">Unit Price (₹)</th>
-                    <th className="px-3.5 py-2.5">Line Total</th>
+                    <th className="px-3.5 py-2.5">Part / Item (Auto-suggests uniform name)</th>
+                    <th className="px-3.5 py-2.5 w-28">Quantity</th>
+                    <th className="px-3.5 py-2.5 w-32">Unit Price (₹)</th>
+                    <th className="px-3.5 py-2.5 w-32">Line Total</th>
                     <th className="px-3.5 py-2.5 w-10"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[--color-border]">
-                  {lines.map((l, i) => (
-                    <tr key={i} className="hover:bg-[--color-surface-1] transition-colors">
-                      <td className="px-3.5 py-2.5">
-                        <input
-                          type="text"
-                          value={l.part}
-                          onChange={(e) => updateLinePart(i, e.target.value)}
-                          placeholder="Part Name"
-                          className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1 text-sm font-medium text-[--color-ink-900]"
-                        />
-                      </td>
-                      <td className="px-3.5 py-2.5">
-                        <input
-                          type="number"
-                          min="1"
-                          value={l.quantity}
-                          onChange={(e) => updateLineQty(i, Math.max(1, Number(e.target.value)))}
-                          className="w-24 rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1 text-sm tabular font-semibold text-[--color-ink-900]"
-                        />
-                      </td>
-                      <td className="px-3.5 py-2.5">
-                        <input
-                          type="number"
-                          min="0"
-                          value={l.unitPrice}
-                          onChange={(e) => updateLinePrice(i, Math.max(0, Number(e.target.value)))}
-                          placeholder="0"
-                          className="w-28 rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1 text-sm tabular text-[--color-ink-900]"
-                        />
-                      </td>
-                      <td className="px-3.5 py-2.5 tabular font-bold text-[--color-ink-900]">
-                        ₹{l.totalCost.toLocaleString("en-IN")}
-                      </td>
-                      <td className="px-3.5 py-2.5 text-center">
-                        <button
-                          type="button"
-                          onClick={() => removeLine(i)}
-                          title="Remove item"
-                          className="text-[--color-ink-400] hover:text-red-500 cursor-pointer transition-colors p-1"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {lines.map((l, i) => {
+                    const matchingParts = getMatchingParts(l.part);
+                    return (
+                      <tr key={i} className="hover:bg-[--color-surface-1]/50 transition-colors">
+                        <td className="px-3.5 py-2.5 relative">
+                          <input
+                            type="text"
+                            list="ksrtc-spares-catalog"
+                            value={l.part}
+                            onChange={(e) => {
+                              updateLinePart(i, e.target.value);
+                              setActivePartDropdown(i);
+                            }}
+                            onFocus={() => setActivePartDropdown(i)}
+                            placeholder="Type or select standard spare…"
+                            className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-sm font-medium text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
+                          />
+
+                          {/* PART AUTOCOMPLETE POPUP */}
+                          {activePartDropdown === i && (
+                            <div className="absolute left-3.5 right-3.5 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border border-[--color-border] bg-[--color-surface-0] shadow-2xl py-1 text-xs">
+                              <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[--color-ink-400] bg-[--color-surface-1] border-b border-[--color-border] flex items-center justify-between">
+                                <span>Suggested Spares Catalog ({matchingParts.length})</span>
+                                <span className="text-[10px] font-normal text-blue-600 dark:text-blue-400">
+                                  Click to fill uniform name & cost
+                                </span>
+                              </div>
+                              {matchingParts.length === 0 ? (
+                                <div className="px-3 py-2 text-xs text-[--color-ink-400] italic">
+                                  No matching standard parts. You can keep typing custom part name.
+                                </div>
+                              ) : (
+                                matchingParts.map((item) => (
+                                  <button
+                                    key={item.id}
+                                    type="button"
+                                    onClick={() => handleSelectPart(i, item)}
+                                    className="w-full text-left px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-950/40 border-b border-[--color-border] last:border-0 transition-colors flex items-center justify-between gap-3 cursor-pointer group"
+                                  >
+                                    <div className="min-w-0 flex-1">
+                                      <p className="font-semibold text-xs text-[--color-ink-900] group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">
+                                        {item.part}
+                                      </p>
+                                      <div className="flex items-center gap-2 mt-0.5 text-[11px] text-[--color-ink-500]">
+                                        <span className="rounded bg-[--color-surface-2] px-1.5 py-0.2 font-medium">
+                                          {item.category}
+                                        </span>
+                                        <span>Stock: {item.currentStock} units</span>
+                                      </div>
+                                    </div>
+                                    {item.unitCost ? (
+                                      <div className="text-right shrink-0">
+                                        <span className="text-xs font-semibold tabular text-[--color-ink-800]">
+                                          ₹{item.unitCost.toLocaleString("en-IN")}
+                                        </span>
+                                        <span className="block text-[10px] text-[--color-ink-400]">Std Cost</span>
+                                      </div>
+                                    ) : null}
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-3.5 py-2.5">
+                          <input
+                            type="number"
+                            min="1"
+                            value={l.quantity}
+                            onChange={(e) => updateLineQty(i, Math.max(1, Number(e.target.value)))}
+                            className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-sm tabular font-semibold text-[--color-ink-900]"
+                          />
+                        </td>
+                        <td className="px-3.5 py-2.5">
+                          <input
+                            type="number"
+                            min="0"
+                            value={l.unitPrice}
+                            onChange={(e) => updateLinePrice(i, Math.max(0, Number(e.target.value)))}
+                            placeholder="0"
+                            className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-sm tabular text-[--color-ink-900]"
+                          />
+                        </td>
+                        <td className="px-3.5 py-2.5 tabular font-bold text-[--color-ink-900]">
+                          ₹{l.totalCost.toLocaleString("en-IN")}
+                        </td>
+                        <td className="px-3.5 py-2.5 text-center">
+                          <button
+                            type="button"
+                            onClick={() => removeLine(i)}
+                            title="Remove item"
+                            className="text-[--color-ink-400] hover:text-red-500 cursor-pointer transition-colors p-1"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
             {total === 0 && lines.length > 0 && (
               <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
-                Tip: Unit prices can be entered above, or left as 0 and finalized upon receiving stock and vendor invoice.
+                Tip: Unit prices can be entered above or auto-populated from inventory, or left as 0 and finalized upon receiving stock and vendor invoice.
               </p>
             )}
           </div>
@@ -320,8 +672,9 @@ export default function NewPurchaseOrder() {
       {showPdf && (
         <PurchaseOrderPdfModal
           po={{
-            poNumber: `PO-2026-DRAFT`,
+            poNumber: poNumber.trim() || `KSRTC/PO/DRAFT`,
             supplier: supplier.trim() || (isCriticalBuy ? "Emergency Procurement Vendor" : "KSRTC Central Stores"),
+            supplierAddress: supplierAddress.trim() || undefined,
             depot: SINGLE_DEPOT_NAME,
             poDate: new Date().toISOString().slice(0, 10),
             expectedDelivery,
@@ -336,4 +689,3 @@ export default function NewPurchaseOrder() {
     </div>
   );
 }
-

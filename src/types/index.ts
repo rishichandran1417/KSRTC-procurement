@@ -160,6 +160,7 @@ export interface PurchaseOrderLine {
 export interface PurchaseOrder {
   poNumber: string;
   supplier: string;
+  supplierAddress?: string;
   depot: string;
   poDate: string;
   expectedDelivery: string;
@@ -167,6 +168,8 @@ export interface PurchaseOrder {
   status: PoStatus;
   lines: PurchaseOrderLine[];
   notes?: string;
+  createdAt?: number;
+  isNew?: boolean;
 }
 
 // ---------- Suppliers ----------
@@ -182,6 +185,7 @@ export interface Supplier {
   contactName?: string;
   contactEmail?: string;
   contactPhone?: string;
+  address?: string;
 }
 
 // ---------- Power BI ----------

@@ -31,6 +31,468 @@ function saveStoredInventory(items: InventoryItem[]): void {
   }
 }
 
+export const DEFAULT_KSRTC_PARTS: InventoryItem[] = [
+  {
+    id: "def-inv-1",
+    part: "Brake Lining Set (Leyland Viking / Cheetah)",
+    category: "Brake Systems",
+    currentStock: 48,
+    safetyStock: 30,
+    reorderPoint: 50,
+    forecastDemand: 65,
+    daysOfSupply: 22,
+    stockoutRisk: "Low",
+    status: "Healthy",
+    unitCost: 1850,
+    primarySupplier: "Kalyani Brakes & Steering Ltd",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Front/Rear axle standard friction linings",
+  },
+  {
+    id: "def-inv-2",
+    part: "Brake Drum Heavy Duty 410mm",
+    category: "Brake Systems",
+    currentStock: 14,
+    safetyStock: 12,
+    reorderPoint: 20,
+    forecastDemand: 18,
+    daysOfSupply: 23,
+    stockoutRisk: "Medium",
+    status: "Warning",
+    unitCost: 4200,
+    primarySupplier: "Kalyani Brakes & Steering Ltd",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Grade 250 cast iron drum",
+  },
+  {
+    id: "def-inv-3",
+    part: "Clutch Plate Assembly 380mm (Organic)",
+    category: "Transmission & Powertrain",
+    currentStock: 22,
+    safetyStock: 15,
+    reorderPoint: 25,
+    forecastDemand: 28,
+    daysOfSupply: 24,
+    stockoutRisk: "Low",
+    status: "Healthy",
+    unitCost: 5400,
+    primarySupplier: "Sundaram Clutches & Spares",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Heavy commercial 6-speed bus transmission",
+  },
+  {
+    id: "def-inv-4",
+    part: "Clutch Pressure Plate Heavy Commercial",
+    category: "Transmission & Powertrain",
+    currentStock: 12,
+    safetyStock: 10,
+    reorderPoint: 18,
+    forecastDemand: 16,
+    daysOfSupply: 23,
+    stockoutRisk: "Medium",
+    status: "Warning",
+    unitCost: 6800,
+    primarySupplier: "Sundaram Clutches & Spares",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Diaphragm spring pressure assembly",
+  },
+  {
+    id: "def-inv-5",
+    part: "Engine Oil Filter Spin-On",
+    category: "Filters & Lubrication",
+    currentStock: 85,
+    safetyStock: 40,
+    reorderPoint: 60,
+    forecastDemand: 95,
+    daysOfSupply: 27,
+    stockoutRisk: "Low",
+    status: "Healthy",
+    unitCost: 480,
+    primarySupplier: "Bosch Rexroth Filters & Injection",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "20 micron filtration rated",
+  },
+  {
+    id: "def-inv-6",
+    part: "Primary Fuel Filter Water Separator Cartridge",
+    category: "Filters & Lubrication",
+    currentStock: 62,
+    safetyStock: 35,
+    reorderPoint: 50,
+    forecastDemand: 70,
+    daysOfSupply: 27,
+    stockoutRisk: "Low",
+    status: "Healthy",
+    unitCost: 650,
+    primarySupplier: "Bosch Rexroth Filters & Injection",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Clear bowl water separator replacement",
+  },
+  {
+    id: "def-inv-7",
+    part: "Secondary Diesel Filter Element",
+    category: "Filters & Lubrication",
+    currentStock: 74,
+    safetyStock: 40,
+    reorderPoint: 55,
+    forecastDemand: 80,
+    daysOfSupply: 28,
+    stockoutRisk: "Low",
+    status: "Healthy",
+    unitCost: 420,
+    primarySupplier: "Bosch Rexroth Filters & Injection",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Fine fuel filtration stage 2",
+  },
+  {
+    id: "def-inv-8",
+    part: "Engine Air Filter Primary Radial Seal Element",
+    category: "Filters & Lubrication",
+    currentStock: 38,
+    safetyStock: 25,
+    reorderPoint: 40,
+    forecastDemand: 45,
+    daysOfSupply: 25,
+    stockoutRisk: "Medium",
+    status: "Warning",
+    unitCost: 1450,
+    primarySupplier: "Bosch Rexroth Filters & Injection",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "High dust capacity intake filter",
+  },
+  {
+    id: "def-inv-9",
+    part: "Engine Air Filter Secondary Safety Element",
+    category: "Filters & Lubrication",
+    currentStock: 28,
+    safetyStock: 20,
+    reorderPoint: 30,
+    forecastDemand: 32,
+    daysOfSupply: 26,
+    stockoutRisk: "Low",
+    status: "Healthy",
+    unitCost: 890,
+    primarySupplier: "Bosch Rexroth Filters & Injection",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Internal safety core filter",
+  },
+  {
+    id: "def-inv-10",
+    part: "Front Leaf Spring Main Leaf (No. 1)",
+    category: "Suspension & Steering",
+    currentStock: 18,
+    safetyStock: 15,
+    reorderPoint: 22,
+    forecastDemand: 20,
+    daysOfSupply: 27,
+    stockoutRisk: "Medium",
+    status: "Warning",
+    unitCost: 3100,
+    primarySupplier: "Global Auto Industries & Co",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Parabolic spring steel with military wrap eye",
+  },
+  {
+    id: "def-inv-11",
+    part: "Rear Helper Leaf Spring Assembly (9 Leaf)",
+    category: "Suspension & Steering",
+    currentStock: 11,
+    safetyStock: 10,
+    reorderPoint: 16,
+    forecastDemand: 15,
+    daysOfSupply: 22,
+    stockoutRisk: "Medium",
+    status: "Warning",
+    unitCost: 7800,
+    primarySupplier: "Global Auto Industries & Co",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Heavy overload rated rear suspension",
+  },
+  {
+    id: "def-inv-12",
+    part: "Tie Rod End Assembly LH/RH Set",
+    category: "Suspension & Steering",
+    currentStock: 34,
+    safetyStock: 20,
+    reorderPoint: 30,
+    forecastDemand: 35,
+    daysOfSupply: 29,
+    stockoutRisk: "Low",
+    status: "Healthy",
+    unitCost: 1650,
+    primarySupplier: "Kalyani Brakes & Steering Ltd",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Precision ball joint assembly",
+  },
+  {
+    id: "def-inv-13",
+    part: "King Pin Kit with Needle Roller Bearings",
+    category: "Suspension & Steering",
+    currentStock: 15,
+    safetyStock: 12,
+    reorderPoint: 20,
+    forecastDemand: 18,
+    daysOfSupply: 25,
+    stockoutRisk: "Medium",
+    status: "Warning",
+    unitCost: 3400,
+    primarySupplier: "National Bearings & Spares Corp",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Front axle knuckle steering king pin",
+  },
+  {
+    id: "def-inv-14",
+    part: "Heavy Commercial Radial Bus Tyre 295/80 R22.5",
+    category: "Tyres & Retreading",
+    currentStock: 26,
+    safetyStock: 25,
+    reorderPoint: 40,
+    forecastDemand: 42,
+    daysOfSupply: 19,
+    stockoutRisk: "Medium",
+    status: "Warning",
+    unitCost: 19500,
+    primarySupplier: "Apollo Radial Fleet Solutions",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "All-position steer and drive radial tyre",
+  },
+  {
+    id: "def-inv-15",
+    part: "Alternator 28V 80A Heavy Commercial Bus",
+    category: "Electrical & Sensors",
+    currentStock: 8,
+    safetyStock: 6,
+    reorderPoint: 12,
+    forecastDemand: 10,
+    daysOfSupply: 24,
+    stockoutRisk: "Medium",
+    status: "Warning",
+    unitCost: 12800,
+    primarySupplier: "Lucas TVS Electricals Division",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Heavy charging output for city and highway transit",
+  },
+  {
+    id: "def-inv-16",
+    part: "Starter Motor 24V 4.5kW Pre-Engaged",
+    category: "Electrical & Sensors",
+    currentStock: 7,
+    safetyStock: 5,
+    reorderPoint: 10,
+    forecastDemand: 9,
+    daysOfSupply: 23,
+    stockoutRisk: "Medium",
+    status: "Warning",
+    unitCost: 14200,
+    primarySupplier: "Lucas TVS Electricals Division",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "High torque planetary gear starter",
+  },
+  {
+    id: "def-inv-17",
+    part: "Heavy Commercial Battery 12V 180Ah (Pair 24V)",
+    category: "Electrical & Sensors",
+    currentStock: 16,
+    safetyStock: 12,
+    reorderPoint: 20,
+    forecastDemand: 18,
+    daysOfSupply: 27,
+    stockoutRisk: "Low",
+    status: "Healthy",
+    unitCost: 11500,
+    primarySupplier: "Lucas TVS Electricals Division",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Low maintenance commercial starting battery",
+  },
+  {
+    id: "def-inv-18",
+    part: "Air Brake Dual Brake Valve (Foot Valve)",
+    category: "Air Brake & Pneumatics",
+    currentStock: 14,
+    safetyStock: 10,
+    reorderPoint: 16,
+    forecastDemand: 15,
+    daysOfSupply: 28,
+    stockoutRisk: "Low",
+    status: "Healthy",
+    unitCost: 3800,
+    primarySupplier: "Wabco Pneumatics India Ltd",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Standard dual-circuit graduated brake control",
+  },
+  {
+    id: "def-inv-19",
+    part: "Air Compressor Unloader / Governor Valve",
+    category: "Air Brake & Pneumatics",
+    currentStock: 19,
+    safetyStock: 12,
+    reorderPoint: 18,
+    forecastDemand: 16,
+    daysOfSupply: 36,
+    stockoutRisk: "Low",
+    status: "Healthy",
+    unitCost: 2400,
+    primarySupplier: "Wabco Pneumatics India Ltd",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "System pressure regulator valve 8.5 bar",
+  },
+  {
+    id: "def-inv-20",
+    part: "Wheel Hub Bearing Set (Front Inner/Outer)",
+    category: "Bearings & Transmission",
+    currentStock: 42,
+    safetyStock: 25,
+    reorderPoint: 35,
+    forecastDemand: 40,
+    daysOfSupply: 32,
+    stockoutRisk: "Low",
+    status: "Healthy",
+    unitCost: 2200,
+    primarySupplier: "National Bearings & Spares Corp",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Taper roller precision bearing matched pair",
+  },
+  {
+    id: "def-inv-21",
+    part: "Universal Joint Cross Kit (Propeller Shaft)",
+    category: "Propeller Shaft & Axles",
+    currentStock: 30,
+    safetyStock: 20,
+    reorderPoint: 28,
+    forecastDemand: 32,
+    daysOfSupply: 28,
+    stockoutRisk: "Low",
+    status: "Healthy",
+    unitCost: 1750,
+    primarySupplier: "Rane Madras Driveline Components",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Heavy duty needle bearing cross with grease zerk",
+  },
+  {
+    id: "def-inv-22",
+    part: "Engine Water Pump Assembly with Pulley",
+    category: "Cooling & Radiator",
+    currentStock: 9,
+    safetyStock: 8,
+    reorderPoint: 14,
+    forecastDemand: 12,
+    daysOfSupply: 23,
+    stockoutRisk: "Medium",
+    status: "Warning",
+    unitCost: 4600,
+    primarySupplier: "Ashok Leyland Genuine Parts Depot",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Cast iron housing with ceramic mechanical seal",
+  },
+  {
+    id: "def-inv-23",
+    part: "Radiator Aluminium Heavy Duty (6-Cylinder Bus)",
+    category: "Cooling & Radiator",
+    currentStock: 5,
+    safetyStock: 4,
+    reorderPoint: 8,
+    forecastDemand: 6,
+    daysOfSupply: 25,
+    stockoutRisk: "Medium",
+    status: "Warning",
+    unitCost: 16500,
+    primarySupplier: "Ashok Leyland Genuine Parts Depot",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "High heat rejection multi-core radiator",
+  },
+  {
+    id: "def-inv-24",
+    part: "Poly-V Fan & Alternator Belt (8PK 1420)",
+    category: "Engine Components",
+    currentStock: 55,
+    safetyStock: 30,
+    reorderPoint: 45,
+    forecastDemand: 50,
+    daysOfSupply: 33,
+    stockoutRisk: "Low",
+    status: "Healthy",
+    unitCost: 750,
+    primarySupplier: "Lucas TVS Electricals Division",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "EPDM synthetic ribbed automotive drive belt",
+  },
+  {
+    id: "def-inv-25",
+    part: "Hydraulic Shock Absorber (Front Heavy Duty)",
+    category: "Suspension & Steering",
+    currentStock: 24,
+    safetyStock: 16,
+    reorderPoint: 25,
+    forecastDemand: 26,
+    daysOfSupply: 28,
+    stockoutRisk: "Low",
+    status: "Healthy",
+    unitCost: 2600,
+    primarySupplier: "Global Auto Industries & Co",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Twin tube telescopic dampener",
+  },
+  {
+    id: "def-inv-26",
+    part: "LED Headlamp Assembly 24V High Intensity",
+    category: "Electrical & Sensors",
+    currentStock: 32,
+    safetyStock: 18,
+    reorderPoint: 28,
+    forecastDemand: 30,
+    daysOfSupply: 32,
+    stockoutRisk: "Low",
+    status: "Healthy",
+    unitCost: 2950,
+    primarySupplier: "Kerala Electrical & Allied (KEL)",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Shock and vibration resistant sealed beam",
+  },
+  {
+    id: "def-inv-27",
+    part: "Wiper Blade Heavy Duty 28 Inch (700mm)",
+    category: "Hardware & Body",
+    currentStock: 68,
+    safetyStock: 35,
+    reorderPoint: 50,
+    forecastDemand: 60,
+    daysOfSupply: 34,
+    stockoutRisk: "Low",
+    status: "Healthy",
+    unitCost: 350,
+    primarySupplier: "Sree Fasteners & Tools Ltd",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Graphite coated natural rubber curved blade",
+  }
+];
+
 let activeInventory: InventoryItem[] = loadStoredInventory();
 
 export function clearInventory(): InventoryItem[] {
@@ -44,11 +506,22 @@ export function clearInventory(): InventoryItem[] {
 export async function getInventory(): Promise<InventoryItem[]> {
   activeInventory = loadStoredInventory();
 
+  // Create combined map starting with default standard items
+  const map = new Map<string, InventoryItem>();
+  for (const item of DEFAULT_KSRTC_PARTS) {
+    map.set(item.part.toLowerCase(), item);
+  }
+
+  // Overlay local active inventory
+  for (const item of activeInventory) {
+    map.set(item.part.toLowerCase(), item);
+  }
+
   if (ENDPOINTS.base) {
     try {
       const remote = await apiClient.get<any[]>(`${ENDPOINTS.base}/inventory`);
-      if (Array.isArray(remote)) {
-        const normalizedRemote: InventoryItem[] = remote.map((r) => {
+      if (Array.isArray(remote) && remote.length > 0) {
+        for (const r of remote) {
           const current = r.quantity ?? r.currentStock ?? 0;
           const safety = r.safety_stock ?? r.safetyStock ?? 5;
           const reorder = r.reorder_point ?? r.reorderPoint ?? 10;
@@ -57,7 +530,7 @@ export async function getInventory(): Promise<InventoryItem[]> {
           else if (current <= reorder) status = "Warning";
           else status = "Healthy";
 
-          return {
+          const norm: InventoryItem = {
             id: String(r.id || r.part_id || `remote-${r.sku || r.name}`),
             part: r.name || r.part || r.sku || "Unknown Part",
             depot: r.depot || SINGLE_DEPOT,
@@ -74,38 +547,18 @@ export async function getInventory(): Promise<InventoryItem[]> {
             primarySupplier: r.primarySupplier || r.supplier || "KSRTC Central Stores",
             notes: r.description || r.notes || "",
           };
-        });
-
-        // Merge: local activeInventory overrides or adds to remote list
-        const mergedMap = new Map<string, InventoryItem>();
-        for (const item of normalizedRemote) {
-          mergedMap.set(item.part.toLowerCase(), item);
+          map.set(norm.part.toLowerCase(), norm);
         }
-        for (const localItem of activeInventory) {
-          mergedMap.set(localItem.part.toLowerCase(), localItem);
-        }
-
-        const merged = Array.from(mergedMap.values());
-        const seenIds = new Set<string>();
-        const uniqueMerged = merged.map((item, idx) => {
-          let uid = String(item.id || `inv-${idx}`);
-          if (seenIds.has(uid)) {
-            uid = `${uid}-${idx}`;
-          }
-          seenIds.add(uid);
-          return { ...item, id: uid };
-        });
-
-        saveStoredInventory(uniqueMerged);
-        activeInventory = uniqueMerged;
-        return simulateLatency(uniqueMerged, 10);
       }
     } catch (err) {
       console.warn("API call to /inventory failed, using cached inventory:", err);
     }
   }
 
-  return simulateLatency([...activeInventory], 50);
+  const result = Array.from(map.values());
+  saveStoredInventory(result);
+  activeInventory = result;
+  return simulateLatency(result, 15);
 }
 
 export async function addInventoryItem(payload: AddInventoryPayload): Promise<InventoryItem> {

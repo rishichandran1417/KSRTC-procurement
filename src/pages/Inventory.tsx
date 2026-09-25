@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, Edit3, Sliders, X, AlertTriangle, Zap } from "lucide-react";
+import {
+  Plus, Search, Edit3, Sliders, X, AlertTriangle, Zap,
+  ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight,
+  ChevronsLeft, ChevronsRight
+} from "lucide-react";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
@@ -15,6 +19,16 @@ import {
 } from "../services/inventoryApi";
 import type { InventoryItem, AddInventoryPayload, ConsumptionRecord, PriceRecord } from "../types";
 
+export type InventorySortField =
+  | "part"
+  | "category"
+  | "currentStock"
+  | "safetyStock"
+  | "reorderPoint"
+  | "forecastDemand"
+  | "daysOfSupply"
+  | "status";
+
 export default function Inventory() {
   const navigate = useNavigate();
   const { filters } = useFilters();
@@ -24,6 +38,12 @@ export default function Inventory() {
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [search, setSearch] = useState("");
+
+  // Sort and pagination states
+  const [sortField, setSortField] = useState<InventorySortField>("part");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   const [selectedDetail, setSelectedDetail] = useState<InventoryItem | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -41,16 +61,116 @@ export default function Inventory() {
 
   useEffect(load, []);
 
-  const filteredItems = useMemo(
-    () =>
-      items.filter((i) => {
-        if (filters.category !== "All Categories" && i.category !== filters.category) return false;
-        if (statusFilter !== "All" && i.status !== statusFilter) return false;
-        if (search && !i.part.toLowerCase().includes(search.toLowerCase())) return false;
-        return true;
-      }),
-    [items, filters.category, statusFilter, search]
-  );
+  const handleSort = (field: InventorySortField) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      if (["currentStock", "safetyStock", "reorderPoint", "forecastDemand", "daysOfSupply"].includes(field)) {
+        setSortDirection("desc");
+      } else {
+        setSortDirection("asc");
+      }
+    }
+    setCurrentPage(1);
+  };
+
+  const filteredAndSortedItems = useMemo(() => {
+    let list = items.filter((i) => {
+      if (filters.category !== "All Categories" && i.category !== filters.category) return false;
+      if (statusFilter !== "All" && i.status !== statusFilter) return false;
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        const matchPart = (i.part || "").toLowerCase().includes(q);
+        const matchCat = (i.category || "").toLowerCase().includes(q);
+        const matchNotes = (i.notes || "").toLowerCase().includes(q);
+        if (!matchPart && !matchCat && !matchNotes) return false;
+      }
+      return true;
+    });
+
+    return [...list].sort((a, b) => {
+      let cmp = 0;
+      switch (sortField) {
+        case "part":
+          cmp = (a.part || "").localeCompare(b.part || "");
+          break;
+        case "category":
+          cmp = (a.category || "").localeCompare(b.category || "");
+          break;
+        case "currentStock":
+          cmp = (a.currentStock ?? 0) - (b.currentStock ?? 0);
+          break;
+        case "safetyStock":
+          cmp = (a.safetyStock ?? 0) - (b.safetyStock ?? 0);
+          break;
+        case "reorderPoint":
+          cmp = (a.reorderPoint ?? 0) - (b.reorderPoint ?? 0);
+          break;
+        case "forecastDemand":
+          cmp = (a.forecastDemand ?? 0) - (b.forecastDemand ?? 0);
+          break;
+        case "daysOfSupply":
+          cmp = (a.daysOfSupply ?? 0) - (b.daysOfSupply ?? 0);
+          break;
+        case "status": {
+          const rank: Record<string, number> = { Critical: 0, Warning: 1, Healthy: 2 };
+          cmp = (rank[a.status] ?? 3) - (rank[b.status] ?? 3);
+          break;
+        }
+      }
+      return sortDirection === "asc" ? cmp : -cmp;
+    });
+  }, [items, filters.category, statusFilter, search, sortField, sortDirection]);
+
+  const totalItems = filteredAndSortedItems.length;
+  const totalPages = pageSize === -1 ? 1 : Math.max(1, Math.ceil(totalItems / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIdx = pageSize === -1 ? 0 : (safeCurrentPage - 1) * pageSize;
+  const paginatedItems =
+    pageSize === -1
+      ? filteredAndSortedItems
+      : filteredAndSortedItems.slice(startIdx, startIdx + pageSize);
+
+  const getPageNumbers = () => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (safeCurrentPage <= 4) {
+      return [1, 2, 3, 4, 5, "...", totalPages];
+    }
+    if (safeCurrentPage >= totalPages - 3) {
+      return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+    return [1, "...", safeCurrentPage - 1, safeCurrentPage, safeCurrentPage + 1, "...", totalPages];
+  };
+
+  const renderSortHeader = (label: string, field: InventorySortField, className = "") => {
+    const isActive = sortField === field;
+    return (
+      <th
+        onClick={() => handleSort(field)}
+        className={`cursor-pointer py-3 px-3 transition-colors hover:text-blue-600 dark:hover:text-blue-400 group select-none ${
+          isActive ? "text-blue-600 dark:text-blue-400 font-semibold" : "text-[--color-ink-500]"
+        } ${className}`}
+      >
+        <div className="inline-flex items-center gap-1">
+          <span>{label}</span>
+          <span className="shrink-0">
+            {isActive ? (
+              sortDirection === "asc" ? (
+                <ArrowUp size={12} className="text-blue-600 dark:text-blue-400" />
+              ) : (
+                <ArrowDown size={12} className="text-blue-600 dark:text-blue-400" />
+              )
+            ) : (
+              <ArrowUpDown size={11} className="opacity-0 group-hover:opacity-60 transition-opacity" />
+            )}
+          </span>
+        </div>
+      </th>
+    );
+  };
 
   return (
     <div>
@@ -128,7 +248,10 @@ export default function Inventory() {
               <input
                 placeholder="Search part or component…"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="w-full rounded-md border border-[--color-border] bg-[--color-surface-0] pl-8 pr-3 py-1.5 text-sm text-[--color-ink-900] placeholder:text-[--color-ink-400] focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               <Search size={14} className="absolute left-2.5 top-2.5 text-[--color-ink-400]" />
@@ -136,13 +259,40 @@ export default function Inventory() {
 
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-md border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-sm text-[--color-ink-800] focus:outline-none focus:ring-1 focus:ring-blue-500"
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="rounded-md border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-sm text-[--color-ink-800] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
             >
               {["All", "Healthy", "Warning", "Critical"].map((s) => (
                 <option key={s} value={s}>{s} Stock</option>
               ))}
             </select>
+
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className="text-[--color-ink-500] hidden sm:inline">Sort:</span>
+              <select
+                value={`${sortField}-${sortDirection}`}
+                onChange={(e) => {
+                  const [f, d] = e.target.value.split("-") as [InventorySortField, "asc" | "desc"];
+                  setSortField(f);
+                  setSortDirection(d);
+                  setCurrentPage(1);
+                }}
+                className="rounded-md border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs text-[--color-ink-800] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+              >
+                <option value="part-asc">Part Name (A → Z)</option>
+                <option value="part-desc">Part Name (Z → A)</option>
+                <option value="currentStock-asc">Stock (Low → High)</option>
+                <option value="currentStock-desc">Stock (High → Low)</option>
+                <option value="daysOfSupply-asc">Days Supply (Lowest First)</option>
+                <option value="daysOfSupply-desc">Days Supply (Highest First)</option>
+                <option value="status-asc">Status (Critical First)</option>
+                <option value="reorderPoint-desc">Reorder Point (High → Low)</option>
+                <option value="forecastDemand-desc">Forecast (High → Low)</option>
+              </select>
+            </div>
           </div>
 
           <button
@@ -157,13 +307,13 @@ export default function Inventory() {
           <LoadingState label="Loading inventory records…" />
         ) : error ? (
           <ErrorState title="Inventory unavailable." message={error} onRetry={load} />
-        ) : filteredItems.length === 0 ? (
+        ) : filteredAndSortedItems.length === 0 ? (
           <EmptyState
             title={items.length === 0 ? "No inventory items registered yet" : "No matching inventory items"}
             message={
               items.length === 0
                 ? "Your inventory is currently empty. Click 'Add Inventory' above to register your first spare part."
-                : "Try adjusting search or category filters."
+                : "Try adjusting search, sort, or category filters."
             }
           />
         ) : (
@@ -172,19 +322,19 @@ export default function Inventory() {
               <table className="w-full text-sm min-w-[780px]">
                 <thead>
                   <tr className="border-b border-[--color-border] bg-[--color-surface-1]/50 text-left text-xs font-medium uppercase tracking-wider text-[--color-ink-500]">
-                    <th className="px-4 py-3">Part / Item</th>
-                    <th className="px-3 py-3">Category</th>
-                    <th className="px-3 py-3">Current Stock</th>
-                    <th className="px-3 py-3">Safety Stock</th>
-                    <th className="px-3 py-3">Reorder Point</th>
-                    <th className="px-3 py-3">Forecast Demand</th>
-                    <th className="px-3 py-3">Days of Supply</th>
-                    <th className="px-3 py-3">Stock Status</th>
-                    <th className="px-3 py-3 text-right pr-4">Actions</th>
+                    {renderSortHeader("Part / Item", "part", "px-4")}
+                    {renderSortHeader("Category", "category")}
+                    {renderSortHeader("Current Stock", "currentStock")}
+                    {renderSortHeader("Safety Stock", "safetyStock")}
+                    {renderSortHeader("Reorder Point", "reorderPoint")}
+                    {renderSortHeader("Forecast Demand", "forecastDemand")}
+                    {renderSortHeader("Days of Supply", "daysOfSupply")}
+                    {renderSortHeader("Stock Status", "status")}
+                    <th className="px-3 py-3 text-right pr-4 text-[--color-ink-500] font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[--color-border]">
-                  {filteredItems.map((item, idx) => (
+                  {paginatedItems.map((item, idx) => (
                     <tr
                       key={`inv-${item.id}-${idx}`}
                       className="hover:bg-[--color-surface-1]/70 transition-colors group"
@@ -246,6 +396,96 @@ export default function Inventory() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* PAGINATION FOOTER */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[--color-border] px-4 py-3 bg-[--color-surface-0]">
+              <div className="flex items-center gap-3 text-xs text-[--color-ink-500]">
+                <span>
+                  Showing <strong className="text-[--color-ink-900]">{startIdx + 1}</strong> to{" "}
+                  <strong className="text-[--color-ink-900]">{Math.min(startIdx + (pageSize === -1 ? totalItems : pageSize), totalItems)}</strong> of{" "}
+                  <strong className="text-[--color-ink-900]">{totalItems.toLocaleString("en-IN")}</strong> parts
+                </span>
+
+                <div className="hidden sm:flex items-center gap-1.5 pl-3 border-l border-[--color-border]">
+                  <span>Rows:</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="rounded border border-[--color-border] bg-[--color-surface-0] px-1.5 py-0.5 text-xs text-[--color-ink-800]"
+                  >
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                    <option value={-1}>All</option>
+                  </select>
+                </div>
+              </div>
+
+              {totalPages > 1 && pageSize !== -1 && (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={safeCurrentPage === 1}
+                    className="p-1 rounded border border-[--color-border] text-[--color-ink-600] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[--color-surface-1]"
+                    title="First page"
+                  >
+                    <ChevronsLeft size={14} />
+                  </button>
+
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={safeCurrentPage === 1}
+                    className="p-1 rounded border border-[--color-border] text-[--color-ink-600] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[--color-surface-1]"
+                    title="Previous page"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+
+                  <div className="flex items-center gap-1 px-1">
+                    {getPageNumbers().map((num, i) =>
+                      num === "..." ? (
+                        <span key={`dots-${i}`} className="px-1 text-xs text-[--color-ink-400]">
+                          …
+                        </span>
+                      ) : (
+                        <button
+                          key={`page-${num}`}
+                          onClick={() => setCurrentPage(Number(num))}
+                          className={`min-w-[26px] h-[26px] rounded text-xs font-medium transition-colors ${
+                            safeCurrentPage === num
+                              ? "bg-blue-600 text-white font-semibold"
+                              : "border border-[--color-border] text-[--color-ink-700] hover:bg-[--color-surface-1]"
+                          }`}
+                        >
+                          {num}
+                        </button>
+                      )
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={safeCurrentPage === totalPages}
+                    className="p-1 rounded border border-[--color-border] text-[--color-ink-600] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[--color-surface-1]"
+                    title="Next page"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={safeCurrentPage === totalPages}
+                    className="p-1 rounded border border-[--color-border] text-[--color-ink-600] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[--color-surface-1]"
+                    title="Last page"
+                  >
+                    <ChevronsRight size={14} />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

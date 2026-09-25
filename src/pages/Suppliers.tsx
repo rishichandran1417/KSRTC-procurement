@@ -5,7 +5,7 @@ import { getSuppliers, updateSupplier } from "../services/supplierApi";
 import { getPurchaseOrders } from "../services/purchaseOrderApi";
 import { getPriceHistory } from "../services/inventoryApi";
 import type { Supplier, PriceRecord, PurchaseOrder } from "../types";
-import { Phone, Mail, ChevronRight, X, Pencil } from "lucide-react";
+import { Phone, Mail, ChevronRight, X, Pencil, MapPin } from "lucide-react";
 
 export default function Suppliers() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -17,6 +17,7 @@ export default function Suppliers() {
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [editName, setEditName] = useState("");
   const [editCategory, setEditCategory] = useState("");
+  const [editAddress, setEditAddress] = useState("");
   const [editContactName, setEditContactName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editPhone, setEditPhone] = useState("");
@@ -40,6 +41,7 @@ export default function Suppliers() {
     setEditingSupplier(s);
     setEditName(s.name || "");
     setEditCategory(s.category || "");
+    setEditAddress(s.address || "");
     setEditContactName(s.contactName || "");
     setEditEmail(s.contactEmail || "");
     setEditPhone(s.contactPhone || "");
@@ -56,6 +58,7 @@ export default function Suppliers() {
         ...editingSupplier,
         name: editName.trim() || editingSupplier.name,
         category: editCategory.trim() || editingSupplier.category,
+        address: editAddress.trim() || editingSupplier.address,
         contactName: editContactName.trim() || editingSupplier.contactName,
         contactEmail: editEmail.trim() || editingSupplier.contactEmail,
         contactPhone: editPhone.trim() || editingSupplier.contactPhone,
@@ -103,6 +106,11 @@ export default function Suppliers() {
                     <div>
                       <p className="text-sm font-medium text-[--color-ink-900]">{s.name}</p>
                       <p className="text-xs text-[--color-ink-500] mt-0.5">{s.category}</p>
+                      {s.address && (
+                        <p className="text-[11px] text-[--color-ink-400] flex items-center gap-1 mt-1 truncate max-w-[200px]" title={s.address}>
+                          <MapPin size={11} className="shrink-0 text-[--color-ink-400]" /> {s.address}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-1">
                       <button
@@ -242,6 +250,17 @@ export default function Suppliers() {
                   onChange={(e) => setEditCategory(e.target.value)}
                   className="w-full rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-xs text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
                   placeholder="e.g. Brake Systems, Transmission Spares"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[--color-ink-700] mb-1">Supplier Address</label>
+                <textarea
+                  rows={2}
+                  value={editAddress}
+                  onChange={(e) => setEditAddress(e.target.value)}
+                  className="w-full rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-xs text-[--color-ink-900] focus:border-blue-500 focus:outline-none resize-none"
+                  placeholder="Street / Industrial Area, City, State, PIN"
                 />
               </div>
 
@@ -413,19 +432,25 @@ function SupplierDetailDrawer({
         </div>
 
         {/* CONTACT INFO */}
-        <div className="rounded border border-[--color-border] bg-[--color-surface-1] p-3 text-xs space-y-1.5">
-          <p className="font-medium text-[--color-ink-900] text-xs mb-1">Contact Details</p>
+        <div className="rounded border border-[--color-border] bg-[--color-surface-1] p-3 text-xs space-y-2">
+          <p className="font-medium text-[--color-ink-900] text-xs mb-1">Contact & Address</p>
+          {supplier.address ? (
+            <div className="flex items-start gap-2 text-[--color-ink-700]">
+              <MapPin size={13} className="text-[--color-ink-400] shrink-0 mt-0.5" />
+              <span className="leading-relaxed">{supplier.address}</span>
+            </div>
+          ) : null}
           {supplier.contactName ? (
             <p className="text-[--color-ink-700] text-xs">Officer: {supplier.contactName}</p>
           ) : null}
           {supplier.contactEmail ? (
             <div className="flex items-center gap-2 text-[--color-ink-700]">
-              <Mail size={13} className="text-[--color-ink-400]" /> {supplier.contactEmail}
+              <Mail size={13} className="text-[--color-ink-400] shrink-0" /> {supplier.contactEmail}
             </div>
           ) : null}
           {supplier.contactPhone ? (
             <div className="flex items-center gap-2 text-[--color-ink-700]">
-              <Phone size={13} className="text-[--color-ink-400]" /> {supplier.contactPhone}
+              <Phone size={13} className="text-[--color-ink-400] shrink-0" /> {supplier.contactPhone}
             </div>
           ) : null}
         </div>
