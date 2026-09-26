@@ -510,12 +510,91 @@ export const DEFAULT_KSRTC_PARTS: InventoryItem[] = [
   }
 ];
 
+const REMOTE_INVENTORY_CACHE_KEY = "ksrtc_remote_inventory_cache_v2";
+
+function loadRemoteCache(): InventoryItem[] {
+  try {
+    const raw = localStorage.getItem(REMOTE_INVENTORY_CACHE_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+function saveRemoteCache(items: InventoryItem[]): void {
+  try {
+    localStorage.setItem(REMOTE_INVENTORY_CACHE_KEY, JSON.stringify(items));
+  } catch {
+    // Ignore storage quota errors
+  }
+}
+
+let cachedRemoteItems: InventoryItem[] = loadRemoteCache();
+let lastRemoteFetchTime = 0;
+let lastRemoteFailureTime = 0;
+let isRemoteFetching = false;
+
+function parseRemoteItem(r: any): InventoryItem {
+  const current = r.quantity ?? r.currentStock ?? 0;
+  const safety = r.safety_stock ?? r.safetyStock ?? 5;
+  const reorder = r.reorder_point ?? r.reorderPoint ?? 10;
+  let status: InventoryItem["status"] = r.status || "Healthy";
+  if (current <= safety) status = "Critical";
+  else if (current <= reorder) status = "Warning";
+  else status = "Healthy";
+
+  return {
+    id: String(r.id || r.part_id || `remote-${r.sku || r.name}`),
+    part: r.name || r.part || r.sku || "Unknown Part",
+    depot: r.depot || SINGLE_DEPOT,
+    category: r.category || "General",
+    currentStock: current,
+    safetyStock: safety,
+    reorderPoint: reorder,
+    forecastDemand: r.forecastDemand ?? r.forecast_demand ?? Math.round(reorder * 1.5),
+    daysOfSupply: r.daysOfSupply ?? (current > 0 ? Math.round((current / Math.max(reorder, 1)) * 30) : 0),
+    stockoutRisk: status === "Critical" ? "High" : status === "Warning" ? "Medium" : "Low",
+    status,
+    lastUpdated: r.updated_at ? r.updated_at.slice(0, 10) : new Date().toISOString().slice(0, 10),
+    unitCost: r.unit_cost ?? r.unitCost ?? 0,
+    primarySupplier: r.primarySupplier || r.supplier || "KSRTC Central Stores",
+    notes: r.description || r.notes || "",
+  };
+}
+
+async function fetchRemoteInventoryInBackground(): Promise<void> {
+  if (!ENDPOINTS.base || isRemoteFetching) return;
+
+  const now = Date.now();
+  // Circuit breaker: wait at least 60s if last request failed to avoid hammering a cold/sleeping instance
+  if (now - lastRemoteFailureTime < 60000) return;
+  // Cache TTL: wait at least 45s between successful fetches
+  if (now - lastRemoteFetchTime < 45000) return;
+
+  isRemoteFetching = true;
+  try {
+    const remote = await apiClient.get<any[]>(`${ENDPOINTS.base}/inventory`);
+    if (Array.isArray(remote) && remote.length > 0) {
+      cachedRemoteItems = remote.map(parseRemoteItem);
+      saveRemoteCache(cachedRemoteItems);
+      lastRemoteFetchTime = Date.now();
+    }
+  } catch (err: any) {
+    lastRemoteFailureTime = Date.now();
+    console.debug("Backend /inventory sync deferred (server cold start or offline):", err?.message || err);
+  } finally {
+    isRemoteFetching = false;
+  }
+}
+
 let activeInventory: InventoryItem[] = loadStoredInventory();
 
 export function clearInventory(): InventoryItem[] {
   activeInventory = [];
   try {
     localStorage.removeItem(INVENTORY_STORAGE_KEY);
+    localStorage.removeItem(REMOTE_INVENTORY_CACHE_KEY);
   } catch {}
   return [];
 }
@@ -529,43 +608,9 @@ export async function getInventory(): Promise<InventoryItem[]> {
     map.set(item.part.toLowerCase().trim(), { ...item });
   }
 
-  // Overlay remote items from database backend if available
-  if (ENDPOINTS.base) {
-    try {
-      const remote = await apiClient.get<any[]>(`${ENDPOINTS.base}/inventory`);
-      if (Array.isArray(remote) && remote.length > 0) {
-        for (const r of remote) {
-          const current = r.quantity ?? r.currentStock ?? 0;
-          const safety = r.safety_stock ?? r.safetyStock ?? 5;
-          const reorder = r.reorder_point ?? r.reorderPoint ?? 10;
-          let status: InventoryItem["status"] = r.status || "Healthy";
-          if (current <= safety) status = "Critical";
-          else if (current <= reorder) status = "Warning";
-          else status = "Healthy";
-
-          const norm: InventoryItem = {
-            id: String(r.id || r.part_id || `remote-${r.sku || r.name}`),
-            part: r.name || r.part || r.sku || "Unknown Part",
-            depot: r.depot || SINGLE_DEPOT,
-            category: r.category || "General",
-            currentStock: current,
-            safetyStock: safety,
-            reorderPoint: reorder,
-            forecastDemand: r.forecastDemand ?? r.forecast_demand ?? Math.round(reorder * 1.5),
-            daysOfSupply: r.daysOfSupply ?? (current > 0 ? Math.round((current / Math.max(reorder, 1)) * 30) : 0),
-            stockoutRisk: status === "Critical" ? "High" : status === "Warning" ? "Medium" : "Low",
-            status,
-            lastUpdated: r.updated_at ? r.updated_at.slice(0, 10) : new Date().toISOString().slice(0, 10),
-            unitCost: r.unit_cost ?? r.unitCost ?? 0,
-            primarySupplier: r.primarySupplier || r.supplier || "KSRTC Central Stores",
-            notes: r.description || r.notes || "",
-          };
-          map.set(norm.part.toLowerCase().trim(), norm);
-        }
-      }
-    } catch (err) {
-      console.warn("API call to /inventory failed, using cached inventory:", err);
-    }
+  // Overlay cached remote items without waiting/blocking UI
+  for (const rItem of cachedRemoteItems) {
+    map.set(rItem.part.toLowerCase().trim(), { ...rItem });
   }
 
   // User's activeInventory MUST take top precedence so manual edits, adjustments, and additions persist!
@@ -588,6 +633,9 @@ export async function getInventory(): Promise<InventoryItem[]> {
       map.set(key, { ...item });
     }
   }
+
+  // Trigger non-blocking background revalidation if needed
+  fetchRemoteInventoryInBackground().catch(() => {});
 
   const result = Array.from(map.values());
   saveStoredInventory(result);
@@ -652,8 +700,8 @@ export async function addInventoryItem(payload: AddInventoryPayload): Promise<In
                 quantity: current,
                 notes: payload.notes || "Initial stock registration",
               });
-            } catch (txErr) {
-              console.warn("Could not post inventory transaction:", txErr);
+            } catch (txErr: any) {
+              console.debug("Could not post inventory transaction:", txErr?.message || txErr);
             }
           }
 
@@ -662,12 +710,12 @@ export async function addInventoryItem(payload: AddInventoryPayload): Promise<In
               reorder_point: reorder,
               safety_stock: safety,
             });
-          } catch (thrErr) {
-            console.warn("Could not update inventory thresholds:", thrErr);
+          } catch (thrErr: any) {
+            console.debug("Could not update inventory thresholds:", thrErr?.message || thrErr);
           }
         }
-      } catch (err) {
-        console.warn("Background part creation sync notice:", err);
+      } catch (err: any) {
+        console.debug("Background part creation sync notice:", err?.message || err);
       }
     })();
   }
@@ -719,7 +767,9 @@ export async function updateInventoryItem(id: string, payload: UpdateInventoryPa
   ];
   saveStoredInventory(activeInventory);
 
-  if (ENDPOINTS.base) {
+  // Only call backend PUT for thresholds if thresholds were actually edited in the payload
+  const hasThresholdChange = payload.reorderPoint !== undefined || payload.safetyStock !== undefined;
+  if (ENDPOINTS.base && hasThresholdChange) {
     const numId = Number(id);
     if (!isNaN(numId)) {
       (async () => {
@@ -728,8 +778,8 @@ export async function updateInventoryItem(id: string, payload: UpdateInventoryPa
             reorder_point: reorder,
             safety_stock: safety,
           });
-        } catch (err) {
-          console.warn("API call to update inventory thresholds failed:", err);
+        } catch (err: any) {
+          console.debug("API call to update inventory thresholds deferred:", err?.message || err);
         }
       })();
     }
@@ -765,8 +815,8 @@ export async function adjustInventoryQuantity(id: string, delta: number, partNam
             quantity: delta,
             notes: `Stock adjustment of ${delta > 0 ? "+" : ""}${delta} units`,
           });
-        } catch (err) {
-          console.warn("Could not post inventory transaction adjustment to server:", err);
+        } catch (err: any) {
+          console.debug("Could not post inventory transaction adjustment to server:", err?.message || err);
         }
       })();
     }

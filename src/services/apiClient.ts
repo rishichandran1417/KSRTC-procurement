@@ -79,7 +79,8 @@ function resolveUrl(url: string): string {
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const targetUrl = resolveUrl(url);
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 12000);
+  const timeoutMs = (init as any)?.timeout ?? (targetUrl.includes("onrender.com") ? 25000 : 12000);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   let response: Response;
   try {
@@ -90,7 +91,7 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
     });
   } catch (err: any) {
     if (err?.name === "AbortError") {
-      throw new ApiError(`Request to ${url} timed out after 12 seconds.`);
+      throw new ApiError(`Request to ${url} timed out after ${Math.round(timeoutMs / 1000)} seconds.`, 408);
     }
     throw new ApiError(
       `Could not reach ${url}. Check connection, CORS, or protocol (https). Original error: ${err?.message || err}`

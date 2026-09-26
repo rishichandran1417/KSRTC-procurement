@@ -39,7 +39,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     refreshAlerts();
-    const interval = setInterval(refreshAlerts, 15000);
+    const interval = setInterval(refreshAlerts, 60000);
     return () => clearInterval(interval);
   }, [refreshAlerts]);
 
