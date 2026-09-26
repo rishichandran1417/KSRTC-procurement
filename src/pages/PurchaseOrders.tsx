@@ -339,15 +339,15 @@ export default function PurchaseOrders() {
   return (
     <div>
       <TopBar
-        title={activeTab === "schedule" ? "Supply Delivery Schedule" : "Purchase Orders"}
+        title={activeTab === "schedule" ? "Supply Delivery & Rescheduling" : "Purchase Orders"}
         subtitle={
           activeTab === "schedule"
-            ? "When will supplies arrive? — Interactive delivery pipeline & receiving calendar"
+            ? "When will supplies arrive? — Interactive delivery pipeline, rescheduling & receiving"
             : "What did we order? — Purchase order lifecycle management"
         }
         actions={
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* View Switcher: Orders List vs Supply Scheduling */}
+          <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full sm:w-auto">
+            {/* View Switcher: Orders List vs Supply Scheduling / Rescheduling */}
             <div className="flex items-center rounded-lg border border-[--color-border] bg-[--color-surface-1] p-0.5">
               <button
                 onClick={() => setActiveTab("orders")}
@@ -369,11 +369,11 @@ export default function PurchaseOrders() {
                     ? "bg-[--color-surface-0] text-blue-600 dark:text-blue-400 shadow-2xs font-bold"
                     : "text-[--color-ink-500] hover:text-[--color-ink-900]"
                 }`}
-                title="Interactive Supply Delivery Schedule"
+                title="Interactive Supply Delivery & Rescheduling Pipeline"
               >
                 <Truck size={13} />
-                <span className="hidden sm:inline">Supply Scheduling</span>
-                <span className="sm:hidden text-[11px]">Schedule</span>
+                <span className="hidden sm:inline">Delivery & Rescheduling</span>
+                <span className="sm:hidden text-[11px]">Reschedule</span>
               </button>
             </div>
 
@@ -412,7 +412,7 @@ export default function PurchaseOrders() {
             <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2.5 bg-[--color-surface-0] p-3 rounded-lg border border-[--color-border]">
             {/* SEARCH */}
-            <div className="relative flex-1 sm:w-64 min-w-[200px]">
+            <div className="relative flex-1 sm:w-64 min-w-[180px]">
               <input
                 placeholder="Search PO #, supplier, part…"
                 value={search}
@@ -443,7 +443,7 @@ export default function PurchaseOrders() {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className={`rounded-md border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${
+              className={`flex-1 sm:flex-initial min-w-[120px] rounded-md border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${
                 statusFilter !== "All"
                   ? "border-blue-500 bg-blue-50/40 text-blue-700 dark:text-blue-300 font-medium"
                   : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-800]"
@@ -468,7 +468,7 @@ export default function PurchaseOrders() {
                 setSupplierFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className={`rounded-md border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[200px] truncate ${
+              className={`flex-1 sm:flex-initial min-w-[130px] rounded-md border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[200px] truncate ${
                 supplierFilter !== "All"
                   ? "border-blue-500 bg-blue-50/40 text-blue-700 dark:text-blue-300 font-medium"
                   : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-800]"
@@ -490,7 +490,7 @@ export default function PurchaseOrders() {
                 setDateFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className={`rounded-md border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${
+              className={`flex-1 sm:flex-initial min-w-[110px] rounded-md border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${
                 dateFilter !== "All"
                   ? "border-blue-500 bg-blue-50/40 text-blue-700 dark:text-blue-300 font-medium"
                   : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-800]"
@@ -512,7 +512,7 @@ export default function PurchaseOrders() {
                 setAmountFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className={`rounded-md border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${
+              className={`flex-1 sm:flex-initial min-w-[110px] rounded-md border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${
                 amountFilter !== "All"
                   ? "border-blue-500 bg-blue-50/40 text-blue-700 dark:text-blue-300 font-medium"
                   : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-800]"
@@ -527,7 +527,7 @@ export default function PurchaseOrders() {
             </select>
 
             {/* SORT CONTROLS */}
-            <div className="flex items-center gap-1.5 text-xs pl-2 border-l border-[--color-border]">
+            <div className="flex items-center gap-1.5 text-xs pl-0 sm:pl-2 border-t sm:border-t-0 sm:border-l border-[--color-border] pt-2 sm:pt-0 w-full sm:w-auto justify-between sm:justify-start">
               <span className="text-[--color-ink-500]">Sort:</span>
               <select
                 value={sortField}
@@ -535,7 +535,7 @@ export default function PurchaseOrders() {
                   setSortField(e.target.value as typeof sortField);
                   setCurrentPage(1);
                 }}
-                className="rounded-md border border-[--color-border] bg-[--color-surface-1] px-2.5 py-1.5 text-xs text-[--color-ink-800] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                className="flex-1 sm:flex-initial rounded-md border border-[--color-border] bg-[--color-surface-1] px-2.5 py-1.5 text-xs text-[--color-ink-800] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
               >
                 <option value="poDate">PO Date</option>
                 <option value="poNumber">PO Number</option>
@@ -549,7 +549,7 @@ export default function PurchaseOrders() {
                 type="button"
                 onClick={() => setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))}
                 title={`Sort Direction: ${sortDirection === "asc" ? "Ascending (Low to High / A-Z)" : "Descending (High to Low / Z-A)"}. Click to toggle.`}
-                className="inline-flex items-center gap-1 rounded-md border border-[--color-border] bg-[--color-surface-1] hover:bg-[--color-surface-2] px-2 py-1.5 text-xs font-medium text-[--color-ink-700] hover:text-[--color-ink-900] transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 rounded-md border border-[--color-border] bg-[--color-surface-1] hover:bg-[--color-surface-2] px-2 py-1.5 text-xs font-medium text-[--color-ink-700] hover:text-[--color-ink-900] transition-colors cursor-pointer shrink-0"
               >
                 {sortDirection === "asc" ? (
                   <>
@@ -568,7 +568,7 @@ export default function PurchaseOrders() {
 
           {/* ACTIVE FILTER PILLS & STATS BAR */}
           {isFiltered && (
-            <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-lg bg-[--color-surface-1] border border-[--color-border] text-xs">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 px-3 py-2 rounded-lg bg-[--color-surface-1] border border-[--color-border] text-xs">
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-[--color-ink-500] flex items-center gap-1">
                   <Filter size={11} className="text-blue-500" />
@@ -679,7 +679,7 @@ export default function PurchaseOrders() {
           </div>
         ) : (
           <div className="rounded-lg border border-[--color-border] bg-[--color-surface-0] overflow-hidden shadow-2xs">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-xs min-w-[680px]">
                 <thead>
                   <tr className="border-b border-[--color-border] bg-[--color-surface-1]/60 text-left text-xs font-medium text-[--color-ink-500]">
@@ -807,7 +807,7 @@ export default function PurchaseOrders() {
               </div>
 
               {totalPages > 1 && pageSize !== -1 && (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 overflow-x-auto max-w-full pb-1 sm:pb-0 custom-scrollbar">
                   <button
                     onClick={() => setCurrentPage(1)}
                     disabled={safeCurrentPage === 1}

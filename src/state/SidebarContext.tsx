@@ -5,12 +5,33 @@ interface SidebarContextValue {
   openMobile: () => void;
   closeMobile: () => void;
   toggleMobile: () => void;
+  isCollapsed: boolean;
+  toggleCollapsed: () => void;
 }
 
 const SidebarContext = createContext<SidebarContextValue | null>(null);
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem("ksrtc_sidebar_collapsed") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleCollapsed = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("ksrtc_sidebar_collapsed", String(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
   // Close mobile sidebar on Escape key
   useEffect(() => {
@@ -42,6 +63,8 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
         openMobile: () => setIsMobileOpen(true),
         closeMobile: () => setIsMobileOpen(false),
         toggleMobile: () => setIsMobileOpen((prev) => !prev),
+        isCollapsed,
+        toggleCollapsed,
       }}
     >
       {children}

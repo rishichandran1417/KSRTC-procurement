@@ -100,30 +100,30 @@ export function LowStockAlertModal() {
         </div>
 
         {/* METRICS ROW */}
-        <div className="grid grid-cols-3 gap-3 border-b border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-5 py-3.5 text-xs">
-          <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 shadow-2xs">
-            <p className="text-[11px] uppercase tracking-wide font-semibold text-slate-500 dark:text-zinc-400">Total Low Stock</p>
-            <p className="text-lg font-bold text-slate-900 dark:text-zinc-50 mt-0.5">{lowStockItems.length}</p>
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 border-b border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 p-3 sm:px-5 sm:py-3.5 text-xs">
+          <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 sm:p-3 shadow-2xs">
+            <p className="text-[10px] sm:text-[11px] uppercase tracking-wide font-semibold text-slate-500 dark:text-zinc-400 truncate">Low Stock</p>
+            <p className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-50 mt-0.5">{lowStockItems.length}</p>
           </div>
-          <div className="rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/60 dark:bg-rose-950/20 p-3 shadow-2xs">
-            <p className="text-[11px] uppercase tracking-wide font-semibold text-rose-600 dark:text-rose-400">Critical Risk</p>
-            <p className="text-lg font-bold text-rose-600 dark:text-rose-400 mt-0.5">{criticalItems.length}</p>
+          <div className="rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/60 dark:bg-rose-950/20 p-2.5 sm:p-3 shadow-2xs">
+            <p className="text-[10px] sm:text-[11px] uppercase tracking-wide font-semibold text-rose-600 dark:text-rose-400 truncate">Critical</p>
+            <p className="text-base sm:text-lg font-bold text-rose-600 dark:text-rose-400 mt-0.5">{criticalItems.length}</p>
           </div>
-          <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/60 dark:bg-amber-950/20 p-3 shadow-2xs">
-            <p className="text-[11px] uppercase tracking-wide font-semibold text-amber-600 dark:text-amber-400">Reorder Threshold</p>
-            <p className="text-lg font-bold text-amber-600 dark:text-amber-400 mt-0.5">{warningItems.length}</p>
+          <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/60 dark:bg-amber-950/20 p-2.5 sm:p-3 shadow-2xs">
+            <p className="text-[10px] sm:text-[11px] uppercase tracking-wide font-semibold text-amber-600 dark:text-amber-400 truncate">Reorder</p>
+            <p className="text-base sm:text-lg font-bold text-amber-600 dark:text-amber-400 mt-0.5">{warningItems.length}</p>
           </div>
         </div>
 
         {/* ITEMS TABLE */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 bg-white dark:bg-zinc-900">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-5 bg-white dark:bg-zinc-900 custom-scrollbar">
           {lowStockItems.length === 0 ? (
             <div className="py-12 text-center text-xs text-slate-500">
               <p className="font-semibold text-sm text-emerald-600">All Inventory Healthy</p>
               <p className="mt-1">No items currently below safety stock or reorder thresholds.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xs">
+            <div className="overflow-x-auto custom-scrollbar rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xs">
               <table className="w-full text-xs min-w-[520px]">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-left uppercase text-[11px] font-semibold text-slate-500 dark:text-zinc-400">
