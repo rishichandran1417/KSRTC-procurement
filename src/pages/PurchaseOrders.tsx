@@ -346,12 +346,12 @@ export default function PurchaseOrders() {
             : "What did we order? — Purchase order lifecycle management"
         }
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {/* View Switcher: Orders List vs Supply Scheduling */}
             <div className="flex items-center rounded-lg border border-[--color-border] bg-[--color-surface-1] p-0.5">
               <button
                 onClick={() => setActiveTab("orders")}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                   activeTab === "orders"
                     ? "bg-[--color-surface-0] text-blue-600 dark:text-blue-400 shadow-2xs font-bold"
                     : "text-[--color-ink-500] hover:text-[--color-ink-900]"
@@ -359,11 +359,12 @@ export default function PurchaseOrders() {
                 title="All Purchase Orders Table"
               >
                 <FileText size={13} />
-                <span>Orders List</span>
+                <span className="hidden sm:inline">Orders List</span>
+                <span className="sm:hidden text-[11px]">Orders</span>
               </button>
               <button
                 onClick={() => setActiveTab("schedule")}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                   activeTab === "schedule"
                     ? "bg-[--color-surface-0] text-blue-600 dark:text-blue-400 shadow-2xs font-bold"
                     : "text-[--color-ink-500] hover:text-[--color-ink-900]"
@@ -371,15 +372,18 @@ export default function PurchaseOrders() {
                 title="Interactive Supply Delivery Schedule"
               >
                 <Truck size={13} />
-                <span>Supply Scheduling</span>
+                <span className="hidden sm:inline">Supply Scheduling</span>
+                <span className="sm:hidden text-[11px]">Schedule</span>
               </button>
             </div>
 
             <button
               onClick={() => navigate("/purchase-orders/new")}
-              className="flex items-center gap-1.5 rounded-md bg-blue-600 hover:bg-blue-700 active:scale-95 px-3 sm:px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition-all cursor-pointer"
+              className="flex items-center gap-1 sm:gap-1.5 rounded-md bg-blue-600 hover:bg-blue-700 active:scale-95 px-2.5 sm:px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition-all cursor-pointer shrink-0"
             >
-              <Plus size={14} /> <span className="hidden sm:inline">Create New PO</span>
+              <Plus size={14} />
+              <span className="hidden sm:inline">Create New PO</span>
+              <span className="sm:hidden text-[11px]">New PO</span>
             </button>
           </div>
         }

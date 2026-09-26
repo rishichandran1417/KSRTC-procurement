@@ -467,11 +467,11 @@ export function SupplyScheduleBoard({
           </div>
 
           {/* Schedule View Toggle: Timeline Pipeline vs Calendar Matrix */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center rounded-lg border border-[--color-border] bg-[--color-surface-1] p-0.5">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex w-full sm:w-auto items-center rounded-lg border border-[--color-border] bg-[--color-surface-1] p-0.5">
               <button
                 onClick={() => setScheduleMode("pipeline")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                   scheduleMode === "pipeline"
                     ? "bg-[--color-surface-0] text-blue-600 dark:text-blue-400 shadow-2xs"
                     : "text-[--color-ink-500] hover:text-[--color-ink-800]"
@@ -483,7 +483,7 @@ export function SupplyScheduleBoard({
               </button>
               <button
                 onClick={() => setScheduleMode("calendar")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                   scheduleMode === "calendar"
                     ? "bg-[--color-surface-0] text-blue-600 dark:text-blue-400 shadow-2xs"
                     : "text-[--color-ink-500] hover:text-[--color-ink-800]"
@@ -498,8 +498,8 @@ export function SupplyScheduleBoard({
         </div>
 
         {/* ROW 2: Filter Dropdowns */}
-        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2.5 border-t border-[--color-border]">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2.5 border-t border-[--color-border]">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <span className="text-xs font-semibold text-[--color-ink-500] hidden sm:inline mr-1">
               Filters:
             </span>
@@ -508,7 +508,7 @@ export function SupplyScheduleBoard({
             <select
               value={urgencyFilter}
               onChange={(e) => setUrgencyFilter(e.target.value as any)}
-              className={`rounded-lg border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${
+              className={`flex-1 sm:flex-initial rounded-lg border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${
                 urgencyFilter !== "All"
                   ? "border-blue-500 bg-blue-50/40 text-blue-700 dark:text-blue-300 font-semibold"
                   : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-800]"
@@ -524,7 +524,7 @@ export function SupplyScheduleBoard({
             <select
               value={depotFilter}
               onChange={(e) => setDepotFilter(e.target.value)}
-              className={`rounded-lg border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[200px] truncate ${
+              className={`flex-1 sm:flex-initial rounded-lg border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer sm:max-w-[200px] truncate ${
                 depotFilter !== "All"
                   ? "border-blue-500 bg-blue-50/40 text-blue-700 dark:text-blue-300 font-semibold"
                   : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-800]"
@@ -542,7 +542,7 @@ export function SupplyScheduleBoard({
             <select
               value={supplierFilter}
               onChange={(e) => setSupplierFilter(e.target.value)}
-              className={`rounded-lg border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[200px] truncate ${
+              className={`w-full sm:w-auto rounded-lg border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer sm:max-w-[200px] truncate ${
                 supplierFilter !== "All"
                   ? "border-blue-500 bg-blue-50/40 text-blue-700 dark:text-blue-300 font-semibold"
                   : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-800]"
@@ -557,7 +557,7 @@ export function SupplyScheduleBoard({
             </select>
           </div>
 
-          <div className="flex items-center gap-3 ml-auto text-xs">
+          <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto text-xs pt-1 sm:pt-0 border-t sm:border-t-0 border-[--color-border]/50">
             <span className="text-[--color-ink-500]">
               Showing <strong className="text-[--color-ink-900]">{filteredOrders.length}</strong> scheduled POs
             </span>
@@ -569,7 +569,7 @@ export function SupplyScheduleBoard({
                   setSupplierFilter("All");
                   setUrgencyFilter("All");
                 }}
-                className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 font-semibold cursor-pointer underline"
+                className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 font-semibold cursor-pointer underline shrink-0"
               >
                 Reset Filters
               </button>
@@ -580,24 +580,43 @@ export function SupplyScheduleBoard({
 
       {/* 3. MAIN SCHEDULE VIEW */}
       {scheduleMode === "pipeline" ? (
-        /* TIMELINE PIPELINE BOARD */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 items-start">
-          {pipelineBuckets.map((bucket) => {
-            const Icon = bucket.icon;
-            const totalBucketValue = bucket.items.reduce((acc, curr) => acc + (curr.total || 0), 0);
-
-            return (
-              <div
-                key={bucket.id}
-                className="rounded-xl border border-[--color-border] bg-[--color-surface-0] overflow-hidden flex flex-col min-h-[450px]"
+        <div className="space-y-2.5">
+          {/* Mobile Quick-Jump Bucket Indicators */}
+          <div className="flex xl:hidden overflow-x-auto gap-1.5 pb-1 -mt-1 text-xs">
+            {pipelineBuckets.map((bucket) => (
+              <button
+                key={`mob-btn-${bucket.id}`}
+                onClick={() => {
+                  const el = document.getElementById(`schedule-bucket-${bucket.id}`);
+                  el?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+                }}
+                className="px-2.5 py-1 rounded-full border border-[--color-border] bg-[--color-surface-0] text-[--color-ink-700] hover:bg-[--color-surface-2] shrink-0 font-medium text-[11px] flex items-center gap-1 active:scale-95 transition-all shadow-2xs"
               >
-                {/* Bucket Header */}
-                <div className={`p-3 bg-[--color-surface-1] border-b border-[--color-border] ${bucket.headerColor}`}>
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-1.5 font-bold text-xs text-[--color-ink-900]">
-                      <Icon size={14} />
-                      <span>{bucket.title}</span>
-                    </div>
+                <span>{bucket.title.split(" ")[0]}</span>
+                <span className="font-bold text-[10px] opacity-75">({bucket.items.length})</span>
+              </button>
+            ))}
+          </div>
+
+          {/* TIMELINE PIPELINE BOARD: Horizontal swipe on mobile/tablet, full grid on desktop */}
+          <div className="flex xl:grid xl:grid-cols-6 gap-3.5 sm:gap-4 items-start overflow-x-auto pb-4 pt-1 snap-x snap-mandatory xl:snap-none -mx-2 px-2 sm:mx-0 sm:px-0">
+            {pipelineBuckets.map((bucket) => {
+              const Icon = bucket.icon;
+              const totalBucketValue = bucket.items.reduce((acc, curr) => acc + (curr.total || 0), 0);
+
+              return (
+                <div
+                  key={bucket.id}
+                  id={`schedule-bucket-${bucket.id}`}
+                  className="w-[85vw] max-w-[340px] sm:w-[320px] xl:w-auto shrink-0 snap-center xl:shrink xl:snap-align-none rounded-xl border border-[--color-border] bg-[--color-surface-0] overflow-hidden flex flex-col min-h-[460px] shadow-2xs"
+                >
+                  {/* Bucket Header */}
+                  <div className={`p-3 bg-[--color-surface-1] border-b border-[--color-border] ${bucket.headerColor}`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1.5 font-bold text-xs text-[--color-ink-900]">
+                        <Icon size={14} />
+                        <span>{bucket.title}</span>
+                      </div>
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${bucket.badgeColor}`}>
                       {bucket.items.length}
                     </span>
@@ -721,7 +740,8 @@ export function SupplyScheduleBoard({
             );
           })}
         </div>
-      ) : (
+      </div>
+    ) : (
         /* CALENDAR MONTH VIEW */
         <div className="rounded-xl border border-[--color-border] bg-[--color-surface-0] overflow-hidden shadow-2xs">
           {/* Calendar Header */}
@@ -732,6 +752,9 @@ export function SupplyScheduleBoard({
               </h2>
               <span className="text-xs text-[--color-ink-500] hidden sm:inline">
                 (Click on any date to inspect scheduled supplies)
+              </span>
+              <span className="text-[10px] text-[--color-ink-400] sm:hidden">
+                (↔ Swipe)
               </span>
             </div>
 
@@ -767,87 +790,92 @@ export function SupplyScheduleBoard({
             </div>
           </div>
 
-          {/* Day of Week Headers */}
-          <div className="grid grid-cols-7 border-b border-[--color-border] bg-[--color-surface-1]/50 text-center text-xs font-bold text-[--color-ink-500] py-2">
-            <div>Mon</div>
-            <div>Tue</div>
-            <div>Wed</div>
-            <div>Thu</div>
-            <div>Fri</div>
-            <div className="text-blue-600 dark:text-blue-400">Sat</div>
-            <div className="text-rose-600 dark:text-rose-400">Sun</div>
-          </div>
+          {/* Horizontally scrollable on mobile, full width on desktop */}
+          <div className="overflow-x-auto">
+            <div className="min-w-[640px] sm:min-w-0">
+              {/* Day of Week Headers */}
+              <div className="grid grid-cols-7 border-b border-[--color-border] bg-[--color-surface-1]/50 text-center text-xs font-bold text-[--color-ink-500] py-2">
+                <div>Mon</div>
+                <div>Tue</div>
+                <div>Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div className="text-blue-600 dark:text-blue-400">Sat</div>
+                <div className="text-rose-600 dark:text-rose-400">Sun</div>
+              </div>
 
-          {/* Month Days Grid */}
-          <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-[--color-border] border-b border-[--color-border]">
-            {calendarData.days.map((day, idx) => {
-              return (
-                <div
-                  key={idx}
-                  className={`min-h-[110px] sm:min-h-[130px] p-1.5 sm:p-2 flex flex-col transition-colors ${
-                    day.isCurrentMonth
-                      ? "bg-[--color-surface-0]"
-                      : "bg-[--color-surface-1]/40 opacity-40"
-                  } ${day.isToday ? "ring-2 ring-blue-500 ring-inset bg-blue-50/10" : ""}`}
-                >
-                  {/* Day header */}
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span
-                      className={`text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center ${
-                        day.isToday
-                          ? "bg-blue-600 text-white font-extrabold shadow-xs"
-                          : day.isCurrentMonth
-                          ? "text-[--color-ink-900]"
-                          : "text-[--color-ink-400]"
-                      }`}
+              {/* Month Days Grid */}
+              <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-[--color-border] border-b border-[--color-border]">
+                {calendarData.days.map((day, idx) => {
+                  return (
+                    <div
+                      key={idx}
+                      className={`min-h-[110px] sm:min-h-[130px] p-1.5 sm:p-2 flex flex-col transition-colors ${
+                        day.isCurrentMonth
+                          ? "bg-[--color-surface-0]"
+                          : "bg-[--color-surface-1]/40 opacity-40"
+                      } ${day.isToday ? "ring-2 ring-blue-500 ring-inset bg-blue-50/10" : ""}`}
                     >
-                      {day.dayNum}
-                    </span>
-
-                    {day.orders.length > 0 && (
-                      <span className="text-[10px] font-bold px-1 rounded bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
-                        {day.orders.length} PO{day.orders.length > 1 ? "s" : ""}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Day delivery cards */}
-                  <div className="space-y-1 flex-1 overflow-y-auto max-h-[100px]">
-                    {day.orders.map((po) => {
-                      const isComplete = po.status === "Received" || po.status === "Closed";
-                      const diff = getDaysDiff(po.expectedDelivery);
-                      const isOverdue = !isComplete && diff !== null && diff < 0;
-
-                      return (
-                        <div
-                          key={po.poNumber}
-                          onClick={() => onViewPo(po)}
-                          className={`rounded px-1.5 py-1 text-[10px] border cursor-pointer transition-all hover:scale-[1.02] shadow-2xs truncate ${
-                            isComplete
-                              ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
-                              : isOverdue
-                              ? "bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 font-semibold"
-                              : "bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300"
+                      {/* Day header */}
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span
+                          className={`text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center ${
+                            day.isToday
+                              ? "bg-blue-600 text-white font-extrabold shadow-xs"
+                              : day.isCurrentMonth
+                              ? "text-[--color-ink-900]"
+                              : "text-[--color-ink-400]"
                           }`}
-                          title={`${po.poNumber} - ${po.supplier} (${po.depot})\nExpected: ${po.expectedDelivery}\nTotal: ₹${po.total}`}
                         >
-                          <div className="font-bold truncate">{po.poNumber}</div>
-                          <div className="text-[9px] opacity-80 truncate">{po.supplier}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
+                          {day.dayNum}
+                        </span>
+
+                        {day.orders.length > 0 && (
+                          <span className="text-[10px] font-bold px-1 rounded bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                            {day.orders.length} PO{day.orders.length > 1 ? "s" : ""}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Day delivery cards */}
+                      <div className="space-y-1 flex-1 overflow-y-auto max-h-[100px]">
+                        {day.orders.map((po) => {
+                          const isComplete = po.status === "Received" || po.status === "Closed";
+                          const diff = getDaysDiff(po.expectedDelivery);
+                          const isOverdue = !isComplete && diff !== null && diff < 0;
+
+                          return (
+                            <div
+                              key={po.poNumber}
+                              onClick={() => onViewPo(po)}
+                              className={`rounded px-1.5 py-1 text-[10px] border cursor-pointer transition-all hover:scale-[1.02] shadow-2xs truncate ${
+                                isComplete
+                                  ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
+                                  : isOverdue
+                                  ? "bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 font-semibold"
+                                  : "bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300"
+                              }`}
+                              title={`${po.poNumber} - ${po.supplier} (${po.depot})\nExpected: ${po.expectedDelivery}\nTotal: ₹${po.total}`}
+                            >
+                              <div className="font-bold truncate">{po.poNumber}</div>
+                              <div className="text-[9px] opacity-80 truncate">{po.supplier}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {/* QUICK RESCHEDULE MODAL */}
       {reschedulingPo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-          <div className="w-full max-w-md rounded-2xl border border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 animate-in fade-in duration-150">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-[--color-border] bg-[--color-surface-0] p-4 sm:p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-[--color-border] pb-3">
               <div>
                 <h3 className="text-base font-bold text-[--color-ink-900]">Reschedule Supply Delivery</h3>
