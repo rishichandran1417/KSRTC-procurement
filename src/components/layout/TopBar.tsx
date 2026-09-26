@@ -7,10 +7,12 @@ import { LowStockAlertModal } from "../ui/LowStockAlertModal";
 export function TopBar({
   title,
   subtitle,
+  actions,
   showAlerts,
 }: {
   title: string;
   subtitle?: string;
+  actions?: React.ReactNode;
   showFilters?: boolean;
   showAlerts?: boolean;
 }) {
@@ -44,33 +46,36 @@ export function TopBar({
             </div>
           </div>
 
-          {/* RIGHT: Low Stock Alert Trigger - only on relevant pages */}
-          {isRelevantPage ? (
-            <div className="flex items-center gap-2 shrink-0">
-              {totalAlerts > 0 ? (
-                <button
-                  onClick={openAlertModal}
-                  className="flex items-center gap-2 rounded-lg border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-300 hover:bg-amber-500/15 transition-colors cursor-pointer"
-                  title={`${totalAlerts} items below safety thresholds. Click to review.`}
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                  <span className="hidden sm:inline">Low Stock</span>
-                  <span className="flex h-4 min-w-4 items-center justify-center rounded-md bg-amber-500/20 px-1 text-[10px] font-semibold text-amber-800 dark:text-amber-200">
-                    {totalAlerts}
-                  </span>
-                </button>
-              ) : (
-                <button
-                  onClick={openAlertModal}
-                  className="flex items-center gap-1.5 rounded-lg border border-[--color-border] bg-[--color-surface-1] px-2.5 py-1 text-xs font-medium text-[--color-healthy-600] hover:bg-[--color-surface-2] transition-colors cursor-pointer"
-                  title="All inventory stock levels are healthy"
-                >
-                  <ShieldCheck size={14} />
-                  <span className="hidden sm:inline">Stock Healthy</span>
-                </button>
-              )}
-            </div>
-          ) : null}
+          {/* RIGHT: Actions & Low Stock Alert Trigger */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            {actions}
+            {isRelevantPage ? (
+              <div className="flex items-center gap-2 shrink-0">
+                {totalAlerts > 0 ? (
+                  <button
+                    onClick={openAlertModal}
+                    className="flex items-center gap-2 rounded-lg border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-300 hover:bg-amber-500/15 transition-colors cursor-pointer"
+                    title={`${totalAlerts} items below safety thresholds. Click to review.`}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                    <span className="hidden sm:inline">Low Stock</span>
+                    <span className="flex h-4 min-w-4 items-center justify-center rounded-md bg-amber-500/20 px-1 text-[10px] font-semibold text-amber-800 dark:text-amber-200">
+                      {totalAlerts}
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={openAlertModal}
+                    className="flex items-center gap-1.5 rounded-lg border border-[--color-border] bg-[--color-surface-1] px-2.5 py-1 text-xs font-medium text-[--color-healthy-600] hover:bg-[--color-surface-2] transition-colors cursor-pointer"
+                    title="All inventory stock levels are healthy"
+                  >
+                    <ShieldCheck size={14} />
+                    <span className="hidden sm:inline">Stock Healthy</span>
+                  </button>
+                )}
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
 

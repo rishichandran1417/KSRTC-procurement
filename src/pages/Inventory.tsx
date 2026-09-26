@@ -32,7 +32,7 @@ export type InventorySortField =
 export default function Inventory() {
   const navigate = useNavigate();
   const { filters } = useFilters();
-  const { openAlertModal, totalAlerts, criticalItems, warningItems } = useAlerts();
+  const { openAlertModal, totalAlerts, criticalItems, warningItems, refreshAlerts } = useAlerts();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -511,6 +511,7 @@ export default function Inventory() {
           onAdded={() => {
             setShowAddModal(false);
             load();
+            refreshAlerts();
           }}
         />
       ) : null}
@@ -523,6 +524,7 @@ export default function Inventory() {
           onUpdated={() => {
             setEditingItem(null);
             load();
+            refreshAlerts();
           }}
         />
       ) : null}
@@ -535,6 +537,7 @@ export default function Inventory() {
           onAdjusted={() => {
             setAdjustingItem(null);
             load();
+            refreshAlerts();
           }}
         />
       ) : null}
@@ -926,7 +929,7 @@ function AdjustQuantityModal({ item, onClose, onAdjusted }: { item: InventoryIte
 
   const applyDelta = (dir: 1 | -1) => {
     setSubmitting(true);
-    adjustInventoryQuantity(item.id, dir * delta)
+    adjustInventoryQuantity(item.id, dir * delta, item.part)
       .then(() => {
         setSubmitting(false);
         onAdjusted();
@@ -941,7 +944,7 @@ function AdjustQuantityModal({ item, onClose, onAdjusted }: { item: InventoryIte
   const applyExact = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    updateInventoryItem(item.id, { currentStock: Math.max(0, exactStock) })
+    updateInventoryItem(item.id, { currentStock: Math.max(0, exactStock), part: item.part })
       .then(() => {
         setSubmitting(false);
         onAdjusted();

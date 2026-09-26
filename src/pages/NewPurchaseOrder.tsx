@@ -30,44 +30,103 @@ export default function NewPurchaseOrder() {
   const [suppliersList, setSuppliersList] = useState<Supplier[]>(DEFAULT_KSRTC_SUPPLIERS);
   const [inventoryList, setInventoryList] = useState<InventoryItem[]>(DEFAULT_KSRTC_PARTS);
 
-  const initialSupplier = prefilledItems[0]?.supplier || (isCriticalBuy ? "KSRTC Central Stores / Urgent Vendor" : "");
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const queryPart = searchParams.get("part") || "";
+  const querySupplier = searchParams.get("supplier") || "";
+  const queryCost = Number(searchParams.get("cost") || 0);
+  const queryQty = Number(searchParams.get("qty") || 1);
+
+  const initialSupplier =
+    querySupplier ||
+    prefilledItems[0]?.supplier ||
+    (isCriticalBuy ? "KSRTC Central Stores / Urgent Vendor" : "");
+
   const [supplier, setSupplier] = useState(initialSupplier);
   const [supplierAddress, setSupplierAddress] = useState(() => {
     if (!initialSupplier) return "";
-    const found = DEFAULT_KSRTC_SUPPLIERS.find((s) => s.name.toLowerCase() === initialSupplier.toLowerCase());
+    const found = DEFAULT_KSRTC_SUPPLIERS.find(
+      (s) => s.name.toLowerCase() === initialSupplier.toLowerCase()
+    );
     return found?.address || "";
   });
   const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
   const [activePartDropdown, setActivePartDropdown] = useState<number | null>(null);
+  const [activeCategoryDropdown, setActiveCategoryDropdown] = useState<number | null>(null);
 
   const [expectedDelivery, setExpectedDelivery] = useState(
-    new Date(Date.now() + (isCriticalBuy ? 3 : 7) * 86400000).toISOString().slice(0, 10)
+    new Date(Date.now() + (isCriticalBuy || queryPart ? 4 : 7) * 86400000).toISOString().slice(0, 10)
   );
   const [notes, setNotes] = useState(
     state.notes ||
-      (isCriticalBuy
+      (queryPart
+        ? `Fast-Track Procurement authorized via KSRTC SCION Copilot recommendation.`
+        : isCriticalBuy
         ? "Emergency Critical Stockout Procurement (Critical Buy)"
         : prefilledItems.length > 0
         ? "Pre-populated from PuLP Optimization Model Recommendation"
         : "")
   );
 
-  const [lines, setLines] = useState<PurchaseOrderLine[]>(
-    prefilledItems.length > 0
-      ? prefilledItems.map((i) => ({
+  const [lines, setLines] = useState<PurchaseOrderLine[]>(() => {
+    if (queryPart) {
+      const matched = DEFAULT_KSRTC_PARTS.find(
+        (p) => p.part.toLowerCase() === queryPart.toLowerCase()
+      );
+      const unitPrice = queryCost || matched?.unitCost || 0;
+      const quantity = queryQty || 1;
+      return [
+        {
+          part: queryPart,
+          category: matched?.category || "HVAC & Climate Control",
+          quantity,
+          unitPrice,
+          totalCost: quantity * unitPrice,
+        },
+      ];
+    }
+    if (prefilledItems.length > 0) {
+      return prefilledItems.map((i) => {
+        const matched = DEFAULT_KSRTC_PARTS.find(
+          (p) => p.part.toLowerCase() === i.part.toLowerCase()
+        );
+        return {
           part: i.part,
+          category: matched?.category || "",
           quantity: i.quantity,
-          unitPrice: i.unit_price || 0,
-          totalCost: (i.quantity || 1) * (i.unit_price || 0),
-        }))
-      : [{ part: "", quantity: 1, unitPrice: 0, totalCost: 0 }]
-  );
+          unitPrice: i.unit_price || matched?.unitCost || 0,
+          totalCost: (i.quantity || 1) * (i.unit_price || matched?.unitCost || 0),
+        };
+      });
+    }
+    return [{ part: "", category: "", quantity: 1, unitPrice: 0, totalCost: 0 }];
+  });
 
   const [submitting, setSubmitting] = useState(false);
   const [showPdf, setShowPdf] = useState(false);
 
   const supplierContainerRef = useRef<HTMLDivElement>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  // Derived list of all standard categories for suggestions
+  const availableCategories = useMemo(() => {
+    const set = new Set<string>();
+    inventoryList.forEach((it) => {
+      if (it.category) set.add(it.category);
+    });
+    [
+      "Brake Systems",
+      "Transmission & Powertrain",
+      "Filters & Lubrication",
+      "Tyres & Rubber",
+      "Electrical Components & Sensors",
+      "Suspension & Steering",
+      "Engine & Cooling",
+      "Hardware & Fasteners",
+      "Body & Glass",
+      "Oils, Lubricants & Greases",
+    ].forEach((c) => set.add(c));
+    return Array.from(set);
+  }, [inventoryList]);
 
   // Load PO number, suppliers, and inventory for autocompletion
   useEffect(() => {
@@ -99,6 +158,7 @@ export default function NewPurchaseOrder() {
       }
       if (tableContainerRef.current && !tableContainerRef.current.contains(e.target as Node)) {
         setActivePartDropdown(null);
+        setActiveCategoryDropdown(null);
       }
     };
     document.addEventListener("mousedown", handleDocumentClick);
@@ -141,6 +201,13 @@ export default function NewPurchaseOrder() {
       .slice(0, 10);
   };
 
+  // Filter matching categories for a specific line item
+  const getMatchingCategories = (query: string) => {
+    const q = (query || "").trim().toLowerCase();
+    if (!q) return availableCategories;
+    return availableCategories.filter((c) => c.toLowerCase().includes(q));
+  };
+
   const handleSelectPart = (idx: number, item: InventoryItem) => {
     setLines((prev) => {
       const updated = [...prev];
@@ -150,12 +217,22 @@ export default function NewPurchaseOrder() {
       updated[idx] = {
         ...cur,
         part: item.part,
+        category: item.category || cur.category || "",
         unitPrice: price,
         totalCost: qty * price,
       };
       return updated;
     });
     setActivePartDropdown(null);
+  };
+
+  const handleSelectCategory = (idx: number, category: string) => {
+    setLines((prev) => {
+      const updated = [...prev];
+      updated[idx] = { ...updated[idx], category };
+      return updated;
+    });
+    setActiveCategoryDropdown(null);
   };
 
   const updateLineQty = (idx: number, qty: number) => {
@@ -170,6 +247,12 @@ export default function NewPurchaseOrder() {
     );
   };
 
+  const updateLineCategory = (idx: number, category: string) => {
+    setLines((prev) =>
+      prev.map((l, i) => (i === idx ? { ...l, category } : l))
+    );
+  };
+
   const updateLinePart = (idx: number, partName: string) => {
     setLines((prev) => {
       const updated = [...prev];
@@ -181,9 +264,11 @@ export default function NewPurchaseOrder() {
         ? matched.unitCost
         : (cur.unitPrice || 0);
       const resolvedName = matched ? matched.part : partName;
+      const resolvedCategory = matched?.category || cur.category || "";
       updated[idx] = {
         ...cur,
         part: resolvedName,
+        category: resolvedCategory,
         unitPrice: price,
         totalCost: (Number(cur.quantity) || 1) * price,
       };
@@ -192,7 +277,7 @@ export default function NewPurchaseOrder() {
   };
 
   const addLine = () => {
-    setLines((prev) => [...prev, { part: "", quantity: 1, unitPrice: 0, totalCost: 0 }]);
+    setLines((prev) => [...prev, { part: "", category: "", quantity: 1, unitPrice: 0, totalCost: 0 }]);
   };
 
   const removeLine = (idx: number) => {
@@ -218,7 +303,13 @@ export default function NewPurchaseOrder() {
       expectedDelivery,
       total,
       status: "Submitted",
-      lines: validLines,
+      lines: validLines.map((l) => ({
+        part: l.part.trim(),
+        category: l.category?.trim() || undefined,
+        quantity: Number(l.quantity) || 1,
+        unitPrice: Number(l.unitPrice) || 0,
+        totalCost: (Number(l.quantity) || 1) * (Number(l.unitPrice) || 0),
+      })),
       notes,
       isNew: true,
       createdAt: Date.now(),
@@ -347,7 +438,7 @@ export default function NewPurchaseOrder() {
                 <div className="relative">
                   <input
                     type="text"
-                    list="ksrtc-suppliers-datalist"
+                    autoComplete="off"
                     value={supplier}
                     onChange={(e) => {
                       const val = e.target.value;
@@ -370,14 +461,6 @@ export default function NewPurchaseOrder() {
                     <ChevronDown size={14} />
                   </button>
                 </div>
-
-                <datalist id="ksrtc-suppliers-datalist">
-                  {suppliersList.map((s) => (
-                    <option key={s.id || s.name} value={s.name}>
-                      {s.category ? `${s.name} (${s.category})` : s.name}
-                    </option>
-                  ))}
-                </datalist>
 
                 {/* SUPPLIER DROPDOWN POPUP */}
                 {showSupplierDropdown && (
@@ -475,12 +558,13 @@ export default function NewPurchaseOrder() {
                   onClick={() => {
                     const item = inventoryList.find((i) => i.part.toLowerCase() === pName.toLowerCase());
                     const price = item?.unitCost || 0;
+                    const cat = item?.category || "";
                     // If first line is empty, replace it; otherwise append
                     setLines((prev) => {
                       if (prev.length === 1 && !prev[0].part.trim()) {
-                        return [{ part: pName, quantity: 1, unitPrice: price, totalCost: price }];
+                        return [{ part: pName, category: cat, quantity: 1, unitPrice: price, totalCost: price }];
                       }
-                      return [...prev, { part: pName, quantity: 1, unitPrice: price, totalCost: price }];
+                      return [...prev, { part: pName, category: cat, quantity: 1, unitPrice: price, totalCost: price }];
                     });
                   }}
                   className="shrink-0 rounded-full border border-[--color-border] bg-[--color-surface-1] hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2.5 py-0.5 text-[11px] font-medium text-[--color-ink-700] hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
@@ -490,52 +574,53 @@ export default function NewPurchaseOrder() {
               ))}
             </div>
 
-            {/* GLOBAL DATALIST FOR SPARES AUTOCOMPLETION */}
-            <datalist id="ksrtc-spares-catalog">
-              {inventoryList.map((item) => (
-                <option key={item.id || item.part} value={item.part}>
-                  {item.category ? `${item.part} (${item.category} - ₹${item.unitCost})` : item.part}
-                </option>
-              ))}
-            </datalist>
-
-            <div ref={tableContainerRef} className="rounded-lg border border-[--color-border]">
-              <table className="w-full text-sm">
+            <div ref={tableContainerRef} className="rounded-lg border border-[--color-border] overflow-x-auto">
+              <table className="w-full text-sm min-w-[700px]">
                 <thead>
                   <tr className="border-b border-[--color-border] bg-[--color-surface-1] text-left text-xs uppercase tracking-wider text-[--color-ink-500]">
-                    <th className="px-3.5 py-2.5">Part / Item (Auto-suggests uniform name)</th>
-                    <th className="px-3.5 py-2.5 w-28">Quantity</th>
-                    <th className="px-3.5 py-2.5 w-32">Unit Price (₹)</th>
-                    <th className="px-3.5 py-2.5 w-32">Line Total</th>
-                    <th className="px-3.5 py-2.5 w-10"></th>
+                    <th className="px-2.5 py-2.5 w-9 text-center">#</th>
+                    <th className="px-3 py-2.5">Part / Item (Auto-suggest)</th>
+                    <th className="px-3 py-2.5 w-48">Category (Separate Column)</th>
+                    <th className="px-2.5 py-2.5 w-20 text-center">Qty</th>
+                    <th className="px-3 py-2.5 w-28">Unit Price (₹)</th>
+                    <th className="px-3 py-2.5 w-28">Line Total</th>
+                    <th className="px-2 py-2.5 w-9 text-center"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[--color-border]">
                   {lines.map((l, i) => {
                     const matchingParts = getMatchingParts(l.part);
+                    const matchingCategories = getMatchingCategories(l.category || "");
                     return (
                       <tr key={i} className="hover:bg-[--color-surface-1]/50 transition-colors">
-                        <td className="px-3.5 py-2.5 relative">
+                        <td className="px-2.5 py-2.5 text-center text-xs font-mono text-[--color-ink-400]">
+                          {i + 1}
+                        </td>
+                        <td className="px-3 py-2.5 relative">
                           <input
                             type="text"
-                            list="ksrtc-spares-catalog"
+                            autoComplete="off"
                             value={l.part}
                             onChange={(e) => {
                               updateLinePart(i, e.target.value);
                               setActivePartDropdown(i);
+                              setActiveCategoryDropdown(null);
                             }}
-                            onFocus={() => setActivePartDropdown(i)}
-                            placeholder="Type or select standard spare…"
-                            className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-sm font-medium text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
+                            onFocus={() => {
+                              setActivePartDropdown(i);
+                              setActiveCategoryDropdown(null);
+                            }}
+                            placeholder="Type or select spare part…"
+                            className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs font-medium text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
                           />
 
                           {/* PART AUTOCOMPLETE POPUP */}
                           {activePartDropdown === i && (
-                            <div className="absolute left-3.5 right-3.5 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border border-[--color-border] bg-[--color-surface-0] shadow-2xl py-1 text-xs">
+                            <div className="absolute left-3 right-3 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border border-[--color-border] bg-[--color-surface-0] shadow-2xl py-1 text-xs">
                               <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[--color-ink-400] bg-[--color-surface-1] border-b border-[--color-border] flex items-center justify-between">
                                 <span>Suggested Spares Catalog ({matchingParts.length})</span>
                                 <span className="text-[10px] font-normal text-blue-600 dark:text-blue-400">
-                                  Click to fill uniform name & cost
+                                  Auto-fills name, category & price
                                 </span>
                               </div>
                               {matchingParts.length === 0 ? (
@@ -575,36 +660,86 @@ export default function NewPurchaseOrder() {
                             </div>
                           )}
                         </td>
-                        <td className="px-3.5 py-2.5">
+
+                        {/* SEPARATE CATEGORY COLUMN */}
+                        <td className="px-3 py-2.5 relative">
+                          <input
+                            type="text"
+                            autoComplete="off"
+                            value={l.category || ""}
+                            onChange={(e) => {
+                              updateLineCategory(i, e.target.value);
+                              setActiveCategoryDropdown(i);
+                              setActivePartDropdown(null);
+                            }}
+                            onFocus={() => {
+                              setActiveCategoryDropdown(i);
+                              setActivePartDropdown(null);
+                            }}
+                            placeholder="Select/type category…"
+                            className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
+                          />
+
+                          {/* CATEGORY AUTOCOMPLETE POPUP */}
+                          {activeCategoryDropdown === i && (
+                            <div className="absolute left-3 right-3 top-full z-50 mt-1 max-h-52 overflow-y-auto rounded-lg border border-[--color-border] bg-[--color-surface-0] shadow-2xl py-1 text-xs">
+                              <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[--color-ink-400] bg-[--color-surface-1] border-b border-[--color-border] flex items-center justify-between">
+                                <span>Suggested Categories</span>
+                                <span className="text-[10px] font-normal text-blue-600 dark:text-blue-400">Click to choose</span>
+                              </div>
+                              {matchingCategories.length === 0 ? (
+                                <div className="px-3 py-2 text-xs text-[--color-ink-400] italic">
+                                  Custom category. Press Tab or Enter to continue.
+                                </div>
+                              ) : (
+                                matchingCategories.map((cat) => (
+                                  <button
+                                    key={cat}
+                                    type="button"
+                                    onClick={() => handleSelectCategory(i, cat)}
+                                    className={`w-full text-left px-3 py-1.5 hover:bg-blue-50 dark:hover:bg-blue-950/40 border-b border-[--color-border] last:border-0 transition-colors flex items-center justify-between text-xs cursor-pointer ${
+                                      l.category === cat ? "font-semibold text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/20" : "text-[--color-ink-800]"
+                                    }`}
+                                  >
+                                    <span>{cat}</span>
+                                    {l.category === cat && <Check size={12} className="text-blue-600 dark:text-blue-400" />}
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </td>
+
+                        <td className="px-2.5 py-2.5">
                           <input
                             type="number"
                             min="1"
                             value={l.quantity}
                             onChange={(e) => updateLineQty(i, Math.max(1, Number(e.target.value)))}
-                            className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-sm tabular font-semibold text-[--color-ink-900]"
+                            className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2 py-1.5 text-xs text-center tabular font-semibold text-[--color-ink-900]"
                           />
                         </td>
-                        <td className="px-3.5 py-2.5">
+                        <td className="px-3 py-2.5">
                           <input
                             type="number"
                             min="0"
                             value={l.unitPrice}
                             onChange={(e) => updateLinePrice(i, Math.max(0, Number(e.target.value)))}
                             placeholder="0"
-                            className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-sm tabular text-[--color-ink-900]"
+                            className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs tabular text-[--color-ink-900]"
                           />
                         </td>
-                        <td className="px-3.5 py-2.5 tabular font-bold text-[--color-ink-900]">
+                        <td className="px-3 py-2.5 tabular font-bold text-xs text-[--color-ink-900]">
                           ₹{l.totalCost.toLocaleString("en-IN")}
                         </td>
-                        <td className="px-3.5 py-2.5 text-center">
+                        <td className="px-2 py-2.5 text-center">
                           <button
                             type="button"
                             onClick={() => removeLine(i)}
                             title="Remove item"
                             className="text-[--color-ink-400] hover:text-red-500 cursor-pointer transition-colors p-1"
                           >
-                            <Trash2 size={15} />
+                            <Trash2 size={14} />
                           </button>
                         </td>
                       </tr>

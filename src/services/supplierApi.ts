@@ -275,6 +275,19 @@ export const DEFAULT_KSRTC_SUPPLIERS: Supplier[] = [
     avgLeadTimeDays: 4,
     openOrders: 2,
   },
+  {
+    id: "supp-21",
+    name: "Subros Thermal Solutions Ltd",
+    category: "HVAC, Climate Control & AC Compressors",
+    address: "Plot 42, Electronics & Heavy Auto Cluster, South Kalamassery, Ernakulam, Kerala - 683104",
+    contactName: "S. K. Raman (OEM Operations)",
+    contactEmail: "oem.sales@subros.co.in",
+    contactPhone: "+91 484 2549811",
+    reliabilityScore: 97,
+    onTimeDeliveryRate: 96,
+    avgLeadTimeDays: 5,
+    openOrders: 1,
+  },
 ];
 
 function normalizeSupplier(s: any, idx = 0): Supplier {

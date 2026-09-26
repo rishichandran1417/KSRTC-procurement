@@ -1,19 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Eye, PackageCheck, XCircle, Plus, X, FileText, Pencil, Trash2,
   Search, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight,
-  ChevronsLeft, ChevronsRight, Sparkles, MapPin
+  ChevronsLeft, ChevronsRight, Sparkles, MapPin, Filter, RotateCcw,
+  Truck
 } from "lucide-react";
 import { TopBar } from "../components/layout/TopBar";
-import { LoadingState, ErrorState, EmptyState } from "../components/ui/States";
+import { LoadingState, ErrorState } from "../components/ui/States";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { getPurchaseOrders, updatePoStatus, updatePurchaseOrder } from "../services/purchaseOrderApi";
 import { PurchaseOrderPdfModal } from "../components/ui/PurchaseOrderPdfModal";
+import { SupplyScheduleBoard } from "../components/purchaseOrders/SupplyScheduleBoard";
 import type { PurchaseOrder, PoStatus } from "../types";
 
 export default function PurchaseOrders() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") === "schedule" ? "schedule" : "orders";
+
+  const setActiveTab = (tab: "orders" | "schedule") => {
+    setSearchParams(tab === "schedule" ? { tab: "schedule" } : {});
+  };
+
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +32,9 @@ export default function PurchaseOrders() {
   // Search, filter, sort and pagination states
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [supplierFilter, setSupplierFilter] = useState("All");
+  const [dateFilter, setDateFilter] = useState("All");
+  const [amountFilter, setAmountFilter] = useState("All");
   const [sortField, setSortField] = useState<"poDate" | "poNumber" | "supplier" | "expectedDelivery" | "total" | "status">("poDate");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,7 +47,7 @@ export default function PurchaseOrders() {
   const [editExpectedDelivery, setEditExpectedDelivery] = useState("");
   const [editStatus, setEditStatus] = useState<PoStatus>("Submitted");
   const [editNotes, setEditNotes] = useState("");
-  const [editLines, setEditLines] = useState<{ part: string; quantity: number; unitPrice: number; totalCost: number }[]>([]);
+  const [editLines, setEditLines] = useState<{ part: string; category?: string; quantity: number; unitPrice: number; totalCost: number }[]>([]);
   const [savingEdit, setSavingEdit] = useState(false);
 
   const load = () => {
@@ -65,12 +77,12 @@ export default function PurchaseOrders() {
     setEditNotes(po.notes || "");
     setEditLines(
       po.lines && po.lines.length > 0
-        ? po.lines.map((l) => ({ ...l }))
-        : [{ part: "Spare Part", quantity: 1, unitPrice: 0, totalCost: 0 }]
+        ? po.lines.map((l) => ({ ...l, category: l.category || "" }))
+        : [{ part: "Spare Part", category: "", quantity: 1, unitPrice: 0, totalCost: 0 }]
     );
   };
 
-  const handleLineChange = (index: number, field: "part" | "quantity" | "unitPrice", value: string | number) => {
+  const handleLineChange = (index: number, field: "part" | "category" | "quantity" | "unitPrice", value: string | number) => {
     setEditLines((prev) => {
       const updated = [...prev];
       const item = { ...updated[index], [field]: value };
@@ -83,7 +95,7 @@ export default function PurchaseOrders() {
   };
 
   const addLine = () => {
-    setEditLines((prev) => [...prev, { part: "", quantity: 1, unitPrice: 0, totalCost: 0 }]);
+    setEditLines((prev) => [...prev, { part: "", category: "", quantity: 1, unitPrice: 0, totalCost: 0 }]);
   };
 
   const removeLine = (index: number) => {
@@ -108,6 +120,7 @@ export default function PurchaseOrders() {
         notes: editNotes.trim(),
         lines: editLines.map((l) => ({
           part: l.part.trim() || "Item",
+          category: l.category?.trim() || undefined,
           quantity: Number(l.quantity) || 1,
           unitPrice: Number(l.unitPrice) || 0,
           totalCost: (Number(l.quantity) || 1) * (Number(l.unitPrice) || 0),
@@ -142,15 +155,70 @@ export default function PurchaseOrders() {
     setCurrentPage(1);
   };
 
+  const resetFilters = () => {
+    setSearch("");
+    setStatusFilter("All");
+    setSupplierFilter("All");
+    setDateFilter("All");
+    setAmountFilter("All");
+    setSortField("poDate");
+    setSortDirection("desc");
+    setCurrentPage(1);
+  };
+
+  // Distinct suppliers from orders list
+  const uniqueSuppliers = useMemo(() => {
+    const set = new Set<string>();
+    orders.forEach((o) => {
+      if (o.supplier && o.supplier.trim()) set.add(o.supplier.trim());
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [orders]);
+
   const sortedAndFilteredOrders = useMemo(() => {
     let list = orders.filter((po) => {
       if (statusFilter !== "All" && po.status !== statusFilter) return false;
+      if (supplierFilter !== "All" && po.supplier !== supplierFilter) return false;
+
+      // Date range filter
+      if (dateFilter !== "All") {
+        const poTime = new Date(po.poDate).getTime();
+        const now = Date.now();
+        if (dateFilter === "today") {
+          const todayStr = new Date().toISOString().slice(0, 10);
+          if (po.poDate !== todayStr) return false;
+        } else if (dateFilter === "7d") {
+          if (now - poTime > 7 * 86400000) return false;
+        } else if (dateFilter === "30d") {
+          if (now - poTime > 30 * 86400000) return false;
+        } else if (dateFilter === "90d") {
+          if (now - poTime > 90 * 86400000) return false;
+        } else if (dateFilter === "thisYear") {
+          const currentYear = new Date().getFullYear();
+          if (!po.poDate.startsWith(String(currentYear))) return false;
+        }
+      }
+
+      // Amount range filter
+      if (amountFilter !== "All") {
+        const total = po.total || 0;
+        if (amountFilter === "under25k" && total >= 25000) return false;
+        if (amountFilter === "25kTo100k" && (total < 25000 || total > 100000)) return false;
+        if (amountFilter === "100kTo500k" && (total < 100000 || total > 500000)) return false;
+        if (amountFilter === "above500k" && total <= 500000) return false;
+      }
+
+      // Text search
       if (search.trim()) {
         const q = search.toLowerCase();
         const matchNumber = (po.poNumber || "").toLowerCase().includes(q);
         const matchSupplier = (po.supplier || "").toLowerCase().includes(q);
         const matchNotes = (po.notes || "").toLowerCase().includes(q);
-        const matchPart = po.lines?.some((l) => (l.part || "").toLowerCase().includes(q));
+        const matchPart = po.lines?.some(
+          (l) =>
+            (l.part || "").toLowerCase().includes(q) ||
+            (l.category || "").toLowerCase().includes(q)
+        );
         if (!matchNumber && !matchSupplier && !matchNotes && !matchPart) return false;
       }
       return true;
@@ -198,7 +266,26 @@ export default function PurchaseOrders() {
       }
       return sortDirection === "asc" ? cmp : -cmp;
     });
-  }, [orders, search, statusFilter, sortField, sortDirection]);
+  }, [orders, search, statusFilter, supplierFilter, dateFilter, amountFilter, sortField, sortDirection]);
+
+  const isFiltered = Boolean(
+    search.trim() ||
+    statusFilter !== "All" ||
+    supplierFilter !== "All" ||
+    dateFilter !== "All" ||
+    amountFilter !== "All"
+  );
+
+  const activeFiltersCount =
+    (search.trim() ? 1 : 0) +
+    (statusFilter !== "All" ? 1 : 0) +
+    (supplierFilter !== "All" ? 1 : 0) +
+    (dateFilter !== "All" ? 1 : 0) +
+    (amountFilter !== "All" ? 1 : 0);
+
+  const filteredTotalValue = useMemo(() => {
+    return sortedAndFilteredOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+  }, [sortedAndFilteredOrders]);
 
   const totalItems = sortedAndFilteredOrders.length;
   const totalPages = pageSize === -1 ? 1 : Math.max(1, Math.ceil(totalItems / pageSize));
@@ -251,12 +338,76 @@ export default function PurchaseOrders() {
 
   return (
     <div>
-      <TopBar title="Purchase Orders" subtitle="What did we order? — Purchase order lifecycle management" />
+      <TopBar
+        title={activeTab === "schedule" ? "Supply Delivery Schedule" : "Purchase Orders"}
+        subtitle={
+          activeTab === "schedule"
+            ? "When will supplies arrive? — Interactive delivery pipeline & receiving calendar"
+            : "What did we order? — Purchase order lifecycle management"
+        }
+        actions={
+          <div className="flex items-center gap-2">
+            {/* View Switcher: Orders List vs Supply Scheduling */}
+            <div className="flex items-center rounded-lg border border-[--color-border] bg-[--color-surface-1] p-0.5">
+              <button
+                onClick={() => setActiveTab("orders")}
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                  activeTab === "orders"
+                    ? "bg-[--color-surface-0] text-blue-600 dark:text-blue-400 shadow-2xs font-bold"
+                    : "text-[--color-ink-500] hover:text-[--color-ink-900]"
+                }`}
+                title="All Purchase Orders Table"
+              >
+                <FileText size={13} />
+                <span>Orders List</span>
+              </button>
+              <button
+                onClick={() => setActiveTab("schedule")}
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                  activeTab === "schedule"
+                    ? "bg-[--color-surface-0] text-blue-600 dark:text-blue-400 shadow-2xs font-bold"
+                    : "text-[--color-ink-500] hover:text-[--color-ink-900]"
+                }`}
+                title="Interactive Supply Delivery Schedule"
+              >
+                <Truck size={13} />
+                <span>Supply Scheduling</span>
+              </button>
+            </div>
+
+            <button
+              onClick={() => navigate("/purchase-orders/new")}
+              className="flex items-center gap-1.5 rounded-md bg-blue-600 hover:bg-blue-700 active:scale-95 px-3 sm:px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition-all cursor-pointer"
+            >
+              <Plus size={14} /> <span className="hidden sm:inline">Create New PO</span>
+            </button>
+          </div>
+        }
+      />
 
       <div className="p-4 sm:p-6 space-y-4">
-        {/* TOOLBAR */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2.5 flex-1">
+        {loading ? (
+          <LoadingState label="Loading purchase order records…" />
+        ) : error ? (
+          <ErrorState title="Purchase orders unavailable." message={error} onRetry={load} />
+        ) : activeTab === "schedule" ? (
+          <SupplyScheduleBoard
+            orders={orders}
+            onUpdateOrder={async (updated) => {
+              await updatePurchaseOrder(updated);
+              setOrders((prev) => prev.map((p) => (p.poNumber === updated.poNumber ? updated : p)));
+              if (viewing && viewing.poNumber === updated.poNumber) setViewing(updated);
+            }}
+            onStatusChange={handleStatusChange}
+            onViewPo={(po) => setViewing(po)}
+            onPdfPo={(po) => setPdfPo(po)}
+          />
+        ) : (
+          <>
+            {/* TOOLBAR */}
+            <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2.5 bg-[--color-surface-0] p-3 rounded-lg border border-[--color-border]">
+            {/* SEARCH */}
             <div className="relative flex-1 sm:w-64 min-w-[200px]">
               <input
                 placeholder="Search PO #, supplier, part…"
@@ -265,18 +416,35 @@ export default function PurchaseOrders() {
                   setSearch(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full rounded-md border border-[--color-border] bg-[--color-surface-0] pl-8 pr-3 py-1.5 text-xs text-[--color-ink-900] placeholder:text-[--color-ink-400] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-md border border-[--color-border] bg-[--color-surface-1] pl-8 pr-7 py-1.5 text-xs text-[--color-ink-900] placeholder:text-[--color-ink-400] focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               <Search size={13} className="absolute left-2.5 top-2.5 text-[--color-ink-400]" />
+              {search && (
+                <button
+                  onClick={() => {
+                    setSearch("");
+                    setCurrentPage(1);
+                  }}
+                  className="absolute right-2 top-2 text-[--color-ink-400] hover:text-[--color-ink-700] p-0.5 rounded cursor-pointer"
+                >
+                  <X size={12} />
+                </button>
+              )}
             </div>
 
+            {/* STATUS FILTER */}
             <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="rounded-md border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs text-[--color-ink-800] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+              className={`rounded-md border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${
+                statusFilter !== "All"
+                  ? "border-blue-500 bg-blue-50/40 text-blue-700 dark:text-blue-300 font-medium"
+                  : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-800]"
+              }`}
+              title="Filter by Status"
             >
               <option value="All">All Statuses</option>
               <option value="Submitted">Submitted</option>
@@ -289,44 +457,181 @@ export default function PurchaseOrders() {
               <option value="Cancelled">Cancelled</option>
             </select>
 
-            <div className="flex items-center gap-1.5 text-xs">
-              <span className="text-[--color-ink-500] hidden sm:inline">Sort:</span>
+            {/* SUPPLIER FILTER */}
+            <select
+              value={supplierFilter}
+              onChange={(e) => {
+                setSupplierFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className={`rounded-md border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[200px] truncate ${
+                supplierFilter !== "All"
+                  ? "border-blue-500 bg-blue-50/40 text-blue-700 dark:text-blue-300 font-medium"
+                  : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-800]"
+              }`}
+              title="Filter by Supplier"
+            >
+              <option value="All">All Suppliers ({uniqueSuppliers.length})</option>
+              {uniqueSuppliers.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+
+            {/* DATE RANGE FILTER */}
+            <select
+              value={dateFilter}
+              onChange={(e) => {
+                setDateFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className={`rounded-md border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${
+                dateFilter !== "All"
+                  ? "border-blue-500 bg-blue-50/40 text-blue-700 dark:text-blue-300 font-medium"
+                  : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-800]"
+              }`}
+              title="Filter by Order Date"
+            >
+              <option value="All">All Dates</option>
+              <option value="today">Today</option>
+              <option value="7d">Last 7 Days</option>
+              <option value="30d">Last 30 Days</option>
+              <option value="90d">Last 90 Days</option>
+              <option value="thisYear">This Year ({new Date().getFullYear()})</option>
+            </select>
+
+            {/* AMOUNT FILTER */}
+            <select
+              value={amountFilter}
+              onChange={(e) => {
+                setAmountFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className={`rounded-md border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${
+                amountFilter !== "All"
+                  ? "border-blue-500 bg-blue-50/40 text-blue-700 dark:text-blue-300 font-medium"
+                  : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-800]"
+              }`}
+              title="Filter by Order Total Amount"
+            >
+              <option value="All">All Amounts</option>
+              <option value="under25k">&lt; ₹25,000</option>
+              <option value="25kTo100k">₹25,000 – ₹1,00,000</option>
+              <option value="100kTo500k">₹1,00,000 – ₹5,00,000</option>
+              <option value="above500k">&gt; ₹5,00,000</option>
+            </select>
+
+            {/* SORT CONTROLS */}
+            <div className="flex items-center gap-1.5 text-xs pl-2 border-l border-[--color-border]">
+              <span className="text-[--color-ink-500]">Sort:</span>
               <select
-                value={`${sortField}-${sortDirection}`}
+                value={sortField}
                 onChange={(e) => {
-                  const [f, d] = e.target.value.split("-") as [typeof sortField, typeof sortDirection];
-                  setSortField(f);
-                  setSortDirection(d);
+                  setSortField(e.target.value as typeof sortField);
                   setCurrentPage(1);
                 }}
-                className="rounded-md border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs text-[--color-ink-800] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                className="rounded-md border border-[--color-border] bg-[--color-surface-1] px-2.5 py-1.5 text-xs text-[--color-ink-800] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
               >
-                <option value="poDate-desc">PO Date (Newest First)</option>
-                <option value="poDate-asc">PO Date (Oldest First)</option>
-                <option value="poNumber-desc">PO Number (Newest / Desc)</option>
-                <option value="poNumber-asc">PO Number (Oldest / Asc)</option>
-                <option value="total-desc">Total Amount (High → Low)</option>
-                <option value="total-asc">Total Amount (Low → High)</option>
-                <option value="supplier-asc">Supplier (A → Z)</option>
-                <option value="supplier-desc">Supplier (Z → A)</option>
-                <option value="status-asc">Status</option>
+                <option value="poDate">PO Date</option>
+                <option value="poNumber">PO Number</option>
+                <option value="total">Total Amount</option>
+                <option value="supplier">Supplier Name</option>
+                <option value="expectedDelivery">Expected Delivery</option>
+                <option value="status">Status</option>
               </select>
+
+              <button
+                type="button"
+                onClick={() => setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))}
+                title={`Sort Direction: ${sortDirection === "asc" ? "Ascending (Low to High / A-Z)" : "Descending (High to Low / Z-A)"}. Click to toggle.`}
+                className="inline-flex items-center gap-1 rounded-md border border-[--color-border] bg-[--color-surface-1] hover:bg-[--color-surface-2] px-2 py-1.5 text-xs font-medium text-[--color-ink-700] hover:text-[--color-ink-900] transition-colors cursor-pointer"
+              >
+                {sortDirection === "asc" ? (
+                  <>
+                    <ArrowUp size={13} className="text-blue-600 dark:text-blue-400" />
+                    <span className="text-[11px]">Asc</span>
+                  </>
+                ) : (
+                  <>
+                    <ArrowDown size={13} className="text-blue-600 dark:text-blue-400" />
+                    <span className="text-[11px]">Desc</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
-          <button
-            onClick={() => navigate("/purchase-orders/new")}
-            className="flex items-center justify-center gap-2 rounded-md bg-blue-600 hover:bg-blue-700 active:scale-95 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition-all cursor-pointer w-full sm:w-auto"
-          >
-            <Plus size={14} /> Create New PO
-          </button>
+          {/* ACTIVE FILTER PILLS & STATS BAR */}
+          {isFiltered && (
+            <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-lg bg-[--color-surface-1] border border-[--color-border] text-xs">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[--color-ink-500] flex items-center gap-1">
+                  <Filter size={11} className="text-blue-500" />
+                  <span>Active Filters ({activeFiltersCount}):</span>
+                </span>
+
+                {search.trim() && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 border border-blue-500/30 px-2 py-0.5 text-[11px] text-blue-700 dark:text-blue-300">
+                    Search: "{search}"
+                    <button onClick={() => setSearch("")} className="hover:text-blue-900 cursor-pointer">
+                      <X size={11} />
+                    </button>
+                  </span>
+                )}
+
+                {statusFilter !== "All" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 border border-blue-500/30 px-2 py-0.5 text-[11px] text-blue-700 dark:text-blue-300">
+                    Status: {statusFilter}
+                    <button onClick={() => setStatusFilter("All")} className="hover:text-blue-900 cursor-pointer">
+                      <X size={11} />
+                    </button>
+                  </span>
+                )}
+
+                {supplierFilter !== "All" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 border border-blue-500/30 px-2 py-0.5 text-[11px] text-blue-700 dark:text-blue-300">
+                    Supplier: {supplierFilter}
+                    <button onClick={() => setSupplierFilter("All")} className="hover:text-blue-900 cursor-pointer">
+                      <X size={11} />
+                    </button>
+                  </span>
+                )}
+
+                {dateFilter !== "All" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 border border-blue-500/30 px-2 py-0.5 text-[11px] text-blue-700 dark:text-blue-300">
+                    Date: {dateFilter === "today" ? "Today" : dateFilter === "7d" ? "Last 7 Days" : dateFilter === "30d" ? "Last 30 Days" : dateFilter === "90d" ? "Last 90 Days" : "This Year"}
+                    <button onClick={() => setDateFilter("All")} className="hover:text-blue-900 cursor-pointer">
+                      <X size={11} />
+                    </button>
+                  </span>
+                )}
+
+                {amountFilter !== "All" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 border border-blue-500/30 px-2 py-0.5 text-[11px] text-blue-700 dark:text-blue-300">
+                    Amount: {amountFilter === "under25k" ? "< ₹25k" : amountFilter === "25kTo100k" ? "₹25k-₹100k" : amountFilter === "100kTo500k" ? "₹100k-₹500k" : "> ₹500k"}
+                    <button onClick={() => setAmountFilter("All")} className="hover:text-blue-900 cursor-pointer">
+                      <X size={11} />
+                    </button>
+                  </span>
+                )}
+
+                <button
+                  onClick={resetFilters}
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-600 dark:text-rose-400 hover:underline pl-1 cursor-pointer"
+                >
+                  <RotateCcw size={11} /> Reset All
+                </button>
+              </div>
+
+              <div className="text-[11px] text-[--color-ink-600] font-medium">
+                Showing <strong className="text-[--color-ink-900]">{sortedAndFilteredOrders.length}</strong> of <strong className="text-[--color-ink-900]">{orders.length}</strong> · Value: <strong className="text-blue-600 dark:text-blue-400 font-semibold">₹{filteredTotalValue.toLocaleString("en-IN")}</strong>
+              </div>
+            </div>
+          )}
         </div>
 
-        {loading ? (
-          <LoadingState label="Loading purchase order records…" />
-        ) : error ? (
-          <ErrorState title="Purchase orders unavailable." message={error} onRetry={load} />
-        ) : orders.length === 0 ? (
+            {orders.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-[--color-border] bg-[--color-surface-0] p-8 text-center sm:p-12">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
               <Plus size={20} />
@@ -353,10 +658,21 @@ export default function PurchaseOrders() {
             </div>
           </div>
         ) : sortedAndFilteredOrders.length === 0 ? (
-          <EmptyState
-            title="No matching purchase orders"
-            message="No orders matched your search or status filter. Try clearing the search term or selecting 'All Statuses'."
-          />
+          <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-[--color-border] bg-[--color-surface-0] p-8 text-center sm:p-12">
+            <Filter size={28} className="text-[--color-ink-400]" />
+            <div>
+              <h3 className="text-sm font-medium text-[--color-ink-900]">No matching purchase orders</h3>
+              <p className="mt-1 max-w-md text-xs text-[--color-ink-500]">
+                No orders matched your selected filters or search query. Clear one or more filters or click below to reset all filters.
+              </p>
+            </div>
+            <button
+              onClick={resetFilters}
+              className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 hover:bg-blue-700 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition-all cursor-pointer mt-1"
+            >
+              <RotateCcw size={13} /> Reset All Filters
+            </button>
+          </div>
         ) : (
           <div className="rounded-lg border border-[--color-border] bg-[--color-surface-0] overflow-hidden shadow-2xs">
             <div className="overflow-x-auto">
@@ -550,7 +866,9 @@ export default function PurchaseOrders() {
             </div>
           </div>
         )}
-      </div>
+      </>
+    )}
+  </div>
 
       {/* PO DETAIL VIEW MODAL */}
       {viewing ? (
@@ -622,8 +940,15 @@ export default function PurchaseOrders() {
                       className="flex items-center justify-between border-b border-[--color-border] last:border-0 pb-1.5 last:pb-0 text-xs"
                     >
                       <div className="min-w-0 pr-2">
-                        <p className="font-medium text-[--color-ink-900] truncate">{l.part}</p>
-                        <p className="text-[--color-ink-500]">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="font-medium text-[--color-ink-900] truncate">{l.part}</p>
+                          {l.category && (
+                            <span className="rounded bg-[--color-surface-2] px-1.5 py-0.2 text-[10px] font-medium text-[--color-ink-600] border border-[--color-border]">
+                              {l.category}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[--color-ink-500] mt-0.5">
                           {l.quantity} units × ₹{l.unitPrice.toLocaleString("en-IN")}
                         </p>
                       </div>
@@ -804,42 +1129,51 @@ export default function PurchaseOrders() {
 
                 <div className="space-y-2 border border-[--color-border] rounded-md p-2.5 bg-[--color-surface-1]">
                   {editLines.map((line, i) => (
-                    <div key={i} className="flex items-center gap-2 border-b border-[--color-border] last:border-0 pb-2 last:pb-0">
+                    <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 border-b border-[--color-border] last:border-0 pb-2.5 last:pb-0">
                       <input
                         type="text"
                         value={line.part}
                         onChange={(e) => handleLineChange(i, "part", e.target.value)}
-                        placeholder="Item description"
+                        placeholder="Item description / spare part"
                         className="flex-1 rounded border border-[--color-border] bg-[--color-surface-0] px-2 py-1 text-xs text-[--color-ink-900]"
                       />
                       <input
-                        type="number"
-                        min="1"
-                        value={line.quantity}
-                        onChange={(e) => handleLineChange(i, "quantity", e.target.value)}
-                        placeholder="Qty"
-                        className="w-16 rounded border border-[--color-border] bg-[--color-surface-0] px-2 py-1 text-xs text-[--color-ink-900] text-center"
+                        type="text"
+                        value={line.category || ""}
+                        onChange={(e) => handleLineChange(i, "category", e.target.value)}
+                        placeholder="Category"
+                        className="w-full sm:w-36 rounded border border-[--color-border] bg-[--color-surface-0] px-2 py-1 text-xs text-[--color-ink-900]"
                       />
-                      <div className="flex items-center gap-1">
-                        <span className="text-[--color-ink-500]">₹</span>
+                      <div className="flex items-center gap-2">
                         <input
                           type="number"
-                          min="0"
-                          value={line.unitPrice}
-                          onChange={(e) => handleLineChange(i, "unitPrice", e.target.value)}
-                          placeholder="Price"
-                          className="w-20 rounded border border-[--color-border] bg-[--color-surface-0] px-2 py-1 text-xs text-[--color-ink-900] text-right"
+                          min="1"
+                          value={line.quantity}
+                          onChange={(e) => handleLineChange(i, "quantity", e.target.value)}
+                          placeholder="Qty"
+                          className="w-16 rounded border border-[--color-border] bg-[--color-surface-0] px-2 py-1 text-xs text-[--color-ink-900] text-center"
                         />
+                        <div className="flex items-center gap-1">
+                          <span className="text-[--color-ink-500]">₹</span>
+                          <input
+                            type="number"
+                            min="0"
+                            value={line.unitPrice}
+                            onChange={(e) => handleLineChange(i, "unitPrice", e.target.value)}
+                            placeholder="Price"
+                            className="w-20 rounded border border-[--color-border] bg-[--color-surface-0] px-2 py-1 text-xs text-[--color-ink-900] text-right"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeLine(i)}
+                          disabled={editLines.length <= 1}
+                          className="p-1 text-[--color-ink-400] hover:text-rose-500 disabled:opacity-30 cursor-pointer"
+                          title="Delete Item"
+                        >
+                          <Trash2 size={13} />
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => removeLine(i)}
-                        disabled={editLines.length <= 1}
-                        className="p-1 text-[--color-ink-400] hover:text-rose-500 disabled:opacity-30 cursor-pointer"
-                        title="Delete Item"
-                      >
-                        <Trash2 size={13} />
-                      </button>
                     </div>
                   ))}
                 </div>

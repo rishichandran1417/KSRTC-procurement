@@ -151,6 +151,7 @@ export type PoStatus =
 
 export interface PurchaseOrderLine {
   part: string;
+  category?: string;
   quantity: number;
   unitPrice: number;
   totalCost: number;

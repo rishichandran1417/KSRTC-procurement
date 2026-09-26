@@ -490,6 +490,23 @@ export const DEFAULT_KSRTC_PARTS: InventoryItem[] = [
     depot: SINGLE_DEPOT,
     lastUpdated: "2026-09-25",
     notes: "Graphite coated natural rubber curved blade",
+  },
+  {
+    id: "def-inv-28",
+    part: "AC Compressor Assembly (KSRTC Std Bus / Heavy Commercial)",
+    category: "HVAC & Climate Control",
+    currentStock: 3,
+    safetyStock: 5,
+    reorderPoint: 8,
+    forecastDemand: 6,
+    daysOfSupply: 15,
+    stockoutRisk: "High",
+    status: "Critical",
+    unitCost: 28500,
+    primarySupplier: "Subros Thermal Solutions Ltd",
+    depot: SINGLE_DEPOT,
+    lastUpdated: "2026-09-25",
+    notes: "Direct drive heavy commercial AC compressor 10S20P 24V for Leyland & Tata bus fleet",
   }
 ];
 
@@ -509,14 +526,10 @@ export async function getInventory(): Promise<InventoryItem[]> {
   // Create combined map starting with default standard items
   const map = new Map<string, InventoryItem>();
   for (const item of DEFAULT_KSRTC_PARTS) {
-    map.set(item.part.toLowerCase(), item);
+    map.set(item.part.toLowerCase().trim(), { ...item });
   }
 
-  // Overlay local active inventory
-  for (const item of activeInventory) {
-    map.set(item.part.toLowerCase(), item);
-  }
-
+  // Overlay remote items from database backend if available
   if (ENDPOINTS.base) {
     try {
       const remote = await apiClient.get<any[]>(`${ENDPOINTS.base}/inventory`);
@@ -547,11 +560,32 @@ export async function getInventory(): Promise<InventoryItem[]> {
             primarySupplier: r.primarySupplier || r.supplier || "KSRTC Central Stores",
             notes: r.description || r.notes || "",
           };
-          map.set(norm.part.toLowerCase(), norm);
+          map.set(norm.part.toLowerCase().trim(), norm);
         }
       }
     } catch (err) {
       console.warn("API call to /inventory failed, using cached inventory:", err);
+    }
+  }
+
+  // User's activeInventory MUST take top precedence so manual edits, adjustments, and additions persist!
+  for (const item of activeInventory) {
+    const key = item.part.toLowerCase().trim();
+    const existing = map.get(key);
+    if (existing) {
+      map.set(key, {
+        ...existing,
+        ...item,
+        currentStock: item.currentStock,
+        safetyStock: item.safetyStock,
+        reorderPoint: item.reorderPoint,
+        status: item.status,
+        daysOfSupply: item.daysOfSupply,
+        stockoutRisk: item.stockoutRisk,
+        lastUpdated: item.lastUpdated || new Date().toISOString().slice(0, 10),
+      });
+    } else {
+      map.set(key, { ...item });
     }
   }
 
@@ -578,23 +612,23 @@ export async function addInventoryItem(payload: AddInventoryPayload): Promise<In
     currentStock: current,
     safetyStock: safety,
     reorderPoint: reorder,
-    forecastDemand: 100,
-    daysOfSupply: Math.round((current / 100) * 30),
+    forecastDemand: Math.round(reorder * 1.5),
+    daysOfSupply: current > 0 ? Math.round((current / Math.max(reorder, 1)) * 30) : 0,
     stockoutRisk: status === "Critical" ? "High" : status === "Warning" ? "Medium" : "Low",
     status,
     lastUpdated: new Date().toISOString().slice(0, 10),
-    unitCost: payload.unitCost,
-    primarySupplier: payload.primarySupplier,
+    unitCost: payload.unitCost || 0,
+    primarySupplier: payload.primarySupplier || "KSRTC Central Stores",
     notes: payload.notes || "Added manually",
   };
 
   // Always store in activeInventory and localStorage first so it reflects immediately
   activeInventory = loadStoredInventory();
-  activeInventory = [newItem, ...activeInventory.filter((i) => i.part.toLowerCase() !== cleanPartName.toLowerCase())];
+  activeInventory = [newItem, ...activeInventory.filter((i) => i.part.toLowerCase().trim() !== cleanPartName.toLowerCase())];
   saveStoredInventory(activeInventory);
 
   if (ENDPOINTS.base) {
-    // Run backend sync asynchronously in background so UI is never blocked on "Saving..."
+    // Run backend sync asynchronously in background so UI is never blocked
     (async () => {
       try {
         const sku = (cleanPartName.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase() || "PART") + "-" + Date.now().toString().slice(-4);
@@ -643,16 +677,25 @@ export async function addInventoryItem(payload: AddInventoryPayload): Promise<In
 
 export async function updateInventoryItem(id: string, payload: UpdateInventoryPayload): Promise<InventoryItem> {
   activeInventory = loadStoredInventory();
-  const all = await getInventory();
-  const existing = all.find((i) => String(i.id) === String(id) || (payload.part && i.part.toLowerCase() === payload.part.toLowerCase()));
+  const cleanName = (payload.part || "").toLowerCase().trim();
+
+  let existing = activeInventory.find(
+    (i) => String(i.id) === String(id) || (cleanName && i.part.toLowerCase().trim() === cleanName)
+  );
+
+  if (!existing) {
+    existing = DEFAULT_KSRTC_PARTS.find(
+      (i) => String(i.id) === String(id) || (cleanName && i.part.toLowerCase().trim() === cleanName)
+    );
+  }
 
   if (!existing) {
     throw new Error(`Inventory item ${id} not found`);
   }
 
-  const current = payload.currentStock ?? existing.currentStock;
-  const safety = payload.safetyStock ?? existing.safetyStock;
-  const reorder = payload.reorderPoint ?? existing.reorderPoint;
+  const current = payload.currentStock !== undefined ? payload.currentStock : existing.currentStock;
+  const safety = payload.safetyStock !== undefined ? payload.safetyStock : existing.safetyStock;
+  const reorder = payload.reorderPoint !== undefined ? payload.reorderPoint : existing.reorderPoint;
   let status: InventoryItem["status"] = "Healthy";
   if (current <= safety) status = "Critical";
   else if (current <= reorder) status = "Warning";
@@ -665,11 +708,15 @@ export async function updateInventoryItem(id: string, payload: UpdateInventoryPa
     reorderPoint: reorder,
     status,
     stockoutRisk: status === "Critical" ? "High" : status === "Warning" ? "Medium" : "Low",
-    daysOfSupply: Math.round((current / Math.max(existing.forecastDemand, 1)) * 30),
+    daysOfSupply: Math.round((current / Math.max(existing.forecastDemand || 50, 1)) * 30),
     lastUpdated: new Date().toISOString().slice(0, 10),
   };
 
-  activeInventory = [updated, ...activeInventory.filter((i) => String(i.id) !== String(id) && i.part.toLowerCase() !== updated.part.toLowerCase())];
+  const keyPart = updated.part.toLowerCase().trim();
+  activeInventory = [
+    updated,
+    ...activeInventory.filter((i) => String(i.id) !== String(id) && i.part.toLowerCase().trim() !== keyPart),
+  ];
   saveStoredInventory(activeInventory);
 
   if (ENDPOINTS.base) {
@@ -691,11 +738,22 @@ export async function updateInventoryItem(id: string, payload: UpdateInventoryPa
   return simulateLatency(updated, 20);
 }
 
-export async function adjustInventoryQuantity(id: string, delta: number): Promise<InventoryItem> {
-  const all = await getInventory();
-  const item = all.find((i) => String(i.id) === String(id));
+export async function adjustInventoryQuantity(id: string, delta: number, partName?: string): Promise<InventoryItem> {
+  const currentInv = loadStoredInventory();
+  const cleanPartName = (partName || "").toLowerCase().trim();
+
+  let item = currentInv.find(
+    (i) => String(i.id) === String(id) || (cleanPartName && i.part.toLowerCase().trim() === cleanPartName)
+  );
+
+  if (!item) {
+    item = DEFAULT_KSRTC_PARTS.find(
+      (i) => String(i.id) === String(id) || (cleanPartName && i.part.toLowerCase().trim() === cleanPartName)
+    );
+  }
+
   if (item) {
-    const newQty = Math.max(0, item.currentStock + delta);
+    const newQty = Math.max(0, (item.currentStock ?? 0) + delta);
 
     const numId = Number(id);
     if (ENDPOINTS.base && !isNaN(numId)) {
@@ -713,23 +771,28 @@ export async function adjustInventoryQuantity(id: string, delta: number): Promis
       })();
     }
 
-    return updateInventoryItem(id, { currentStock: newQty });
+    return updateInventoryItem(item.id, { currentStock: newQty, part: item.part });
   }
+
   throw new Error(`Inventory item ${id} not found`);
 }
 
 export async function receiveItemStockIntoInventory(partName: string, quantityReceived: number): Promise<void> {
-  const all = await getInventory();
-  const item = all.find((i) => i.part.toLowerCase() === partName.toLowerCase());
+  const cleanName = partName.toLowerCase().trim();
+  const currentInv = loadStoredInventory();
+  let item = currentInv.find((i) => i.part.toLowerCase().trim() === cleanName);
+  if (!item) {
+    item = DEFAULT_KSRTC_PARTS.find((i) => i.part.toLowerCase().trim() === cleanName);
+  }
   if (item) {
-    await adjustInventoryQuantity(item.id, quantityReceived);
+    await adjustInventoryQuantity(item.id, quantityReceived, item.part);
   } else {
     await addInventoryItem({
       part: partName,
-      category: "Brake Parts",
+      category: "Brake Systems",
       currentStock: quantityReceived,
-      safetyStock: 50,
-      reorderPoint: 80,
+      safetyStock: 30,
+      reorderPoint: 50,
       notes: "Auto-created from Received Purchase Order",
     });
   }

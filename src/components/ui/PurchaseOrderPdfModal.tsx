@@ -210,7 +210,10 @@ export function PurchaseOrderPdfModal({ po, onClose }: Props) {
                           (line, idx) => `
                         <tr>
                           <td style="text-align: center; color: #64748b;">${idx + 1}</td>
-                          <td style="font-weight: 500;">${line.part}</td>
+                          <td style="font-weight: 500;">
+                            ${line.part}
+                            ${line.category ? `<div style="font-size: 10px; color: #64748b; font-weight: normal; margin-top: 1px;">Category: ${line.category}</div>` : ""}
+                          </td>
                           <td style="text-align: center;">${line.quantity}</td>
                           <td style="text-align: right;">₹${(line.unitPrice || 0).toLocaleString("en-IN")}</td>
                           <td style="text-align: right; font-weight: 500;">₹${((line.quantity || 1) * (line.unitPrice || 0)).toLocaleString("en-IN")}</td>
@@ -366,7 +369,14 @@ export function PurchaseOrderPdfModal({ po, onClose }: Props) {
                     po.lines.map((line, idx) => (
                       <tr key={`po-line-${idx}`} className="hover:bg-slate-50/50">
                         <td className="py-2 px-3 text-center text-slate-500">{idx + 1}</td>
-                        <td className="py-2 px-3 font-medium text-slate-900">{line.part}</td>
+                        <td className="py-2 px-3 font-medium text-slate-900">
+                          <div>{line.part}</div>
+                          {line.category && (
+                            <span className="inline-block mt-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-normal px-1.5 py-0.2">
+                              {line.category}
+                            </span>
+                          )}
+                        </td>
                         <td className="py-2 px-3 text-center">{line.quantity}</td>
                         <td className="py-2 px-3 text-right tabular text-slate-700">₹{(line.unitPrice || 0).toLocaleString("en-IN")}</td>
                         <td className="py-2 px-3 text-right tabular font-medium text-slate-900">

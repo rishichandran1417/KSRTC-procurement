@@ -12,14 +12,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { message, context } = req.body || {};
+    const { message, context, inventory, orders } = req.body || {};
     if (!message || typeof message !== "string") {
       return res
         .status(400)
         .json({ error: 'Missing or invalid "message" in request body.' });
     }
 
-    const result = await processChatRequest(message, context);
+    const result = await processChatRequest(message, context, inventory, orders);
     if (result.error) {
       return res.status(500).json({ error: result.error });
     }
