@@ -10,7 +10,7 @@ import { createPurchaseOrder, getNextPoNumber, getPurchaseOrders } from "../serv
 import { getSuppliers, DEFAULT_KSRTC_SUPPLIERS } from "../services/supplierApi";
 import { getInventory, DEFAULT_KSRTC_PARTS } from "../services/inventoryApi";
 import { PurchaseOrderPdfModal } from "../components/ui/PurchaseOrderPdfModal";
-import type { ProcurementItem, PurchaseOrder, PurchaseOrderLine, Supplier, InventoryItem } from "../types";
+import type { ProcurementItem, PurchaseOrder, Supplier, InventoryItem } from "../types";
 
 interface NavState {
   items?: ProcurementItem[];
@@ -67,7 +67,15 @@ export default function NewPurchaseOrder() {
         : "")
   );
 
-  const [lines, setLines] = useState<PurchaseOrderLine[]>(() => {
+interface FormLineItem {
+  part: string;
+  category?: string;
+  quantity: number | string;
+  unitPrice: number | string;
+  totalCost: number;
+}
+
+  const [lines, setLines] = useState<FormLineItem[]>(() => {
     if (queryPart) {
       const matched = DEFAULT_KSRTC_PARTS.find(
         (p) => p.part.toLowerCase() === queryPart.toLowerCase()
@@ -213,7 +221,7 @@ export default function NewPurchaseOrder() {
       const updated = [...prev];
       const cur = updated[idx];
       const qty = Number(cur.quantity) || 1;
-      const price = item.unitCost || cur.unitPrice || 0;
+      const price = Number(item.unitCost) || Number(cur.unitPrice) || 0;
       updated[idx] = {
         ...cur,
         part: item.part,
@@ -235,15 +243,25 @@ export default function NewPurchaseOrder() {
     setActiveCategoryDropdown(null);
   };
 
-  const updateLineQty = (idx: number, qty: number) => {
+  const updateLineQty = (idx: number, qty: number | string) => {
     setLines((prev) =>
-      prev.map((l, i) => (i === idx ? { ...l, quantity: qty, totalCost: qty * l.unitPrice } : l))
+      prev.map((l, i) => {
+        if (i !== idx) return l;
+        const numQty = qty === "" ? 0 : Number(qty);
+        const numPrice = Number(l.unitPrice) || 0;
+        return { ...l, quantity: qty, totalCost: numQty * numPrice };
+      })
     );
   };
 
-  const updateLinePrice = (idx: number, price: number) => {
+  const updateLinePrice = (idx: number, price: number | string) => {
     setLines((prev) =>
-      prev.map((l, i) => (i === idx ? { ...l, unitPrice: price, totalCost: l.quantity * price } : l))
+      prev.map((l, i) => {
+        if (i !== idx) return l;
+        const numPrice = price === "" ? 0 : Number(price);
+        const numQty = Number(l.quantity) || 0;
+        return { ...l, unitPrice: price, totalCost: numQty * numPrice };
+      })
     );
   };
 
@@ -262,7 +280,7 @@ export default function NewPurchaseOrder() {
       );
       const price: number = (matched && typeof matched.unitCost === "number" && matched.unitCost > 0)
         ? matched.unitCost
-        : (cur.unitPrice || 0);
+        : (Number(cur.unitPrice) || 0);
       const resolvedName = matched ? matched.part : partName;
       const resolvedCategory = matched?.category || cur.category || "";
       updated[idx] = {
@@ -762,7 +780,15 @@ export default function NewPurchaseOrder() {
                             type="number"
                             min="1"
                             value={l.quantity}
-                            onChange={(e) => updateLineQty(i, Math.max(1, Number(e.target.value)))}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              updateLineQty(i, val === "" ? "" : Math.max(1, Number(val)));
+                            }}
+                            onBlur={() => {
+                              if (l.quantity === "" || Number(l.quantity) < 1) {
+                                updateLineQty(i, 1);
+                              }
+                            }}
                             className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2 py-1.5 text-xs text-center tabular font-semibold text-[--color-ink-900]"
                           />
                         </td>
@@ -771,7 +797,15 @@ export default function NewPurchaseOrder() {
                             type="number"
                             min="0"
                             value={l.unitPrice}
-                            onChange={(e) => updateLinePrice(i, Math.max(0, Number(e.target.value)))}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              updateLinePrice(i, val === "" ? "" : Math.max(0, Number(val)));
+                            }}
+                            onBlur={() => {
+                              if (l.unitPrice === "" || isNaN(Number(l.unitPrice))) {
+                                updateLinePrice(i, 0);
+                              }
+                            }}
                             placeholder="0"
                             className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs tabular text-[--color-ink-900]"
                           />
@@ -862,7 +896,15 @@ export default function NewPurchaseOrder() {
             expectedDelivery,
             total,
             status: "Draft",
-            lines: lines.filter((l) => l.part.trim().length > 0),
+            lines: lines
+              .filter((l) => l.part.trim().length > 0)
+              .map((l) => ({
+                part: l.part.trim(),
+                category: l.category?.trim() || undefined,
+                quantity: Number(l.quantity) || 1,
+                unitPrice: Number(l.unitPrice) || 0,
+                totalCost: (Number(l.quantity) || 1) * (Number(l.unitPrice) || 0),
+              })),
             notes,
           }}
           onClose={() => setShowPdf(false)}

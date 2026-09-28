@@ -48,7 +48,14 @@ export default function PurchaseOrders() {
   const [editExpectedDelivery, setEditExpectedDelivery] = useState("");
   const [editStatus, setEditStatus] = useState<PoStatus>("Submitted");
   const [editNotes, setEditNotes] = useState("");
-  const [editLines, setEditLines] = useState<{ part: string; category?: string; quantity: number; unitPrice: number; totalCost: number; receivedQuantity?: number }[]>([]);
+  const [editLines, setEditLines] = useState<{
+    part: string;
+    category?: string;
+    quantity: number | string;
+    unitPrice: number | string;
+    totalCost: number;
+    receivedQuantity?: number | string;
+  }[]>([]);
   const [savingEdit, setSavingEdit] = useState(false);
   const [inventoryCatalog, setInventoryCatalog] = useState<InventoryItem[]>([]);
 
@@ -152,7 +159,7 @@ export default function PurchaseOrders() {
           quantity: Number(l.quantity) || 1,
           unitPrice: Number(l.unitPrice) || 0,
           totalCost: (Number(l.quantity) || 1) * (Number(l.unitPrice) || 0),
-          receivedQuantity: l.receivedQuantity !== undefined ? Number(l.receivedQuantity) : undefined,
+          receivedQuantity: l.receivedQuantity !== undefined && l.receivedQuantity !== "" ? Number(l.receivedQuantity) : 0,
         })),
         total: calculatedTotal,
       };
@@ -1314,7 +1321,7 @@ export default function PurchaseOrders() {
                             value={line.category || ""}
                             onChange={(e) => handleLineChange(i, "category", e.target.value)}
                             placeholder="Category"
-                            className="w-full md:w-32 rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs text-[--color-ink-900]"
+                            className="w-full md:w-48 min-w-[170px] rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs text-[--color-ink-900]"
                           />
 
                           {/* Ordered & Received & Price */}
@@ -1324,8 +1331,16 @@ export default function PurchaseOrders() {
                               <input
                                 type="number"
                                 min="1"
-                                value={line.quantity}
-                                onChange={(e) => handleLineChange(i, "quantity", e.target.value)}
+                                value={line.quantity ?? ""}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  handleLineChange(i, "quantity", val === "" ? "" : Math.max(1, Number(val)));
+                                }}
+                                onBlur={() => {
+                                  if (!line.quantity || Number(line.quantity) < 1) {
+                                    handleLineChange(i, "quantity", 1);
+                                  }
+                                }}
                                 placeholder="Qty"
                                 className="w-16 rounded border border-[--color-border] bg-[--color-surface-0] px-2 py-1.5 text-xs text-[--color-ink-900] text-center font-medium"
                                 title="Total Quantity Ordered"
@@ -1338,14 +1353,24 @@ export default function PurchaseOrders() {
                                 type="number"
                                 min="0"
                                 max={ordered}
-                                value={line.receivedQuantity ?? 0}
+                                value={line.receivedQuantity !== undefined && line.receivedQuantity !== null ? line.receivedQuantity : ""}
                                 onChange={(e) => {
-                                  const val = Math.max(0, Number(e.target.value) || 0);
+                                  const raw = e.target.value;
+                                  if (raw === "") {
+                                    handleLineChange(i, "receivedQuantity", "");
+                                    return;
+                                  }
+                                  const val = Math.max(0, Number(raw));
                                   handleLineChange(i, "receivedQuantity", val);
                                   if (val > 0 && val < ordered) {
                                     setEditStatus("Partially Received");
                                   } else if (val >= ordered && ordered > 0) {
                                     setEditStatus("Received");
+                                  }
+                                }}
+                                onBlur={() => {
+                                  if (line.receivedQuantity === "" || line.receivedQuantity === undefined || isNaN(Number(line.receivedQuantity))) {
+                                    handleLineChange(i, "receivedQuantity", 0);
                                   }
                                 }}
                                 placeholder="0"
@@ -1370,8 +1395,16 @@ export default function PurchaseOrders() {
                               <input
                                 type="number"
                                 min="0"
-                                value={line.unitPrice}
-                                onChange={(e) => handleLineChange(i, "unitPrice", e.target.value)}
+                                value={line.unitPrice !== undefined && line.unitPrice !== null ? line.unitPrice : ""}
+                                onChange={(e) => {
+                                  const raw = e.target.value;
+                                  handleLineChange(i, "unitPrice", raw === "" ? "" : Math.max(0, Number(raw)));
+                                }}
+                                onBlur={() => {
+                                  if (line.unitPrice === "" || line.unitPrice === undefined || isNaN(Number(line.unitPrice))) {
+                                    handleLineChange(i, "unitPrice", 0);
+                                  }
+                                }}
                                 placeholder="Price"
                                 className="w-20 rounded border border-[--color-border] bg-[--color-surface-0] px-2 py-1.5 text-xs text-[--color-ink-900] text-right"
                               />
