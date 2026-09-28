@@ -333,7 +333,7 @@ export default function NewPurchaseOrder() {
         subtitle="Review, adjust pricing/quantities, and submit purchase order to database"
       />
 
-      <div className="p-4 sm:p-6 max-w-4xl space-y-4">
+      <div className="p-4 sm:p-6 w-full space-y-4">
         {/* TOP QUICK ACTION & BREADCRUMB */}
         <div className="flex flex-wrap items-center justify-between gap-3 bg-[--color-surface-0] p-3 rounded-lg border border-[--color-border]">
           <button
@@ -579,11 +579,11 @@ export default function NewPurchaseOrder() {
                 <thead>
                   <tr className="border-b border-[--color-border] bg-[--color-surface-1] text-left text-xs uppercase tracking-wider text-[--color-ink-500]">
                     <th className="px-2.5 py-2.5 w-9 text-center">#</th>
-                    <th className="px-3 py-2.5">Part / Item (Auto-suggest)</th>
-                    <th className="px-3 py-2.5 w-48">Category (Separate Column)</th>
-                    <th className="px-2.5 py-2.5 w-20 text-center">Qty</th>
-                    <th className="px-3 py-2.5 w-28">Unit Price (₹)</th>
-                    <th className="px-3 py-2.5 w-28">Line Total</th>
+                    <th className="px-3 py-2.5 min-w-[360px]">Part / Item (Auto-suggest & Paste)</th>
+                    <th className="px-3 py-2.5 w-52">Category</th>
+                    <th className="px-2.5 py-2.5 w-24 text-center">Qty</th>
+                    <th className="px-3 py-2.5 w-32">Unit Price (₹)</th>
+                    <th className="px-3 py-2.5 w-32">Line Total</th>
                     <th className="px-2 py-2.5 w-9 text-center"></th>
                   </tr>
                 </thead>
@@ -596,8 +596,8 @@ export default function NewPurchaseOrder() {
                         <td className="px-2.5 py-2.5 text-center text-xs font-mono text-[--color-ink-400]">
                           {i + 1}
                         </td>
-                        <td className="px-3 py-2.5 relative">
-                          <div className="flex items-center gap-1.5">
+                        <td className="px-3 py-2.5 relative min-w-[360px]">
+                          <div className="flex items-center gap-2">
                             <input
                               type="text"
                               autoComplete="off"

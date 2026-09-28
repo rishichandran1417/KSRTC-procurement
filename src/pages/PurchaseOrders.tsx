@@ -1091,7 +1091,7 @@ export default function PurchaseOrders() {
           onClick={() => setEditingPo(null)}
         >
           <div
-            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg border border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 shadow-2xl text-xs space-y-4 text-[--color-ink-900]"
+            className="w-full max-w-6xl max-h-[92vh] overflow-y-auto rounded-lg border border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 shadow-2xl text-xs space-y-4 text-[--color-ink-900]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-start border-b border-[--color-border] pb-3">
@@ -1245,11 +1245,12 @@ export default function PurchaseOrders() {
                       <div key={i} className="flex flex-col gap-2 border-b border-[--color-border] last:border-0 pb-3 last:pb-0">
                         <div className="flex flex-col md:flex-row md:items-center gap-2">
                           {/* Component Name with Paste Button and Datalist */}
-                          <div className="flex-1 min-w-[220px] flex items-center gap-1.5">
+                          <div className="flex-1 min-w-[340px] flex items-center gap-1.5">
                             <input
                               type="text"
                               list="ksrtc-edit-spares-datalist"
                               value={line.part}
+                              title={line.part}
                               onChange={(e) => {
                                 const val = e.target.value;
                                 handleLineChange(i, "part", val);
@@ -1277,7 +1278,7 @@ export default function PurchaseOrders() {
                                 }
                               }}
                               placeholder="Type, paste, or select component name…"
-                              className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
+                              className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-3 py-1.5 text-xs text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
                             />
                             <button
                               type="button"

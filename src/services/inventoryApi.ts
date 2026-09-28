@@ -844,19 +844,23 @@ export async function updateInventoryItem(id: string, payload: UpdateInventoryPa
   ];
   saveStoredInventory(activeInventory);
 
-  // Only call backend PUT for thresholds if thresholds were actually edited in the payload
-  const hasThresholdChange = payload.reorderPoint !== undefined || payload.safetyStock !== undefined;
-  if (ENDPOINTS.base && hasThresholdChange) {
+  if (ENDPOINTS.base) {
     const numId = Number(id);
     if (!isNaN(numId)) {
       (async () => {
         try {
-          await apiClient.put<any>(`${ENDPOINTS.base}/inventory/${numId}`, {
-            reorder_point: reorder,
-            safety_stock: safety,
-          });
+          const body: any = {};
+          if (payload.currentStock !== undefined) {
+            body.current_stock = current;
+            body.quantity = current;
+          }
+          if (payload.reorderPoint !== undefined) body.reorder_point = reorder;
+          if (payload.safetyStock !== undefined) body.safety_stock = safety;
+          if (Object.keys(body).length > 0) {
+            await apiClient.put<any>(`${ENDPOINTS.base}/inventory/${numId}`, body);
+          }
         } catch (err: any) {
-          console.debug("API call to update inventory thresholds deferred:", err?.message || err);
+          console.debug("API call to update inventory deferred:", err?.message || err);
         }
       })();
     }

@@ -171,6 +171,20 @@ export default defineConfig(({ mode }) => {
               return;
             }
 
+            // Intercept inventory updates (stock changes & thresholds)
+            if (req.url?.startsWith('/api/v1/db/inventory/') && req.method === 'PUT') {
+              let bodyStr = '';
+              req.on('data', (c) => { bodyStr += c; });
+              req.on('end', () => {
+                let parsed: any = {};
+                try { parsed = JSON.parse(bodyStr || '{}'); } catch {}
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ status: 'success', message: 'Inventory updated successfully', ...parsed }));
+              });
+              return;
+            }
+
             next();
           });
         },
