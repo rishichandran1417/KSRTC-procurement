@@ -206,8 +206,8 @@ export default function Suppliers() {
   return (
     <div>
       <TopBar
-        title="Supplier Dashboard"
-        subtitle="Who are we buying from? — Performance & delivery reliability"
+        title="Supplier Directory"
+        subtitle="Manage registered vendor profiles, delivery compliance ratings, on-time fulfillment rates, and lead times"
       />
 
       <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
@@ -498,26 +498,26 @@ export default function Suppliers() {
               </div>
             ) : null}
 
-            {/* COMPARISON MATRIX (Rendered when in table view OR at the bottom of grid view) */}
-            <div className="rounded-xl border border-[--color-border] bg-[--color-surface-0] p-4 shadow-2xs">
+            {/* COMPARISON MATRIX */}
+            <div className="rounded-md border border-[--color-border] bg-[--color-surface-0] p-4 shadow-2xs">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-xs sm:text-sm font-bold text-[--color-ink-900]">
-                  Supplier Performance Comparison Matrix
+                  Supplier Performance Matrix
                 </h2>
                 <span className="text-xs text-[--color-ink-500]">
-                  {filteredAndSortedSuppliers.length} records
+                  {filteredAndSortedSuppliers.length} suppliers registered
                 </span>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs min-w-[620px]">
                   <thead>
-                    <tr className="border-b border-[--color-border] text-left text-xs font-semibold text-[--color-ink-500] uppercase tracking-wider bg-[--color-surface-1]/40">
+                    <tr className="border-b border-[--color-border] text-left text-[11px] font-semibold text-[--color-ink-500] uppercase tracking-wider bg-[--color-surface-1]/50">
                       <th className="py-2.5 px-3">Supplier Name</th>
                       <th className="py-2.5 px-2">Primary Category</th>
-                      <th className="py-2.5 px-2">Reliability Score</th>
-                      <th className="py-2.5 px-2">On-Time Rate</th>
-                      <th className="py-2.5 px-2">Average Lead Time</th>
-                      <th className="py-2.5 px-2">Open Orders</th>
+                      <th className="py-2.5 px-2 text-right">Reliability Score</th>
+                      <th className="py-2.5 px-2 text-right">On-Time Rate</th>
+                      <th className="py-2.5 px-2 text-right">Avg Lead Time</th>
+                      <th className="py-2.5 px-2 text-right">Open Orders</th>
                       <th className="py-2.5 px-3 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -529,7 +529,7 @@ export default function Suppliers() {
                       >
                         <td className="py-2.5 px-3 font-semibold text-[--color-ink-900]">{s.name}</td>
                         <td className="py-2.5 px-2 text-[--color-ink-600]">{s.category}</td>
-                        <td className="py-2.5 px-2 tabular font-bold text-[--color-ink-900]">
+                        <td className="py-2.5 px-2 tabular text-right font-bold text-[--color-ink-900]">
                           <span
                             className={
                               (s.reliabilityScore ?? 92) >= 95
@@ -539,12 +539,12 @@ export default function Suppliers() {
                                 : "text-amber-600 dark:text-amber-400"
                             }
                           >
-                            {s.reliabilityScore ?? 92} / 100
+                            {s.reliabilityScore ?? 92}%
                           </span>
                         </td>
-                        <td className="py-2.5 px-2 tabular text-[--color-ink-800]">{s.onTimeDeliveryRate ?? 95}%</td>
-                        <td className="py-2.5 px-2 tabular text-[--color-ink-800]">{s.avgLeadTimeDays ?? 7} days</td>
-                        <td className="py-2.5 px-2 tabular text-[--color-ink-800]">{s.openOrders ?? 0}</td>
+                        <td className="py-2.5 px-2 tabular text-right text-[--color-ink-800]">{s.onTimeDeliveryRate ?? 95}%</td>
+                        <td className="py-2.5 px-2 tabular text-right text-[--color-ink-800]">{s.avgLeadTimeDays ?? 7} days</td>
+                        <td className="py-2.5 px-2 tabular text-right font-bold text-[--color-ink-900]">{s.openOrders ?? 0}</td>
                         <td className="py-2.5 px-3 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <button

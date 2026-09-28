@@ -352,6 +352,7 @@ export default function PurchaseOrders() {
 
   const renderSortHeader = (label: string, field: typeof sortField, className = "") => {
     const isActive = sortField === field;
+    const isRight = className.includes("text-right");
     return (
       <th
         onClick={() => handleSort(field)}
@@ -359,7 +360,7 @@ export default function PurchaseOrders() {
           isActive ? "text-blue-600 dark:text-blue-400 font-semibold" : "text-[--color-ink-500]"
         } ${className}`}
       >
-        <div className="inline-flex items-center gap-1">
+        <div className={`inline-flex items-center gap-1 ${isRight ? "justify-end w-full" : ""}`}>
           <span>{label}</span>
           <span className="shrink-0">
             {isActive ? (
@@ -380,11 +381,11 @@ export default function PurchaseOrders() {
   return (
     <div>
       <TopBar
-        title={activeTab === "schedule" ? "Supply Delivery & Rescheduling" : "Purchase Orders"}
+        title={activeTab === "schedule" ? "Purchase Orders — Delivery Pipeline" : "Purchase Orders"}
         subtitle={
           activeTab === "schedule"
-            ? "When will supplies arrive? — Interactive delivery pipeline, rescheduling & receiving"
-            : "What did we order? — Purchase order lifecycle management"
+            ? "Monitor expected supplier arrivals, reschedule delivery milestones, and confirm warehouse intake"
+            : "Track procurement lifecycle, manage supplier commitments, delivery schedules, and receipts"
         }
         actions={
           <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full sm:w-auto">
@@ -743,7 +744,7 @@ export default function PurchaseOrders() {
                     {renderSortHeader("Supplier", "supplier", "px-3")}
                     {renderSortHeader("PO Date", "poDate", "px-3")}
                     {renderSortHeader("Expected Delivery", "expectedDelivery", "px-3")}
-                    {renderSortHeader("Total Amount", "total", "px-3")}
+                    {renderSortHeader("Total Amount", "total", "px-3 text-right")}
                     {renderSortHeader("Status", "status", "px-3")}
                     <th className="px-3 py-2.5 text-right pr-4 text-[--color-ink-500] font-medium">Actions</th>
                   </tr>
@@ -770,7 +771,7 @@ export default function PurchaseOrders() {
                       <td className="px-3 py-2.5 text-[--color-ink-700]">{po.supplier}</td>
                       <td className="px-3 py-2.5 text-[--color-ink-600]">{po.poDate}</td>
                       <td className="px-3 py-2.5 text-[--color-ink-600]">{po.expectedDelivery}</td>
-                      <td className="tabular px-3 py-2.5 font-semibold text-[--color-ink-900]">
+                      <td className="tabular px-3 py-2.5 font-semibold text-right text-[--color-ink-900]">
                         ₹{po.total.toLocaleString("en-IN")}
                       </td>
                       <td className="px-3 py-2.5">

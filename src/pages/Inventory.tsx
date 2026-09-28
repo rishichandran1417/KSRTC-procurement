@@ -25,6 +25,7 @@ export type InventorySortField =
   | "currentStock"
   | "safetyStock"
   | "reorderPoint"
+  | "unitCost"
   | "forecastDemand"
   | "daysOfSupply"
   | "status";
@@ -73,7 +74,7 @@ export default function Inventory() {
       setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
     } else {
       setSortField(field);
-      if (["currentStock", "safetyStock", "reorderPoint", "forecastDemand", "daysOfSupply"].includes(field)) {
+      if (["currentStock", "safetyStock", "reorderPoint", "unitCost", "forecastDemand", "daysOfSupply"].includes(field)) {
         setSortDirection("desc");
       } else {
         setSortDirection("asc");
@@ -114,6 +115,9 @@ export default function Inventory() {
         case "reorderPoint":
           cmp = (a.reorderPoint ?? 0) - (b.reorderPoint ?? 0);
           break;
+        case "unitCost":
+          cmp = (a.unitCost ?? 0) - (b.unitCost ?? 0);
+          break;
         case "forecastDemand":
           cmp = (a.forecastDemand ?? 0) - (b.forecastDemand ?? 0);
           break;
@@ -152,16 +156,27 @@ export default function Inventory() {
     return [1, "...", safeCurrentPage - 1, safeCurrentPage, safeCurrentPage + 1, "...", totalPages];
   };
 
-  const renderSortHeader = (label: string, field: InventorySortField, className = "") => {
+  const renderSortHeader = (
+    label: string,
+    field: InventorySortField,
+    className = "",
+    align: "left" | "right" | "center" = "left"
+  ) => {
     const isActive = sortField === field;
     return (
       <th
         onClick={() => handleSort(field)}
-        className={`cursor-pointer py-3 px-3 transition-colors hover:text-blue-600 dark:hover:text-blue-400 group select-none ${
-          isActive ? "text-blue-600 dark:text-blue-400 font-semibold" : "text-[--color-ink-500]"
+        className={`cursor-pointer py-2.5 px-3 transition-colors hover:text-blue-600 dark:hover:text-blue-400 group select-none text-[11px] font-semibold uppercase tracking-wider ${
+          align === "right" ? "text-right" : align === "center" ? "text-center" : "text-left"
+        } ${
+          isActive ? "text-blue-600 dark:text-blue-400" : "text-[--color-ink-500]"
         } ${className}`}
       >
-        <div className="inline-flex items-center gap-1">
+        <div
+          className={`inline-flex items-center gap-1 ${
+            align === "right" ? "justify-end w-full" : align === "center" ? "justify-center w-full" : ""
+          }`}
+        >
           <span>{label}</span>
           <span className="shrink-0">
             {isActive ? (
@@ -181,7 +196,10 @@ export default function Inventory() {
 
   return (
     <div>
-      <TopBar title="Inventory Management" subtitle="What do we have? — Current stock levels & safety thresholds" />
+      <TopBar
+        title="Central Depot Inventory"
+        subtitle="Monitor fleet spare part balances, safety thresholds, reorder triggers, and item valuations across depots"
+      />
 
       <div className="p-4 sm:p-6">
         {totalAlerts > 0 && (
@@ -326,76 +344,91 @@ export default function Inventory() {
         ) : (
           <div className="rounded-lg border border-[--color-border] bg-[--color-surface-0] overflow-hidden shadow-2xs">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[780px]">
+              <table className="w-full text-xs sm:text-sm min-w-[880px]">
                 <thead>
-                  <tr className="border-b border-[--color-border] bg-[--color-surface-1]/50 text-left text-xs font-medium uppercase tracking-wider text-[--color-ink-500]">
-                    {renderSortHeader("Part / Item", "part", "px-4")}
+                  <tr className="border-b border-[--color-border] bg-[--color-surface-1] text-left text-[11px] font-semibold uppercase tracking-wider text-[--color-ink-500] sticky top-0 z-10">
+                    {renderSortHeader("Part / Item", "part", "px-3.5")}
                     {renderSortHeader("Category", "category")}
-                    {renderSortHeader("Current Stock", "currentStock")}
-                    {renderSortHeader("Safety Stock", "safetyStock")}
-                    {renderSortHeader("Reorder Point", "reorderPoint")}
-                    {renderSortHeader("Forecast Demand", "forecastDemand")}
-                    {renderSortHeader("Days of Supply", "daysOfSupply")}
-                    {renderSortHeader("Stock Status", "status")}
-                    <th className="px-3 py-3 text-right pr-4 text-[--color-ink-500] font-medium">Actions</th>
+                    {renderSortHeader("Current Stock", "currentStock", "", "right")}
+                    {renderSortHeader("Safety Stock", "safetyStock", "", "right")}
+                    {renderSortHeader("Reorder Point", "reorderPoint", "", "right")}
+                    {renderSortHeader("Unit Cost (₹)", "unitCost", "", "right")}
+                    {renderSortHeader("Forecast", "forecastDemand", "", "right")}
+                    {renderSortHeader("Days Supply", "daysOfSupply", "", "right")}
+                    {renderSortHeader("Stock Status", "status", "", "center")}
+                    <th className="px-3 py-2.5 text-right pr-4 text-[--color-ink-500] font-semibold text-[11px] uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[--color-border]">
                   {paginatedItems.map((item, idx) => (
                     <tr
                       key={`inv-${item.id}-${idx}`}
-                      className="hover:bg-[--color-surface-1]/70 transition-colors group"
+                      className="hover:bg-[--color-surface-1]/60 transition-colors group"
                     >
                       <td
                         onClick={() => setSelectedDetail(item)}
-                        className="cursor-pointer px-4 py-3 font-medium text-[--color-ink-900] hover:text-blue-600 transition-colors"
+                        className="cursor-pointer px-3.5 py-2.5 text-[--color-ink-900] hover:text-blue-600 transition-colors"
                       >
-                        {item.part}
+                        <div className="font-semibold text-xs sm:text-sm text-[--color-ink-900]">{item.part}</div>
+                        {item.primarySupplier ? (
+                          <div className="text-[11px] text-[--color-ink-400] truncate max-w-xs">{item.primarySupplier}</div>
+                        ) : null}
                       </td>
-                      <td className="px-3 py-3 text-[--color-ink-600]">{item.category}</td>
-                      <td className="px-3 py-3">
+                      <td className="px-3 py-2.5 text-xs text-[--color-ink-600]">{item.category}</td>
+                      <td className="px-3 py-2.5 text-right">
                         <button
                           type="button"
                           onClick={() => setAdjustingItem(item)}
                           title="Click to adjust stock quantity"
-                          className="inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-left transition-colors hover:bg-[--color-surface-2] cursor-pointer"
+                          className="inline-flex items-center justify-end gap-1.5 rounded px-2 py-0.5 text-right transition-colors hover:bg-[--color-surface-2] cursor-pointer"
                         >
-                          <span className="tabular font-semibold text-sm text-[--color-ink-900]">{item.currentStock}</span>
+                          <span className="tabular font-bold text-xs sm:text-sm text-[--color-ink-900]">
+                            {item.currentStock.toLocaleString("en-IN")}
+                          </span>
                           <Sliders size={11} className="text-[--color-ink-400] opacity-40 group-hover:opacity-100 transition-opacity" />
                         </button>
                       </td>
-                      <td className="tabular px-3 py-3 text-[--color-ink-500]">{item.safetyStock}</td>
-                      <td className="tabular px-3 py-3 text-[--color-ink-500]">{item.reorderPoint}</td>
-                      <td className="tabular px-3 py-3 text-[--color-ink-700]">{item.forecastDemand} <span className="text-[11px] text-[--color-ink-400]">/mo</span></td>
-                      <td className="tabular px-3 py-3">
+                      <td className="tabular px-3 py-2.5 text-right text-xs text-[--color-ink-600]">
+                        {item.safetyStock.toLocaleString("en-IN")}
+                      </td>
+                      <td className="tabular px-3 py-2.5 text-right text-xs text-[--color-ink-600]">
+                        {item.reorderPoint.toLocaleString("en-IN")}
+                      </td>
+                      <td className="tabular px-3 py-2.5 text-right font-medium text-xs sm:text-sm text-[--color-ink-900]">
+                        ₹{(item.unitCost || 0).toLocaleString("en-IN")}
+                      </td>
+                      <td className="tabular px-3 py-2.5 text-right text-xs text-[--color-ink-700]">
+                        {item.forecastDemand.toLocaleString("en-IN")} <span className="text-[10px] text-[--color-ink-400]">/mo</span>
+                      </td>
+                      <td className="tabular px-3 py-2.5 text-right">
                         {item.daysOfSupply <= 5 ? (
                           <span className="inline-flex items-center gap-1 font-semibold text-rose-600 dark:text-rose-400 text-xs">
                             {item.daysOfSupply}d
                             <span className="text-[10px] font-normal opacity-80">(low)</span>
                           </span>
                         ) : (
-                          <span className="text-[--color-ink-700] font-medium">{item.daysOfSupply}d</span>
+                          <span className="text-[--color-ink-700] font-medium text-xs">{item.daysOfSupply}d</span>
                         )}
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="px-3 py-2.5 text-center">
                         <StatusBadge label={item.status} />
                       </td>
-                      <td className="px-3 py-3 text-right pr-4">
+                      <td className="px-3 py-2.5 text-right pr-4">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => setAdjustingItem(item)}
                             title="Adjust quantity"
-                            className="inline-flex items-center gap-1.5 rounded-md border border-[--color-border] bg-[--color-surface-1] hover:bg-[--color-surface-2] px-2.5 py-1 text-xs font-medium text-[--color-ink-700] hover:text-[--color-ink-900] transition-colors cursor-pointer shadow-2xs"
+                            className="inline-flex items-center gap-1 rounded border border-[--color-border] bg-[--color-surface-1] hover:bg-[--color-surface-2] px-2 py-1 text-xs font-medium text-[--color-ink-700] hover:text-[--color-ink-900] transition-colors cursor-pointer shadow-2xs"
                           >
-                            <Sliders size={12} className="text-[--color-ink-500]" />
+                            <Sliders size={11} className="text-[--color-ink-500]" />
                             <span>Adjust</span>
                           </button>
                           <button
                             onClick={() => setEditingItem(item)}
                             title="Edit Part Details"
-                            className="rounded-md border border-[--color-border] bg-[--color-surface-1] hover:bg-[--color-surface-2] p-1.5 text-[--color-ink-600] hover:text-[--color-ink-900] transition-colors cursor-pointer shadow-2xs"
+                            className="rounded border border-[--color-border] bg-[--color-surface-1] hover:bg-[--color-surface-2] p-1 text-[--color-ink-600] hover:text-[--color-ink-900] transition-colors cursor-pointer shadow-2xs"
                           >
-                            <Edit3 size={13} />
+                            <Edit3 size={12} />
                           </button>
                         </div>
                       </td>

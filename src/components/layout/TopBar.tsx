@@ -83,23 +83,23 @@ export function TopBar({
                   {totalAlerts > 0 ? (
                     <button
                       onClick={openAlertModal}
-                      className="flex items-center gap-2 rounded-lg border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-300 hover:bg-amber-500/15 transition-colors cursor-pointer"
+                      className="flex items-center gap-2 rounded-md border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-xs font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-500/15 transition-colors cursor-pointer"
                       title={`${totalAlerts} items below safety thresholds. Click to review.`}
                     >
-                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                      <span className="hidden md:inline">Low Stock</span>
-                      <span className="flex h-4 min-w-4 items-center justify-center rounded-md bg-amber-500/20 px-1 text-[10px] font-semibold text-amber-800 dark:text-amber-200">
+                      <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                      <span className="hidden md:inline">Stock Alerts</span>
+                      <span className="flex h-4 min-w-4 items-center justify-center rounded bg-rose-500/20 px-1 text-[10px] font-bold text-rose-800 dark:text-rose-200">
                         {totalAlerts}
                       </span>
                     </button>
                   ) : (
                     <button
                       onClick={openAlertModal}
-                      className="flex items-center gap-1.5 rounded-lg border border-[--color-border] bg-[--color-surface-1] px-2.5 py-1 text-xs font-medium text-[--color-healthy-600] hover:bg-[--color-surface-2] transition-colors cursor-pointer"
-                      title="All inventory stock levels are healthy"
+                      className="flex items-center gap-1.5 rounded-md border border-[--color-border] bg-[--color-surface-1] px-2.5 py-1 text-xs font-medium text-[--color-healthy-600] hover:bg-[--color-surface-2] transition-colors cursor-pointer"
+                      title="All central depot inventory levels are above safety stock"
                     >
                       <ShieldCheck size={14} />
-                      <span className="hidden md:inline">Stock Healthy</span>
+                      <span className="hidden md:inline">Stock Normal</span>
                     </button>
                   )}
                 </div>

@@ -600,8 +600,8 @@ interface FormLineItem {
                     <th className="px-3 py-2.5 min-w-[360px]">Part / Item (Auto-suggest & Paste)</th>
                     <th className="px-3 py-2.5 w-52">Category</th>
                     <th className="px-2.5 py-2.5 w-24 text-center">Qty</th>
-                    <th className="px-3 py-2.5 w-32">Unit Price (₹)</th>
-                    <th className="px-3 py-2.5 w-32">Line Total</th>
+                    <th className="px-3 py-2.5 w-32 text-right">Unit Price (₹)</th>
+                    <th className="px-3 py-2.5 w-32 text-right">Line Total</th>
                     <th className="px-2 py-2.5 w-9 text-center"></th>
                   </tr>
                 </thead>
@@ -807,10 +807,10 @@ interface FormLineItem {
                               }
                             }}
                             placeholder="0"
-                            className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs tabular text-[--color-ink-900]"
+                            className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs tabular text-right text-[--color-ink-900]"
                           />
                         </td>
-                        <td className="px-3 py-2.5 tabular font-bold text-xs text-[--color-ink-900]">
+                        <td className="px-3 py-2.5 tabular font-bold text-xs text-right text-[--color-ink-900]">
                           ₹{l.totalCost.toLocaleString("en-IN")}
                         </td>
                         <td className="px-2 py-2.5 text-center">
