@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ArrowUp,
+  Menu,
+  SendHorizontal,
   History,
   Plus,
   Trash2,
@@ -11,12 +12,8 @@ import {
   RotateCcw,
   ArrowUpRight,
   ExternalLink,
-  Package,
-  FileText,
-  Building2,
-  TrendingUp,
 } from "lucide-react";
-import { TopBar } from "../components/layout/TopBar";
+import { useSidebar } from "../state/SidebarContext";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { ScionLoader } from "../components/ui/ScionLoader";
 import { sendChatMessage } from "../services/chatApi";
@@ -38,30 +35,8 @@ interface ChatSession {
 
 const STORAGE_KEY = "ksrtc_chat_sessions_v1";
 
-const QUICK_PROMPTS = [
-  {
-    icon: Package,
-    label: "Critical Stock Shortages",
-    query: "Which components are currently below safety stock or at critical risk?",
-  },
-  {
-    icon: FileText,
-    label: "Pending Purchase Orders",
-    query: "What purchase orders are currently pending delivery or partially received?",
-  },
-  {
-    icon: Building2,
-    label: "Supplier Pricing Analysis",
-    query: "Show latest component unit prices and vendor comparison records.",
-  },
-  {
-    icon: TrendingUp,
-    label: "Optimization Recommendations",
-    query: "What are the recommended purchase quantities under the current procurement budget?",
-  },
-];
-
 export default function AiAssistant() {
+  const { toggleMobile } = useSidebar();
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -108,7 +83,7 @@ export default function AiAssistant() {
     const newId = `session-${Date.now()}`;
     const newSession: ChatSession = {
       id: newId,
-      title: "New Query Session",
+      title: "New Conversation",
       timestamp: new Date().toLocaleDateString("en-IN", {
         month: "short",
         day: "numeric",
@@ -195,162 +170,101 @@ export default function AiAssistant() {
           return next;
         });
       })
-      .catch(() => setError("Decision support assistant could not reach the server. Please check your network connection."))
+      .catch(() => setError("SCION could not reach the server. Please check your network and Gemini API key."))
       .finally(() => setSending(false));
   };
 
   return (
-    <div className="flex h-full flex-col relative bg-slate-50/50 dark:bg-[#121417]">
-      {/* ENTERPRISE TOPBAR */}
-      <TopBar
-        title="Procurement Decision Assistant"
-        subtitle="Operational supply chain query console connected to inventory, orders, and pricing models"
-        actions={
-          <div className="flex items-center gap-2">
-            <button
-              onClick={startNewChat}
-              className="flex items-center gap-1.5 rounded-md border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-zinc-200 hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer shadow-2xs"
-              title="Start new conversation"
-            >
-              <Plus size={14} className="text-blue-600 dark:text-blue-400" />
-              <span>New Query</span>
-            </button>
-
-            <button
-              onClick={() => setShowHistoryDrawer(true)}
-              className="flex items-center gap-1.5 rounded-md border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-zinc-200 hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer shadow-2xs"
-              title="Query history"
-            >
-              <History size={14} />
-              <span className="hidden sm:inline">History</span>
-              {sessions.length > 0 && (
-                <span className="ml-0.5 rounded-full bg-slate-200 dark:bg-zinc-700 px-1.5 py-0.2 text-[10px] font-bold">
-                  {sessions.length}
-                </span>
-              )}
-            </button>
+    <div className="flex h-full flex-col relative bg-[--color-surface-1]">
+      {/* TOP HEADER */}
+      <div className="flex items-center justify-between border-b border-[--color-border] bg-[--color-surface-0] px-4 sm:px-6 py-3 shrink-0">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={toggleMobile}
+            className="rounded-md p-1.5 text-[--color-ink-700] hover:bg-[--color-surface-2] active:scale-95 transition-transform lg:hidden shrink-0 cursor-pointer"
+            aria-label="Open navigation menu"
+          >
+            <Menu size={20} />
+          </button>
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[--color-surface-1] border border-[--color-border] shadow-2xs p-1.5">
+            <img src="/scion-logo.png" alt="SCION" className="h-6 w-6 object-contain" />
           </div>
-        }
-      />
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm sm:text-base font-bold text-[--color-ink-900]">KSRTC SCION</h1>
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                Operational
+              </span>
+            </div>
+            <p className="text-[11px] text-[--color-ink-500] font-normal hidden sm:block">
+              Fleet Supply Chain & Procurement Intelligence
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={startNewChat}
+            className="inline-flex items-center gap-1.5 rounded-md border border-[--color-border] bg-[--color-surface-0] hover:bg-[--color-surface-1] px-3 py-1.5 text-xs font-medium text-[--color-ink-800] transition-colors cursor-pointer shadow-2xs"
+            title="Start new conversation"
+          >
+            <Plus size={13} className="text-[--color-ink-600]" />
+            <span>New Chat</span>
+          </button>
+
+          <button
+            onClick={() => setShowHistoryDrawer(true)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-[--color-border] bg-[--color-surface-0] hover:bg-[--color-surface-1] px-3 py-1.5 text-xs font-medium text-[--color-ink-800] transition-colors cursor-pointer shadow-2xs"
+            title="View conversation history"
+          >
+            <History size={13} className="text-[--color-ink-600]" />
+            <span className="hidden sm:inline">History</span>
+            {sessions.length > 0 && (
+              <span className="ml-0.5 rounded-full bg-[--color-surface-2] px-1.5 py-0.2 text-[10px] font-bold text-[--color-ink-700]">
+                {sessions.length}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
 
       {/* CHAT MESSAGES STREAM */}
       <div className="flex-1 overflow-y-auto">
         {messages.length === 0 ? (
-          /* ENTERPRISE DECISION SUPPORT CONSOLE EMPTY STATE */
-          <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
-            {/* Operational Context Header */}
-            <div className="rounded-md border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-2xs mb-6">
-              <div className="flex items-start gap-4">
-                <div className="h-10 w-10 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900/50 flex items-center justify-center shrink-0 p-2">
-                  <img src="/scion-logo.png" alt="KSRTC SCION" className="h-6 w-6 object-contain" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-base font-semibold text-slate-900 dark:text-zinc-100">
-                      Supply Chain Decision Support Console
-                    </h2>
-                    <span className="inline-flex items-center gap-1 rounded bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                      Operational
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                    This assistant integrates with live KSRTC fleet data, ERP records, supplier catalogs, and PuLP optimization results. Query specific components, stockout risks, lead times, or procurement allocations.
-                  </p>
-                </div>
-              </div>
-
-              {/* Connected Domain Capabilities */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6 pt-5 border-t border-slate-100 dark:border-zinc-800/80">
-                <div className="p-3 rounded-md bg-slate-50/70 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-zinc-800">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Package size={14} className="text-blue-600 dark:text-blue-400" />
-                    <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100">Central Inventory</span>
-                  </div>
-                  <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                    Stock counts, reorder thresholds, and depot supply days.
-                  </p>
-                </div>
-
-                <div className="p-3 rounded-md bg-slate-50/70 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-zinc-800">
-                  <div className="flex items-center gap-2 mb-1">
-                    <FileText size={14} className="text-indigo-600 dark:text-indigo-400" />
-                    <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100">Purchase Orders</span>
-                  </div>
-                  <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                    Fulfillment progress, delivery dates, and partial receipts.
-                  </p>
-                </div>
-
-                <div className="p-3 rounded-md bg-slate-50/70 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-zinc-800">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Building2 size={14} className="text-emerald-600 dark:text-emerald-400" />
-                    <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100">Supplier Registry</span>
-                  </div>
-                  <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                    Vendor lead times, SLA compliance, and contract pricing.
-                  </p>
-                </div>
-
-                <div className="p-3 rounded-md bg-slate-50/70 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-zinc-800">
-                  <div className="flex items-center gap-2 mb-1">
-                    <TrendingUp size={14} className="text-amber-600 dark:text-amber-400" />
-                    <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100">PuLP Optimizer</span>
-                  </div>
-                  <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                    Budget-constrained procurement and demand forecasts.
-                  </p>
-                </div>
-              </div>
+          /* CLEAN PROFESSIONAL HUMAN-DESIGNED WORKSPACE */
+          <div className="flex h-full flex-col items-center justify-center px-4 text-center pb-12 max-w-xl mx-auto">
+            <div className="h-12 w-12 rounded-xl border border-[--color-border] bg-[--color-surface-0] flex items-center justify-center mb-3 shadow-2xs p-2">
+              <img src="/scion-logo.png" alt="KSRTC SCION" className="h-8 w-8 object-contain" />
             </div>
-
-            {/* Quick Operational Prompts */}
-            <div>
-              <p className="text-xs font-semibold text-slate-700 dark:text-zinc-300 uppercase tracking-wider mb-2.5">
-                Recommended Operational Queries
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {QUICK_PROMPTS.map((item, idx) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => send(item.query)}
-                      className="text-left p-3 rounded-md border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-blue-400 dark:hover:border-blue-700/60 hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-all cursor-pointer group shadow-2xs"
-                    >
-                      <div className="flex items-center gap-2 text-xs font-medium text-slate-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                        <Icon size={14} className="text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors shrink-0" />
-                        <span>{item.label}</span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1 line-clamp-1">
-                        "{item.query}"
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <h2 className="text-lg sm:text-xl font-bold text-[--color-ink-900]">
+              KSRTC Fleet & Supply Chain Assistant
+            </h2>
+            <p className="text-xs text-[--color-ink-500] mt-1.5 max-w-md leading-relaxed">
+              Directly query Central Depot inventory, evaluate supplier pricing benchmarks, review pending purchase orders, or run procurement analysis.
+            </p>
           </div>
         ) : (
           /* CONVERSATION COLUMN */
-          <div className="max-w-3xl mx-auto w-full px-4 pt-6 pb-8 space-y-6">
+          <div className="max-w-3xl mx-auto w-full px-4 pt-6 pb-8 space-y-7">
             {messages.map((m) => (
               <ChatGptMessageRow key={m.id} message={m} onNavigate={(path) => navigate(path)} />
             ))}
 
             {sending && (
-              <div className="flex gap-3 items-start">
-                <div className="h-7 w-7 rounded-md bg-slate-100 dark:bg-zinc-800 border border-blue-500/30 flex items-center justify-center shrink-0 p-1">
-                  <img src="/scion-logo.png" alt="SCION" className="h-4 w-4 object-contain" />
+              <div className="flex gap-3 sm:gap-4 items-start">
+                <div className="h-8 w-8 rounded-lg bg-[--color-surface-1] border border-[--color-border] flex items-center justify-center shrink-0 shadow-2xs p-1">
+                  <img src="/scion-logo.png" alt="SCION" className="h-5 w-5 object-contain" />
                 </div>
-                <div className="flex-1 pt-0.5">
-                  <ScionLoader text="Querying KSRTC fleet data and synthesizing operational recommendations…" />
+                <div className="flex-1 pt-1">
+                  <ScionLoader text="Formulating KSRTC fleet intelligence response…" />
                 </div>
               </div>
             )}
 
             {error && (
-              <div className="max-w-xl mx-auto rounded-md bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 p-3 text-xs text-rose-700 dark:text-rose-300 flex items-center justify-between shadow-2xs">
+              <div className="max-w-xl mx-auto rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 p-3.5 text-xs text-rose-700 dark:text-rose-300 flex items-center justify-between shadow-2xs">
                 <span>{error}</span>
                 <button
                   onClick={() => send(messages[messages.length - 1]?.text || "")}
@@ -367,9 +281,9 @@ export default function AiAssistant() {
       </div>
 
       {/* BOTTOM INPUT CONTAINER */}
-      <div className="bg-white dark:bg-zinc-900 border-t border-slate-200 dark:border-zinc-800 px-4 py-3 shrink-0">
+      <div className="bg-[--color-surface-0] border-t border-[--color-border] px-4 py-3 shrink-0">
         <div className="max-w-3xl mx-auto">
-          <div className="relative rounded-md border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800/90 p-1.5 pl-3.5 flex items-center gap-2 shadow-2xs focus-within:border-blue-500 dark:focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/20 transition-all">
+          <div className="relative rounded-lg border border-[--color-border] bg-[--color-surface-1] p-1.5 pl-3.5 flex items-center gap-2 shadow-2xs focus-within:border-blue-500 focus-within:bg-[--color-surface-0] focus-within:ring-1 focus-within:ring-blue-500 transition-all">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -379,21 +293,22 @@ export default function AiAssistant() {
                   send(input);
                 }
               }}
-              placeholder="Query spare parts, prices, suppliers, stock levels, or purchase orders…"
-              className="flex-1 bg-transparent text-xs sm:text-[13px] text-slate-900 dark:text-zinc-100 placeholder-slate-400 dark:placeholder-zinc-500 outline-none"
+              placeholder="Search spare parts, vendor rates, stock levels, or purchase orders…"
+              className="flex-1 bg-transparent text-xs sm:text-sm text-[--color-ink-900] placeholder:text-[--color-ink-400] outline-none"
             />
             <button
               onClick={() => send(input)}
               disabled={!input.trim() || sending}
-              className="h-7 w-7 rounded-md bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shrink-0 disabled:opacity-30 disabled:bg-slate-300 dark:disabled:bg-zinc-700 transition-all cursor-pointer shadow-2xs"
-              title="Execute query"
+              className="px-3.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Send query"
             >
-              <ArrowUp size={15} />
+              <SendHorizontal size={14} />
+              <span className="hidden sm:inline">Send</span>
             </button>
           </div>
-          <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-zinc-500 px-1 mt-1.5">
-            <span>KSRTC Decision Support Engine · Connected to Central Depot</span>
-            <span className="hidden sm:inline">Press Enter ↵ to run</span>
+          <div className="flex items-center justify-between text-[11px] text-[--color-ink-400] px-1 mt-1.5">
+            <span>KSRTC Central Stores & Workshop Intelligence</span>
+            <span className="hidden sm:inline">Press Enter ↵ to send</span>
           </div>
         </div>
       </div>
@@ -405,14 +320,14 @@ export default function AiAssistant() {
           onClick={() => setShowHistoryDrawer(false)}
         >
           <div
-            className="h-full w-full max-w-xs border-l border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 p-5 space-y-4 shadow-2xl overflow-y-auto"
+            className="h-full w-full max-w-xs border-l border-[--color-border] bg-[--color-surface-0] text-[--color-ink-900] p-5 space-y-4 shadow-2xl overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-3">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-zinc-100">Conversation History</h2>
+            <div className="flex items-center justify-between border-b border-[--color-border] pb-3">
+              <h2 className="text-sm font-bold text-[--color-ink-900]">Conversation History</h2>
               <button
                 onClick={() => setShowHistoryDrawer(false)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer"
+                className="rounded-md p-1.5 text-[--color-ink-400] hover:bg-[--color-surface-2] hover:text-[--color-ink-700] transition-colors cursor-pointer"
               >
                 <X size={16} />
               </button>
@@ -423,15 +338,15 @@ export default function AiAssistant() {
                 startNewChat();
                 setShowHistoryDrawer(false);
               }}
-              className="w-full flex items-center justify-center gap-2 rounded-md bg-blue-600 hover:bg-blue-500 text-white py-2 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white py-2 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
             >
-              <Plus size={14} /> New Query Session
+              <Plus size={14} /> New Conversation
             </button>
 
             <div className="space-y-1 pt-2">
               {sessions.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-8">
-                  No query history yet.
+                <p className="text-xs text-[--color-ink-400] text-center py-8">
+                  No conversation history yet.
                 </p>
               ) : (
                 sessions.map((s) => (
@@ -441,17 +356,17 @@ export default function AiAssistant() {
                       setActiveSessionId(s.id);
                       setShowHistoryDrawer(false);
                     }}
-                    className={`group flex items-center justify-between rounded-md px-3 py-2 text-xs transition-colors cursor-pointer ${
+                    className={`group flex items-center justify-between rounded-lg px-3 py-2 text-xs transition-colors cursor-pointer ${
                       s.id === activeSessionId
-                        ? "bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 font-semibold border border-blue-200 dark:border-blue-800/50"
-                        : "text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800"
+                        ? "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-medium border border-blue-200 dark:border-blue-800/50"
+                        : "text-[--color-ink-600] hover:bg-[--color-surface-1] hover:text-[--color-ink-900]"
                     }`}
                   >
                     <p className="truncate flex-1 pr-2">{s.title}</p>
                     <button
                       onClick={(e) => deleteSession(s.id, e)}
                       title="Delete conversation"
-                      className="text-slate-400 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity p-1 cursor-pointer"
+                      className="text-[--color-ink-400] hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity p-1 cursor-pointer"
                     >
                       <Trash2 size={13} />
                     </button>
@@ -461,7 +376,7 @@ export default function AiAssistant() {
             </div>
 
             {sessions.length > 0 && (
-              <div className="pt-4 border-t border-slate-100 dark:border-zinc-800">
+              <div className="pt-4 border-t border-[--color-border]">
                 <button
                   onClick={clearAllHistory}
                   className="w-full text-center text-xs font-medium text-rose-500 hover:underline py-1 cursor-pointer"
@@ -493,7 +408,7 @@ function ChatGptMessageRow({
   if (isUser) {
     return (
       <div className="flex justify-end">
-        <div className="rounded-md bg-blue-900 text-white dark:bg-blue-950 px-3.5 py-2 text-xs sm:text-[13px] leading-relaxed max-w-[85%] sm:max-w-[75%] font-medium shadow-2xs border border-blue-800 dark:border-blue-900">
+        <div className="rounded-xl rounded-tr-xs bg-blue-600 text-white px-4 py-2.5 text-xs sm:text-[13px] leading-relaxed max-w-[85%] sm:max-w-[75%] font-normal shadow-2xs">
           {message.text}
         </div>
       </div>
@@ -501,22 +416,22 @@ function ChatGptMessageRow({
   }
 
   return (
-    <div className="flex gap-3 items-start group">
+    <div className="flex gap-3 sm:gap-4 items-start group">
       {/* ASSISTANT AVATAR */}
-      <div className="h-7 w-7 rounded-md bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs p-1">
-        <img src="/scion-logo.png" alt="SCION" className="h-4 w-4 object-contain" />
+      <div className="h-8 w-8 rounded-lg bg-[--color-surface-1] border border-[--color-border] flex items-center justify-center shrink-0 mt-0.5 shadow-2xs p-1">
+        <img src="/scion-logo.png" alt="SCION" className="h-5 w-5 object-contain" />
       </div>
 
       {/* ASSISTANT CONTENT */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs font-bold text-slate-900 dark:text-zinc-100">KSRTC SCION</span>
-          <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800/60 px-1.5 py-0.2 rounded">
-            Decision Support
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-xs font-bold text-[--color-ink-900]">KSRTC SCION</span>
+          <span className="text-[10px] font-medium text-[--color-ink-500] bg-[--color-surface-1] border border-[--color-border] px-1.5 py-0.5 rounded">
+            Fleet Intelligence
           </span>
         </div>
 
-        <div className="text-xs sm:text-[13px] leading-relaxed text-slate-800 dark:text-zinc-200">
+        <div className="text-xs sm:text-[14px] leading-relaxed text-slate-800 dark:text-zinc-200">
           <RichMarkdown text={message.text} onNavigate={onNavigate} />
 
           {/* ATTACHED DATA TABLES IF AVAILABLE */}
@@ -540,7 +455,7 @@ function ChatGptMessageRow({
         </div>
 
         {/* ACTION ROW */}
-        <div className="flex items-center gap-2 pt-1.5 text-slate-400 dark:text-zinc-500">
+        <div className="flex items-center gap-2 pt-2 text-slate-400 dark:text-zinc-500">
           <CopyMessageButton text={message.text} />
         </div>
       </div>
@@ -1033,26 +948,26 @@ function RichMarkdown({
 
 function ProcurementTable({ result }: { result: ProcurementResult }) {
   return (
-    <div className="my-3 rounded-md border border-slate-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 shadow-2xs">
+    <div className="my-4 rounded-xl border border-slate-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 shadow-2xs">
       <div className="overflow-x-auto">
         <table className="w-full text-xs min-w-[340px]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-left uppercase text-[11px] text-slate-500 dark:text-zinc-400">
-              <th className="py-2 px-3 font-semibold">Part</th>
-              <th className="py-2 px-3 font-semibold text-right">Qty</th>
-              <th className="py-2 px-3 font-semibold text-right">Total Cost</th>
-              <th className="py-2 px-3 font-semibold text-center">Priority</th>
+              <th className="py-2.5 px-3.5 font-semibold">Part</th>
+              <th className="py-2.5 px-3.5 font-semibold">Qty</th>
+              <th className="py-2.5 px-3.5 font-semibold">Total Cost</th>
+              <th className="py-2.5 px-3.5 font-semibold">Priority</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
             {result.items.map((i) => (
               <tr key={i.part} className="hover:bg-slate-50 dark:hover:bg-zinc-800/40">
-                <td className="py-2 px-3 font-medium text-slate-900 dark:text-zinc-100">{i.part}</td>
-                <td className="py-2 px-3 tabular text-right text-slate-600 dark:text-zinc-300">{i.quantity}</td>
-                <td className="py-2 px-3 tabular text-right font-semibold text-slate-900 dark:text-zinc-100">
+                <td className="py-2.5 px-3.5 font-medium text-slate-900 dark:text-zinc-100">{i.part}</td>
+                <td className="py-2.5 px-3.5 tabular text-slate-600 dark:text-zinc-300">{i.quantity}</td>
+                <td className="py-2.5 px-3.5 tabular font-semibold text-slate-900 dark:text-zinc-100">
                   ₹{i.total_cost.toLocaleString("en-IN")}
                 </td>
-                <td className="py-2 px-3 text-center">
+                <td className="py-2.5 px-3.5">
                   <StatusBadge label={i.priority} />
                 </td>
               </tr>
@@ -1066,24 +981,24 @@ function ProcurementTable({ result }: { result: ProcurementResult }) {
 
 function InventoryTable({ items }: { items: InventoryItem[] }) {
   return (
-    <div className="my-3 rounded-md border border-slate-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 shadow-2xs">
+    <div className="my-4 rounded-xl border border-slate-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 shadow-2xs">
       <div className="overflow-x-auto">
         <table className="w-full text-xs min-w-[320px]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-left uppercase text-[11px] text-slate-500 dark:text-zinc-400">
-              <th className="py-2 px-3 font-semibold">Part</th>
-              <th className="py-2 px-3 font-semibold text-right">Stock</th>
-              <th className="py-2 px-3 font-semibold text-right">Supply Days</th>
-              <th className="py-2 px-3 font-semibold text-center">Status</th>
+              <th className="py-2.5 px-3.5 font-semibold">Part</th>
+              <th className="py-2.5 px-3.5 font-semibold">Stock</th>
+              <th className="py-2.5 px-3.5 font-semibold">Supply Days</th>
+              <th className="py-2.5 px-3.5 font-semibold">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
             {items.map((i) => (
               <tr key={i.id} className="hover:bg-slate-50 dark:hover:bg-zinc-800/40">
-                <td className="py-2 px-3 font-medium text-slate-900 dark:text-zinc-100">{i.part}</td>
-                <td className="py-2 px-3 tabular text-right font-bold text-rose-600 dark:text-rose-400">{i.currentStock}</td>
-                <td className="py-2 px-3 tabular text-right text-slate-600 dark:text-zinc-300">{i.daysOfSupply}d</td>
-                <td className="py-2 px-3 text-center">
+                <td className="py-2.5 px-3.5 font-medium text-slate-900 dark:text-zinc-100">{i.part}</td>
+                <td className="py-2.5 px-3.5 tabular font-bold text-rose-600 dark:text-rose-400">{i.currentStock}</td>
+                <td className="py-2.5 px-3.5 tabular text-slate-600 dark:text-zinc-300">{i.daysOfSupply}d</td>
+                <td className="py-2.5 px-3.5">
                   <StatusBadge label={i.status} />
                 </td>
               </tr>
@@ -1097,26 +1012,26 @@ function InventoryTable({ items }: { items: InventoryItem[] }) {
 
 function PoTable({ orders }: { orders: PurchaseOrder[] }) {
   return (
-    <div className="my-3 rounded-md border border-slate-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 shadow-2xs">
+    <div className="my-4 rounded-xl border border-slate-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 shadow-2xs">
       <div className="overflow-x-auto">
         <table className="w-full text-xs min-w-[320px]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-left uppercase text-[11px] text-slate-500 dark:text-zinc-400">
-              <th className="py-2 px-3 font-semibold">PO #</th>
-              <th className="py-2 px-3 font-semibold">Supplier</th>
-              <th className="py-2 px-3 font-semibold text-right">Total</th>
-              <th className="py-2 px-3 font-semibold text-center">Status</th>
+              <th className="py-2.5 px-3.5 font-semibold">PO #</th>
+              <th className="py-2.5 px-3.5 font-semibold">Supplier</th>
+              <th className="py-2.5 px-3.5 font-semibold">Total</th>
+              <th className="py-2.5 px-3.5 font-semibold">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
             {orders.map((po) => (
               <tr key={po.poNumber} className="hover:bg-slate-50 dark:hover:bg-zinc-800/40">
-                <td className="py-2 px-3 font-medium text-slate-900 dark:text-zinc-100">{po.poNumber}</td>
-                <td className="py-2 px-3 text-slate-600 dark:text-zinc-300">{po.supplier}</td>
-                <td className="py-2 px-3 tabular text-right font-semibold text-slate-900 dark:text-zinc-100">
+                <td className="py-2.5 px-3.5 font-medium text-slate-900 dark:text-zinc-100">{po.poNumber}</td>
+                <td className="py-2.5 px-3.5 text-slate-600 dark:text-zinc-300">{po.supplier}</td>
+                <td className="py-2.5 px-3.5 tabular font-semibold text-slate-900 dark:text-zinc-100">
                   ₹{po.total.toLocaleString("en-IN")}
                 </td>
-                <td className="py-2 px-3 text-center">
+                <td className="py-2.5 px-3.5">
                   <StatusBadge label={po.status} />
                 </td>
               </tr>
@@ -1130,22 +1045,22 @@ function PoTable({ orders }: { orders: PurchaseOrder[] }) {
 
 function PriceTable({ prices }: { prices: PriceRecord[] }) {
   return (
-    <div className="my-3 rounded-md border border-slate-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 shadow-2xs">
+    <div className="my-4 rounded-xl border border-slate-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 shadow-2xs">
       <div className="overflow-x-auto">
         <table className="w-full text-xs min-w-[280px]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-left uppercase text-[11px] text-slate-500 dark:text-zinc-400">
-              <th className="py-2 px-3 font-semibold">Date</th>
-              <th className="py-2 px-3 font-semibold">Supplier</th>
-              <th className="py-2 px-3 font-semibold text-right">Unit Price</th>
+              <th className="py-2.5 px-3.5 font-semibold">Date</th>
+              <th className="py-2.5 px-3.5 font-semibold">Supplier</th>
+              <th className="py-2.5 px-3.5 font-semibold">Unit Price</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
             {prices.map((p, i) => (
               <tr key={i} className="hover:bg-slate-50 dark:hover:bg-zinc-800/40">
-                <td className="py-2 px-3 text-slate-600 dark:text-zinc-300">{p.date}</td>
-                <td className="py-2 px-3 text-slate-600 dark:text-zinc-300">{p.supplier}</td>
-                <td className="py-2 px-3 tabular text-right font-semibold text-slate-900 dark:text-zinc-100">₹{p.unitPrice}</td>
+                <td className="py-2.5 px-3.5 text-slate-600 dark:text-zinc-300">{p.date}</td>
+                <td className="py-2.5 px-3.5 text-slate-600 dark:text-zinc-300">{p.supplier}</td>
+                <td className="py-2.5 px-3.5 tabular font-semibold text-slate-900 dark:text-zinc-100">₹{p.unitPrice}</td>
               </tr>
             ))}
           </tbody>
