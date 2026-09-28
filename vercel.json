@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/v1/db/(.*)",
+      "destination": "https://database-5oe4.onrender.com/api/v1/db/$1"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },

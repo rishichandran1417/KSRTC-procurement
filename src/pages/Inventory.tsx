@@ -59,7 +59,14 @@ export default function Inventory() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+    const handleInvChange = () => {
+      getInventory().then(setItems).catch(() => {});
+    };
+    window.addEventListener("ksrtc_inventory_changed", handleInvChange);
+    return () => window.removeEventListener("ksrtc_inventory_changed", handleInvChange);
+  }, []);
 
   const handleSort = (field: InventorySortField) => {
     if (sortField === field) {

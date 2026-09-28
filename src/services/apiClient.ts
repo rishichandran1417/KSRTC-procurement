@@ -73,6 +73,12 @@ export class ApiError extends Error {
 }
 
 function resolveUrl(url: string): string {
+  // When running in the browser and pointing to the default Render DB backend,
+  // route through same-origin /api/v1/db to avoid CORS restrictions and leverage
+  // the Vercel rewrite or local Vite dev proxy.
+  if (typeof window !== "undefined" && url.includes("database-5oe4.onrender.com/api/v1/db")) {
+    return url.replace("https://database-5oe4.onrender.com/api/v1/db", "/api/v1/db");
+  }
   return url;
 }
 
@@ -113,6 +119,8 @@ export const apiClient = {
     request<T>(url, { method: "POST", body: JSON.stringify(body) }),
   put: <T>(url: string, body: unknown) =>
     request<T>(url, { method: "PUT", body: JSON.stringify(body) }),
+  patch: <T>(url: string, body: unknown) =>
+    request<T>(url, { method: "PATCH", body: JSON.stringify(body) }),
 };
 
 /** Simulates network latency when needed */

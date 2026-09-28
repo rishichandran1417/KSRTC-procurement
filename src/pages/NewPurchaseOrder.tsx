@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Plus, Trash2, CheckCircle2, AlertTriangle, ArrowLeft, FileText,
-  MapPin, Check, ChevronDown, Building2
+  MapPin, Check, ChevronDown, Building2, ClipboardPaste
 } from "lucide-react";
 import { TopBar } from "../components/layout/TopBar";
 import { SINGLE_DEPOT_NAME } from "../state/FiltersContext";
@@ -597,22 +597,69 @@ export default function NewPurchaseOrder() {
                           {i + 1}
                         </td>
                         <td className="px-3 py-2.5 relative">
-                          <input
-                            type="text"
-                            autoComplete="off"
-                            value={l.part}
-                            onChange={(e) => {
-                              updateLinePart(i, e.target.value);
-                              setActivePartDropdown(i);
-                              setActiveCategoryDropdown(null);
-                            }}
-                            onFocus={() => {
-                              setActivePartDropdown(i);
-                              setActiveCategoryDropdown(null);
-                            }}
-                            placeholder="Type or select spare part…"
-                            className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs font-medium text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
-                          />
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="text"
+                              autoComplete="off"
+                              value={l.part}
+                              onChange={(e) => {
+                                updateLinePart(i, e.target.value);
+                                setActivePartDropdown(i);
+                                setActiveCategoryDropdown(null);
+                              }}
+                              onPaste={(e) => {
+                                const text = e.clipboardData.getData("text/plain");
+                                if (text) {
+                                  e.preventDefault();
+                                  const clean = text.replace(/[\r\n\t]+/g, " ").trim();
+                                  updateLinePart(i, clean);
+                                  const item = inventoryList.find(
+                                    (inv) =>
+                                      inv.part.toLowerCase() === clean.toLowerCase() ||
+                                      clean.toLowerCase().includes(inv.part.toLowerCase())
+                                  );
+                                  if (item) {
+                                    handleSelectPart(i, item);
+                                  } else {
+                                    setActivePartDropdown(i);
+                                  }
+                                }
+                              }}
+                              onFocus={() => {
+                                setActivePartDropdown(i);
+                                setActiveCategoryDropdown(null);
+                              }}
+                              placeholder="Type, paste, or select spare part…"
+                              className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs font-medium text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  const text = await navigator.clipboard.readText();
+                                  if (text) {
+                                    const clean = text.replace(/[\r\n\t]+/g, " ").trim();
+                                    updateLinePart(i, clean);
+                                    const item = inventoryList.find(
+                                      (inv) =>
+                                        inv.part.toLowerCase() === clean.toLowerCase() ||
+                                        clean.toLowerCase().includes(inv.part.toLowerCase())
+                                    );
+                                    if (item) {
+                                      handleSelectPart(i, item);
+                                    } else {
+                                      setActivePartDropdown(i);
+                                    }
+                                  }
+                                } catch {}
+                              }}
+                              title="Paste component name from clipboard"
+                              className="shrink-0 inline-flex items-center gap-1 rounded border border-[--color-border] bg-[--color-surface-1] hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2 py-1.5 text-[11px] font-medium text-blue-600 dark:text-blue-400 transition-colors cursor-pointer"
+                            >
+                              <ClipboardPaste size={12} />
+                              <span>Paste</span>
+                            </button>
+                          </div>
 
                           {/* PART AUTOCOMPLETE POPUP */}
                           {activePartDropdown === i && (

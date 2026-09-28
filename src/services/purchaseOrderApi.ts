@@ -104,6 +104,7 @@ export async function getPurchaseOrders(): Promise<PurchaseOrder[]> {
         const normalizedRemote: PurchaseOrder[] = remote.map((r) => {
           const poNumber = r.poNumber || r.po_number || `PO-${r.id}`;
           return {
+            id: r.id || r.po_id,
             poNumber,
             supplier: r.supplier || r.supplier_name || "KSRTC Central Stores",
             supplierAddress: r.supplierAddress || r.supplier_address || r.address || "",
@@ -161,8 +162,8 @@ export async function getPurchaseOrders(): Promise<PurchaseOrder[]> {
         activeOrders = finalOrders;
         return simulateLatency(finalOrders, 10);
       }
-    } catch (err) {
-      console.warn("API call to /purchase-orders failed, using local orders:", err);
+    } catch (err: any) {
+      console.debug("API call to /purchase-orders deferred, using local orders:", err?.message || err);
     }
   }
 
@@ -206,18 +207,23 @@ export async function createPurchaseOrder(po: PurchaseOrder): Promise<PurchaseOr
         const payload = {
           po_number: newPo.poNumber,
           supplier: newPo.supplier,
-          order_date: newPo.poDate,
-          expected_delivery_date: newPo.expectedDelivery,
+          vendor: newPo.supplier,
+          order_date: newPo.poDate ? `${newPo.poDate}T00:00:00` : new Date().toISOString(),
+          expected_delivery_date: newPo.expectedDelivery ? `${newPo.expectedDelivery}T00:00:00` : new Date().toISOString(),
+          currency: "INR",
+          created_by: "Procurement Officer",
           items: (newPo.lines || []).map((l, idx) => ({
             part_id: idx + 1,
             ordered_quantity: l.quantity,
+            quantity: l.quantity,
             unit_price: l.unitPrice,
+            unit_cost: l.unitPrice,
             line_total: l.totalCost,
           })),
         };
         await apiClient.post<any>(`${ENDPOINTS.base}/purchase-orders`, payload);
-      } catch (err) {
-        console.warn("Background API call to create purchase order on server:", err);
+      } catch (err: any) {
+        console.debug("Backend PO creation sync deferred:", err?.message || err);
       }
     })();
   }
@@ -226,6 +232,41 @@ export async function createPurchaseOrder(po: PurchaseOrder): Promise<PurchaseOr
 }
 
 export async function updatePurchaseOrder(updated: PurchaseOrder): Promise<PurchaseOrder> {
+  const allOrders = activeOrders.length > 0 ? activeOrders : await getPurchaseOrders();
+  const existing = allOrders.find((p) => p.poNumber === updated.poNumber);
+
+  // Support partial and incremental receiving (e.g. ordered 100, received 50):
+  if (updated.lines && updated.lines.length > 0) {
+    for (let idx = 0; idx < updated.lines.length; idx++) {
+      const line = updated.lines[idx];
+      const existingLine = existing?.lines?.[idx] || existing?.lines?.find((l) => l.part.toLowerCase() === line.part.toLowerCase());
+
+      // If user selected "Received", fulfill all remaining unreceived units
+      if (updated.status === "Received" && (line.receivedQuantity === undefined || line.receivedQuantity < line.quantity)) {
+        line.receivedQuantity = line.quantity;
+      }
+
+      const currentRec = Number(line.receivedQuantity ?? (updated.status === "Received" ? line.quantity : 0));
+      const previousRec = Number(existingLine?.receivedQuantity ?? (existing?.status === "Received" ? (existingLine?.quantity ?? 0) : 0));
+      const deltaToReceive = currentRec - previousRec;
+
+      if (deltaToReceive > 0 && line.part) {
+        await receiveItemStockIntoInventory(line.part, deltaToReceive, line.category);
+      }
+    }
+
+    const totalOrdered = updated.lines.reduce((s, l) => s + (Number(l.quantity) || 0), 0);
+    const totalReceived = updated.lines.reduce((s, l) => s + (Number(l.receivedQuantity) || 0), 0);
+
+    if (totalReceived >= totalOrdered && totalOrdered > 0) {
+      updated.status = "Received";
+      updated.inventoryReceived = true;
+    } else if (totalReceived > 0) {
+      updated.status = "Partially Received";
+      updated.inventoryReceived = false;
+    }
+  }
+
   const createdOrders = loadCreatedOrders();
   const isCreated = createdOrders.some((p) => p.poNumber === updated.poNumber);
 
@@ -240,12 +281,18 @@ export async function updatePurchaseOrder(updated: PurchaseOrder): Promise<Purch
 
   activeOrders = activeOrders.map((p) => (p.poNumber === updated.poNumber ? updated : p));
 
-  if (ENDPOINTS.base) {
+  // ONLY attempt remote update if this order came from the remote database!
+  // Locally created orders (e.g. KSRTC/PO/2026/03282+) do not exist on the remote database.
+  if (ENDPOINTS.base && !isCreated) {
     (async () => {
       try {
-        await apiClient.put<PurchaseOrder>(`${ENDPOINTS.base}/purchase-orders/${updated.poNumber}`, updated);
-      } catch (err) {
-        console.warn("API call to update purchase order background notice:", err);
+        const rawId = existing?.id ?? parseInt(updated.poNumber.split("/").pop() || "", 10);
+        const remoteId = Number(rawId);
+        if (!isNaN(remoteId) && remoteId > 0) {
+          await apiClient.patch<any>(`${ENDPOINTS.base}/purchase-orders/${remoteId}/status`, { status: updated.status });
+        }
+      } catch (err: any) {
+        console.debug("Remote PO status update deferred:", err?.message || err);
       }
     })();
   }
@@ -270,24 +317,20 @@ export async function updatePoStatus(poNumber: string, status: PoStatus): Promis
         lines: [],
       };
 
+  // If transitioning to "Received" and not already received, update inventory stock
+  const wasAlreadyReceived = existing?.status === "Received" || existing?.inventoryReceived;
+  if (status === "Received" && !wasAlreadyReceived && updatedPo.lines && updatedPo.lines.length > 0) {
+    for (const line of updatedPo.lines) {
+      if (line.part && (Number(line.quantity) || 0) > 0) {
+        await receiveItemStockIntoInventory(line.part, Number(line.quantity) || 0, line.category);
+      }
+    }
+    updatedPo.inventoryReceived = true;
+  }
+
   await updatePurchaseOrder(updatedPo);
 
-  // When PO is received, update inventory stock
-  if (status === "Received" && updatedPo.lines) {
-    for (const line of updatedPo.lines) {
-      await receiveItemStockIntoInventory(line.part, line.quantity);
-    }
-  }
-
-  if (ENDPOINTS.base) {
-    try {
-      await apiClient.put<PurchaseOrder>(`${ENDPOINTS.base}/purchase-orders/${poNumber}/status`, { status });
-    } catch (err) {
-      console.warn("API call to update purchase order status failed, updated locally:", err);
-    }
-  }
-
-  return simulateLatency(updatedPo, 50);
+  return simulateLatency(updatedPo, 25);
 }
 
 export async function receivePurchaseOrder(poNumber: string): Promise<PurchaseOrder> {

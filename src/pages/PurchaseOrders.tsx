@@ -4,15 +4,16 @@ import {
   Eye, PackageCheck, XCircle, Plus, X, FileText, Pencil, Trash2,
   Search, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight,
   ChevronsLeft, ChevronsRight, Sparkles, MapPin, Filter, RotateCcw,
-  Truck
+  Truck, ClipboardPaste
 } from "lucide-react";
 import { TopBar } from "../components/layout/TopBar";
 import { LoadingState, ErrorState } from "../components/ui/States";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { getPurchaseOrders, updatePoStatus, updatePurchaseOrder } from "../services/purchaseOrderApi";
+import { getInventory } from "../services/inventoryApi";
 import { PurchaseOrderPdfModal } from "../components/ui/PurchaseOrderPdfModal";
 import { SupplyScheduleBoard } from "../components/purchaseOrders/SupplyScheduleBoard";
-import type { PurchaseOrder, PoStatus } from "../types";
+import type { PurchaseOrder, PoStatus, InventoryItem } from "../types";
 
 export default function PurchaseOrders() {
   const navigate = useNavigate();
@@ -47,8 +48,9 @@ export default function PurchaseOrders() {
   const [editExpectedDelivery, setEditExpectedDelivery] = useState("");
   const [editStatus, setEditStatus] = useState<PoStatus>("Submitted");
   const [editNotes, setEditNotes] = useState("");
-  const [editLines, setEditLines] = useState<{ part: string; category?: string; quantity: number; unitPrice: number; totalCost: number }[]>([]);
+  const [editLines, setEditLines] = useState<{ part: string; category?: string; quantity: number; unitPrice: number; totalCost: number; receivedQuantity?: number }[]>([]);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [inventoryCatalog, setInventoryCatalog] = useState<InventoryItem[]>([]);
 
   const load = () => {
     setLoading(true);
@@ -59,12 +61,22 @@ export default function PurchaseOrders() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+    getInventory().then(setInventoryCatalog).catch(() => {});
+  }, []);
+
+  const [successToast, setSuccessToast] = useState<string | null>(null);
 
   const handleStatusChange = (poNumber: string, nextStatus: PoStatus) => {
     updatePoStatus(poNumber, nextStatus).then((updated) => {
       setOrders((prev) => prev.map((o) => (o.poNumber === poNumber ? updated : o)));
       if (viewing && viewing.poNumber === poNumber) setViewing(updated);
+      if (nextStatus === "Received") {
+        const units = updated.lines?.reduce((s, l) => s + (Number(l.quantity) || 0), 0) || 0;
+        setSuccessToast(`PO #${poNumber} received: ${units} units successfully added to inventory stock!`);
+        setTimeout(() => setSuccessToast(null), 5000);
+      }
     });
   };
 
@@ -77,12 +89,28 @@ export default function PurchaseOrders() {
     setEditNotes(po.notes || "");
     setEditLines(
       po.lines && po.lines.length > 0
-        ? po.lines.map((l) => ({ ...l, category: l.category || "" }))
-        : [{ part: "Spare Part", category: "", quantity: 1, unitPrice: 0, totalCost: 0 }]
+        ? po.lines.map((l) => ({
+            ...l,
+            category: l.category || "",
+            quantity: Number(l.quantity) || 1,
+            unitPrice: Number(l.unitPrice) || 0,
+            totalCost: (Number(l.quantity) || 1) * (Number(l.unitPrice) || 0),
+            receivedQuantity:
+              l.receivedQuantity !== undefined
+                ? Number(l.receivedQuantity)
+                : po.status === "Received"
+                ? Number(l.quantity) || 1
+                : 0,
+          }))
+        : [{ part: "Spare Part", category: "", quantity: 1, unitPrice: 0, totalCost: 0, receivedQuantity: 0 }]
     );
   };
 
-  const handleLineChange = (index: number, field: "part" | "category" | "quantity" | "unitPrice", value: string | number) => {
+  const handleLineChange = (
+    index: number,
+    field: "part" | "category" | "quantity" | "unitPrice" | "receivedQuantity",
+    value: string | number
+  ) => {
     setEditLines((prev) => {
       const updated = [...prev];
       const item = { ...updated[index], [field]: value };
@@ -95,7 +123,7 @@ export default function PurchaseOrders() {
   };
 
   const addLine = () => {
-    setEditLines((prev) => [...prev, { part: "", category: "", quantity: 1, unitPrice: 0, totalCost: 0 }]);
+    setEditLines((prev) => [...prev, { part: "", category: "", quantity: 1, unitPrice: 0, totalCost: 0, receivedQuantity: 0 }]);
   };
 
   const removeLine = (index: number) => {
@@ -124,6 +152,7 @@ export default function PurchaseOrders() {
           quantity: Number(l.quantity) || 1,
           unitPrice: Number(l.unitPrice) || 0,
           totalCost: (Number(l.quantity) || 1) * (Number(l.unitPrice) || 0),
+          receivedQuantity: l.receivedQuantity !== undefined ? Number(l.receivedQuantity) : undefined,
         })),
         total: calculatedTotal,
       };
@@ -132,6 +161,11 @@ export default function PurchaseOrders() {
       setOrders((prev) => prev.map((p) => (p.poNumber === updated.poNumber ? updated : p)));
       if (viewing && viewing.poNumber === updated.poNumber) {
         setViewing(updated);
+      }
+      if (editStatus === "Received" || editStatus === "Partially Received") {
+        const units = updated.lines?.reduce((s, l) => s + (Number(l.receivedQuantity ?? (editStatus === "Received" ? l.quantity : 0)) || 0), 0) || 0;
+        setSuccessToast(`PO #${updated.poNumber} status updated: ${units} units tracked in inventory stock!`);
+        setTimeout(() => setSuccessToast(null), 5000);
       }
       setEditingPo(null);
     } catch (e) {
@@ -390,6 +424,21 @@ export default function PurchaseOrders() {
       />
 
       <div className="p-4 sm:p-6 space-y-4">
+        {successToast && (
+          <div className="flex items-center justify-between rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-xs sm:text-sm font-medium text-emerald-800 dark:text-emerald-300 shadow-xs animate-in fade-in duration-200">
+            <div className="flex items-center gap-2.5">
+              <PackageCheck className="text-emerald-600 dark:text-emerald-400 shrink-0" size={17} />
+              <span>{successToast}</span>
+            </div>
+            <button
+              onClick={() => setSuccessToast(null)}
+              className="text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-200 cursor-pointer p-1"
+              aria-label="Close notification"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
         {loading ? (
           <LoadingState label="Loading purchase order records…" />
         ) : error ? (
@@ -1042,78 +1091,85 @@ export default function PurchaseOrders() {
           onClick={() => setEditingPo(null)}
         >
           <div
-            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border border-[--color-border] bg-[--color-surface-0] p-5 shadow-xl text-xs space-y-4 text-[--color-ink-900]"
+            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg border border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 shadow-2xl text-xs space-y-4 text-[--color-ink-900]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-start border-b border-[--color-border] pb-3">
               <div>
-                <h3 className="text-sm font-medium text-[--color-ink-900]">Edit Purchase Order</h3>
+                <h3 className="text-base font-semibold text-[--color-ink-900]">Edit Purchase Order</h3>
                 <p className="text-xs text-[--color-ink-500] font-mono mt-0.5">{editingPo.poNumber}</p>
               </div>
               <button
                 onClick={() => setEditingPo(null)}
                 className="rounded p-1 text-[--color-ink-400] hover:text-[--color-ink-700] hover:bg-[--color-surface-2] transition-colors cursor-pointer"
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               <div>
-                <label className="block text-xs font-medium text-[--color-ink-700] mb-1">Supplier Name</label>
+                <label className="block text-xs font-semibold text-[--color-ink-700] mb-1">Supplier Name</label>
                 <input
                   type="text"
                   value={editSupplier}
                   onChange={(e) => setEditSupplier(e.target.value)}
-                  className="w-full rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-xs text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
-                  placeholder="e.g. Ashok Leyland OEM Spares"
+                  className="w-full rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-xs font-medium text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
+                  placeholder="e.g. Ashok Leyland OEM Spares Division"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[--color-ink-700] mb-1">Supplier Address</label>
-                <input
-                  type="text"
+                <label className="block text-xs font-semibold text-[--color-ink-700] mb-1">Supplier Address</label>
+                <textarea
+                  rows={2}
                   value={editSupplierAddress}
                   onChange={(e) => setEditSupplierAddress(e.target.value)}
-                  className="w-full rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-xs text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
-                  placeholder="e.g. Industrial Development Area, Kochuveli, Thiruvananthapuram - 695021"
+                  className="w-full rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-xs font-normal text-[--color-ink-900] focus:border-blue-500 focus:outline-none resize-none leading-relaxed"
+                  placeholder="e.g. Plot 42, Electronics & Heavy Auto Cluster, South Kalamassery, Ernakulam, Kerala - 683104"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-[--color-ink-700] mb-1">Expected Delivery</label>
+                  <label className="block text-xs font-semibold text-[--color-ink-700] mb-1">Expected Delivery</label>
                   <input
                     type="date"
                     value={editExpectedDelivery}
                     onChange={(e) => setEditExpectedDelivery(e.target.value)}
-                    className="w-full rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-xs text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-xs text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[--color-ink-700] mb-1">Status</label>
+                  <label className="block text-xs font-semibold text-[--color-ink-700] mb-1">Status</label>
                   <select
                     value={editStatus}
-                    onChange={(e) => setEditStatus(e.target.value as PoStatus)}
-                    className="w-full rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-xs text-[--color-ink-900] focus:border-blue-500 focus:outline-none cursor-pointer"
+                    onChange={(e) => {
+                      const newStatus = e.target.value as PoStatus;
+                      setEditStatus(newStatus);
+                      if (newStatus === "Received") {
+                        setEditLines((prev) =>
+                          prev.map((l) => ({ ...l, receivedQuantity: Number(l.quantity) || 1 }))
+                        );
+                      }
+                    }}
+                    className="w-full rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-xs font-medium text-[--color-ink-900] focus:border-blue-500 focus:outline-none cursor-pointer"
                   >
-                    <option value="Submitted">Submitted</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Ordered">Ordered</option>
-                    <option value="Received">Received</option>
+                    <option value="Ordered">Ordered / Pending</option>
+                    <option value="Partially Received">Partially Received (Partial Delivery)</option>
+                    <option value="Received">Received (Full Delivery - Auto-updates Stock)</option>
                     <option value="Cancelled">Cancelled</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[--color-ink-700] mb-1">Order Notes</label>
+                <label className="block text-xs font-semibold text-[--color-ink-700] mb-1">Order Notes</label>
                 <textarea
                   rows={2}
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
-                  className="w-full rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-xs text-[--color-ink-900] focus:border-blue-500 focus:outline-none resize-none"
+                  className="w-full rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-xs text-[--color-ink-900] focus:border-blue-500 focus:outline-none resize-none leading-relaxed"
                   placeholder="Add notes or delivery requirements..."
                 />
               </div>
@@ -1121,70 +1177,242 @@ export default function PurchaseOrders() {
               {/* Line Items */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-[--color-ink-700]">Line Items</label>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-[--color-ink-700]">Line Items ({editLines.length})</label>
+                    <span className="text-[10px] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-900/60 font-medium">
+                      Tracks Ordered vs Received Units (Partial Receiving Supported)
+                    </span>
+                  </div>
                   <button
                     type="button"
                     onClick={addLine}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer font-semibold"
                   >
-                    <Plus size={12} /> Add Item
+                    <Plus size={13} /> Add Item
                   </button>
                 </div>
 
-                <div className="space-y-2 border border-[--color-border] rounded-md p-2.5 bg-[--color-surface-1]">
-                  {editLines.map((line, i) => (
-                    <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 border-b border-[--color-border] last:border-0 pb-2.5 last:pb-0">
-                      <input
-                        type="text"
-                        value={line.part}
-                        onChange={(e) => handleLineChange(i, "part", e.target.value)}
-                        placeholder="Item description / spare part"
-                        className="flex-1 rounded border border-[--color-border] bg-[--color-surface-0] px-2 py-1 text-xs text-[--color-ink-900]"
-                      />
-                      <input
-                        type="text"
-                        value={line.category || ""}
-                        onChange={(e) => handleLineChange(i, "category", e.target.value)}
-                        placeholder="Category"
-                        className="w-full sm:w-36 rounded border border-[--color-border] bg-[--color-surface-0] px-2 py-1 text-xs text-[--color-ink-900]"
-                      />
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          min="1"
-                          value={line.quantity}
-                          onChange={(e) => handleLineChange(i, "quantity", e.target.value)}
-                          placeholder="Qty"
-                          className="w-16 rounded border border-[--color-border] bg-[--color-surface-0] px-2 py-1 text-xs text-[--color-ink-900] text-center"
-                        />
-                        <div className="flex items-center gap-1">
-                          <span className="text-[--color-ink-500]">₹</span>
-                          <input
-                            type="number"
-                            min="0"
-                            value={line.unitPrice}
-                            onChange={(e) => handleLineChange(i, "unitPrice", e.target.value)}
-                            placeholder="Price"
-                            className="w-20 rounded border border-[--color-border] bg-[--color-surface-0] px-2 py-1 text-xs text-[--color-ink-900] text-right"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeLine(i)}
-                          disabled={editLines.length <= 1}
-                          className="p-1 text-[--color-ink-400] hover:text-rose-500 disabled:opacity-30 cursor-pointer"
-                          title="Delete Item"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                    </div>
+                {/* Quick Add Popular Spares Bar */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-2 text-xs">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[--color-ink-400] shrink-0">
+                    Quick Spares:
+                  </span>
+                  {[
+                    "Air Filter - Secondary Element (Heavy Commercial)",
+                    "Brake Lining Set (Leyland Viking / Cheetah)",
+                    "Clutch Plate Assembly 380mm (Organic)",
+                    "Engine Oil Filter Spin-On",
+                    "Heavy Commercial Radial Bus Tyre 295/80 R22.5",
+                    "AC Compressor Assembly (KSRTC Std Bus / Heavy Commercial)",
+                  ].map((pName) => (
+                    <button
+                      key={pName}
+                      type="button"
+                      onClick={() => {
+                        const item = inventoryCatalog.find((i) => i.part.toLowerCase() === pName.toLowerCase());
+                        const price = item?.unitCost || 0;
+                        const cat = item?.category || "";
+                        setEditLines((prev) => {
+                          if (prev.length === 1 && !prev[0].part.trim()) {
+                            return [{ part: pName, category: cat, quantity: 1, unitPrice: price, totalCost: price, receivedQuantity: 0 }];
+                          }
+                          return [...prev, { part: pName, category: cat, quantity: 1, unitPrice: price, totalCost: price, receivedQuantity: 0 }];
+                        });
+                      }}
+                      className="shrink-0 rounded-full border border-[--color-border] bg-[--color-surface-1] hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2.5 py-0.5 text-[11px] font-medium text-[--color-ink-700] hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                    >
+                      + {pName.split("(")[0].trim()}
+                    </button>
                   ))}
                 </div>
 
-                <div className="mt-2 flex justify-between items-center text-xs px-1">
-                  <span className="text-[--color-ink-500]">Calculated Total</span>
-                  <span className="font-semibold text-blue-600 dark:text-blue-400">
+                <datalist id="ksrtc-edit-spares-datalist">
+                  {inventoryCatalog.map((item) => (
+                    <option key={item.id} value={item.part}>
+                      {item.category ? `${item.category} • ` : ""}₹{item.unitCost || 0}
+                    </option>
+                  ))}
+                </datalist>
+
+                <div className="space-y-2.5 border border-[--color-border] rounded-md p-3 bg-[--color-surface-1]">
+                  {editLines.map((line, i) => {
+                    const ordered = Number(line.quantity) || 0;
+                    const rec = Number(line.receivedQuantity) || 0;
+                    const isPartial = rec > 0 && rec < ordered;
+                    const isFull = rec >= ordered && ordered > 0;
+
+                    return (
+                      <div key={i} className="flex flex-col gap-2 border-b border-[--color-border] last:border-0 pb-3 last:pb-0">
+                        <div className="flex flex-col md:flex-row md:items-center gap-2">
+                          {/* Component Name with Paste Button and Datalist */}
+                          <div className="flex-1 min-w-[220px] flex items-center gap-1.5">
+                            <input
+                              type="text"
+                              list="ksrtc-edit-spares-datalist"
+                              value={line.part}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                handleLineChange(i, "part", val);
+                                const match = inventoryCatalog.find((inv) => inv.part.toLowerCase() === val.toLowerCase());
+                                if (match) {
+                                  if (!line.category) handleLineChange(i, "category", match.category || "");
+                                  if (!line.unitPrice || line.unitPrice === 0) handleLineChange(i, "unitPrice", match.unitCost || 0);
+                                }
+                              }}
+                              onPaste={(e) => {
+                                const pasted = e.clipboardData.getData("text/plain");
+                                if (pasted) {
+                                  e.preventDefault();
+                                  const clean = pasted.replace(/[\r\n\t]+/g, " ").trim();
+                                  handleLineChange(i, "part", clean);
+                                  const match = inventoryCatalog.find(
+                                    (inv) =>
+                                      inv.part.toLowerCase() === clean.toLowerCase() ||
+                                      clean.toLowerCase().includes(inv.part.toLowerCase())
+                                  );
+                                  if (match) {
+                                    if (!line.category || line.category === "General") handleLineChange(i, "category", match.category || "");
+                                    if (!line.unitPrice || line.unitPrice === 0) handleLineChange(i, "unitPrice", match.unitCost || 0);
+                                  }
+                                }
+                              }}
+                              placeholder="Type, paste, or select component name…"
+                              className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  const text = await navigator.clipboard.readText();
+                                  if (text) {
+                                    const clean = text.replace(/[\r\n\t]+/g, " ").trim();
+                                    handleLineChange(i, "part", clean);
+                                    const match = inventoryCatalog.find(
+                                      (inv) =>
+                                        inv.part.toLowerCase() === clean.toLowerCase() ||
+                                        clean.toLowerCase().includes(inv.part.toLowerCase())
+                                    );
+                                    if (match) {
+                                      if (!line.category || line.category === "General") handleLineChange(i, "category", match.category || "");
+                                      if (!line.unitPrice || line.unitPrice === 0) handleLineChange(i, "unitPrice", match.unitCost || 0);
+                                    }
+                                  }
+                                } catch {}
+                              }}
+                              title="Paste component name from clipboard"
+                              className="shrink-0 inline-flex items-center gap-1 rounded border border-[--color-border] bg-[--color-surface-0] hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2 py-1.5 text-[11px] font-medium text-blue-600 dark:text-blue-400 transition-colors cursor-pointer"
+                            >
+                              <ClipboardPaste size={12} />
+                              <span>Paste</span>
+                            </button>
+                          </div>
+
+                          {/* Category */}
+                          <input
+                            type="text"
+                            value={line.category || ""}
+                            onChange={(e) => handleLineChange(i, "category", e.target.value)}
+                            placeholder="Category"
+                            className="w-full md:w-32 rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs text-[--color-ink-900]"
+                          />
+
+                          {/* Ordered & Received & Price */}
+                          <div className="flex flex-wrap items-center gap-2 shrink-0">
+                            <div className="flex items-center gap-1">
+                              <span className="text-[10px] text-[--color-ink-500] font-medium">Ordered:</span>
+                              <input
+                                type="number"
+                                min="1"
+                                value={line.quantity}
+                                onChange={(e) => handleLineChange(i, "quantity", e.target.value)}
+                                placeholder="Qty"
+                                className="w-16 rounded border border-[--color-border] bg-[--color-surface-0] px-2 py-1.5 text-xs text-[--color-ink-900] text-center font-medium"
+                                title="Total Quantity Ordered"
+                              />
+                            </div>
+
+                            <div className="flex items-center gap-1 bg-emerald-50/80 dark:bg-emerald-950/40 px-2 py-1 rounded border border-emerald-300 dark:border-emerald-800">
+                              <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold">Received:</span>
+                              <input
+                                type="number"
+                                min="0"
+                                max={ordered}
+                                value={line.receivedQuantity ?? 0}
+                                onChange={(e) => {
+                                  const val = Math.max(0, Number(e.target.value) || 0);
+                                  handleLineChange(i, "receivedQuantity", val);
+                                  if (val > 0 && val < ordered) {
+                                    setEditStatus("Partially Received");
+                                  } else if (val >= ordered && ordered > 0) {
+                                    setEditStatus("Received");
+                                  }
+                                }}
+                                placeholder="0"
+                                className="w-14 rounded border border-emerald-400 dark:border-emerald-700 bg-[--color-surface-0] px-1.5 py-0.5 text-xs text-[--color-ink-900] text-center font-bold"
+                                title="Quantity Actually Arrived / Received"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleLineChange(i, "receivedQuantity", ordered);
+                                  setEditStatus("Received");
+                                }}
+                                className="text-[10px] font-semibold text-emerald-700 hover:text-emerald-900 dark:text-emerald-300 cursor-pointer px-1 py-0.5 rounded bg-emerald-200/70 dark:bg-emerald-900/60"
+                                title="Receive All Ordered Units"
+                              >
+                                All
+                              </button>
+                            </div>
+
+                            <div className="flex items-center gap-1">
+                              <span className="text-[--color-ink-500]">₹</span>
+                              <input
+                                type="number"
+                                min="0"
+                                value={line.unitPrice}
+                                onChange={(e) => handleLineChange(i, "unitPrice", e.target.value)}
+                                placeholder="Price"
+                                className="w-20 rounded border border-[--color-border] bg-[--color-surface-0] px-2 py-1.5 text-xs text-[--color-ink-900] text-right"
+                              />
+                            </div>
+
+                            <span className="text-xs font-semibold tabular text-blue-600 dark:text-blue-400 w-20 text-right">
+                              ₹{((Number(line.quantity) || 0) * (Number(line.unitPrice) || 0)).toLocaleString("en-IN")}
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={() => removeLine(i)}
+                              disabled={editLines.length <= 1}
+                              className="p-1.5 text-[--color-ink-400] hover:text-rose-500 disabled:opacity-30 cursor-pointer"
+                              title="Delete Item"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Partial status indicator line */}
+                        {isPartial && (
+                          <div className="flex items-center justify-between text-[11px] bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 px-2.5 py-1 rounded border border-amber-200 dark:border-amber-900/60">
+                            <span>📦 <strong>{rec} of {ordered} units</strong> received into stock ({ordered - rec} units pending delivery)</span>
+                            <span className="font-semibold text-amber-700 dark:text-amber-400">Partially Received</span>
+                          </div>
+                        )}
+                        {isFull && (
+                          <div className="flex items-center justify-between text-[11px] bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 px-2.5 py-1 rounded border border-emerald-200 dark:border-emerald-900/60">
+                            <span>✓ <strong>All {ordered} units</strong> received into stock</span>
+                            <span className="font-semibold text-emerald-700 dark:text-emerald-400">Fully Received</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-2.5 flex justify-between items-center text-xs px-1">
+                  <span className="text-[--color-ink-500] font-medium">Calculated Order Total</span>
+                  <span className="font-bold text-sm text-blue-600 dark:text-blue-400">
                     ₹{editLines
                       .reduce((sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0), 0)
                       .toLocaleString("en-IN")}
@@ -1193,11 +1421,11 @@ export default function PurchaseOrders() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[--color-border]">
+            <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-[--color-border]">
               <button
                 type="button"
                 onClick={() => setEditingPo(null)}
-                className="rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-xs font-normal text-[--color-ink-700] hover:bg-[--color-surface-2] cursor-pointer"
+                className="rounded border border-[--color-border] bg-[--color-surface-1] px-4 py-2 text-xs font-medium text-[--color-ink-700] hover:bg-[--color-surface-2] cursor-pointer"
               >
                 Cancel
               </button>
@@ -1205,7 +1433,7 @@ export default function PurchaseOrders() {
                 type="button"
                 disabled={savingEdit}
                 onClick={handleSaveEdit}
-                className="rounded bg-blue-600 px-3.5 py-1.5 text-xs font-medium text-white shadow-2xs hover:bg-blue-700 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                className="rounded bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-blue-700 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
               >
                 {savingEdit ? "Saving…" : "Save Changes"}
               </button>

@@ -73,7 +73,12 @@ export default function Dashboard() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(loadData, [filters.category, filters.startDate, filters.endDate, filters.horizon]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    loadData();
+    const handleInvChange = () => loadData();
+    window.addEventListener("ksrtc_inventory_changed", handleInvChange);
+    return () => window.removeEventListener("ksrtc_inventory_changed", handleInvChange);
+  }, [filters.category, filters.startDate, filters.endDate, filters.horizon]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCreatePoFromPulp = () => {
     if (!pulpResult) return;

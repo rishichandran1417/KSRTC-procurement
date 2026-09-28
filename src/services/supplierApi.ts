@@ -330,42 +330,104 @@ function saveStoredSuppliers(suppliers: Supplier[]): void {
   } catch {}
 }
 
+const REMOTE_SUPPLIER_CACHE_KEY = "ksrtc_remote_suppliers_cache";
+
+function loadRemoteSuppliersCache(): Supplier[] {
+  try {
+    const raw = localStorage.getItem(REMOTE_SUPPLIER_CACHE_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+function saveRemoteSuppliersCache(suppliers: Supplier[]): void {
+  try {
+    localStorage.setItem(REMOTE_SUPPLIER_CACHE_KEY, JSON.stringify(suppliers));
+  } catch {}
+}
+
+let cachedRemoteSuppliers: Supplier[] = loadRemoteSuppliersCache();
+let isRemoteSupplierFetching = false;
+let lastSupplierFetchTime = 0;
+let lastSupplierFailureTime = 0;
+
+async function fetchRemoteSuppliersInBackground(): Promise<void> {
+  if (!ENDPOINTS.base || isRemoteSupplierFetching) return;
+
+  const now = Date.now();
+  // Circuit breaker: wait at least 60s if last request failed to avoid hammering a cold/failing instance
+  if (now - lastSupplierFailureTime < 60000) return;
+  // Cache TTL: wait at least 60s between successful fetches if cache is populated
+  if (now - lastSupplierFetchTime < 60000 && cachedRemoteSuppliers.length > 0) return;
+
+  isRemoteSupplierFetching = true;
+  try {
+    let normalized: Supplier[] = [];
+
+    // 1. Try /suppliers endpoint
+    try {
+      const remote = await apiClient.get<any[]>(`${ENDPOINTS.base}/suppliers`);
+      if (Array.isArray(remote) && remote.length > 0) {
+        normalized = remote.map((s, i) => normalizeSupplier(s, i));
+      }
+    } catch {
+      // 2. If /suppliers has a server-side 500 ResponseValidationError,
+      // fallback to /supplier-parts which returns all live vendors with 200 OK
+      try {
+        const parts = await apiClient.get<any[]>(`${ENDPOINTS.base}/supplier-parts`);
+        if (Array.isArray(parts) && parts.length > 0) {
+          const vendorMap = new Map<string, Supplier>();
+          for (const p of parts) {
+            const vName = p.vendor_name || p.supplier_name;
+            if (vName && !vendorMap.has(vName.toLowerCase())) {
+              vendorMap.set(
+                vName.toLowerCase(),
+                normalizeSupplier({
+                  id: `supp-remote-${p.vendor_id || p.supplier_id}`,
+                  name: vName,
+                  lead_time_days: p.lead_time_days || 7,
+                })
+              );
+            }
+          }
+          normalized = Array.from(vendorMap.values());
+        }
+      } catch {}
+    }
+
+    if (normalized.length > 0) {
+      cachedRemoteSuppliers = normalized;
+      saveRemoteSuppliersCache(cachedRemoteSuppliers);
+      lastSupplierFetchTime = Date.now();
+    }
+  } catch (err: any) {
+    lastSupplierFailureTime = Date.now();
+    console.debug("Backend /suppliers sync deferred:", err?.message || err);
+  } finally {
+    isRemoteSupplierFetching = false;
+  }
+}
+
 let activeSuppliers: Supplier[] = loadStoredSuppliers();
 
 export async function getSuppliers(): Promise<Supplier[]> {
   activeSuppliers = loadStoredSuppliers();
 
-  if (ENDPOINTS.base) {
-    try {
-      const remote = await apiClient.get<any[]>(`${ENDPOINTS.base}/suppliers`);
-      if (Array.isArray(remote) && remote.length > 0) {
-        const normalized = remote.map((s, i) => normalizeSupplier(s, i));
-        
-        // Merge with local changes
-        const map = new Map<string, Supplier>();
-        for (const s of DEFAULT_KSRTC_SUPPLIERS) map.set(s.name.toLowerCase(), s);
-        for (const s of normalized) map.set(s.name.toLowerCase(), s);
-        for (const s of activeSuppliers) map.set(s.name.toLowerCase(), s);
-        
-        const merged = Array.from(map.values());
-        saveStoredSuppliers(merged);
-        activeSuppliers = merged;
-        return simulateLatency(merged, 10);
-      }
-    } catch (err) {
-      console.warn("API call to /suppliers failed, using cached suppliers:", err);
-    }
-  }
-
-  // Fallback defaults merged with local stored
+  // Merge defaults + cached remote vendors + active local stored
   const map = new Map<string, Supplier>();
   for (const s of DEFAULT_KSRTC_SUPPLIERS) map.set(s.name.toLowerCase(), s);
+  for (const s of cachedRemoteSuppliers) map.set(s.name.toLowerCase(), s);
   for (const s of activeSuppliers) map.set(s.name.toLowerCase(), s);
+
+  // Trigger non-blocking background revalidation
+  fetchRemoteSuppliersInBackground().catch(() => {});
+
   const merged = Array.from(map.values());
   saveStoredSuppliers(merged);
   activeSuppliers = merged;
-
-  return simulateLatency([...activeSuppliers], 50);
+  return simulateLatency([...activeSuppliers], 10);
 }
 
 export async function updateSupplier(updated: Supplier): Promise<Supplier> {
@@ -378,8 +440,8 @@ export async function updateSupplier(updated: Supplier): Promise<Supplier> {
     (async () => {
       try {
         await apiClient.put(`${ENDPOINTS.base}/suppliers/${normalized.id}`, normalized);
-      } catch (err) {
-        console.warn("Could not sync supplier update to server:", err);
+      } catch (err: any) {
+        console.debug("Could not sync supplier update to server:", err?.message || err);
       }
     })();
   }

@@ -159,6 +159,7 @@ export interface PurchaseOrderLine {
 }
 
 export interface PurchaseOrder {
+  id?: number | string;
   poNumber: string;
   supplier: string;
   supplierAddress?: string;
@@ -171,6 +172,7 @@ export interface PurchaseOrder {
   notes?: string;
   createdAt?: number;
   isNew?: boolean;
+  inventoryReceived?: boolean;
 }
 
 // ---------- Suppliers ----------
