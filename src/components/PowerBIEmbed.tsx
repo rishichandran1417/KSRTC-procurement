@@ -19,23 +19,23 @@ export function PowerBIEmbed({
 
   return (
     <div
-      className={`flex flex-col rounded-md border border-[--color-border] bg-[--color-surface-0] ${
+      className={`flex flex-col rounded-md border border-[var(--color-border)] bg-[var(--color-surface-0)] ${
         isFullscreen ? "fixed inset-2 sm:inset-4 z-50 shadow-xl" : "h-[380px] sm:h-[480px] md:h-[560px] lg:h-[620px]"
       }`}
     >
-      <div className="flex items-center justify-between border-b border-[--color-border] px-4 py-2.5">
-        <p className="text-sm font-medium text-[--color-ink-900]">Vendor Performance Analytics Report</p>
+      <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-2.5">
+        <p className="text-sm font-medium text-[var(--color-ink-900)]">Vendor Performance Analytics Report</p>
         <div className="flex items-center gap-1">
           <button
             onClick={() => setRefreshKey((k) => k + 1)}
-            className="rounded p-1.5 text-[--color-ink-500] hover:bg-[--color-surface-1]"
+            className="rounded p-1.5 text-[var(--color-ink-500)] hover:bg-[var(--color-surface-1)]"
             title="Refresh"
           >
             <RefreshCw size={15} />
           </button>
           <button
             onClick={() => setIsFullscreen((f) => !f)}
-            className="rounded p-1.5 text-[--color-ink-500] hover:bg-[--color-surface-1]"
+            className="rounded p-1.5 text-[var(--color-ink-500)] hover:bg-[var(--color-surface-1)]"
             title="Full screen"
           >
             <Maximize2 size={15} />
@@ -58,7 +58,7 @@ export function PowerBIEmbed({
             key={refreshKey}
             title="Power BI Report"
             src={config.embedUrl}
-            className="h-full w-full rounded border border-[--color-border]"
+            className="h-full w-full rounded border border-[var(--color-border)]"
             allowFullScreen
           />
         )}

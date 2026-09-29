@@ -41,7 +41,7 @@ export default function Suppliers() {
   const [leadTimeFilter, setLeadTimeFilter] = useState("All");
   const [sortField, setSortField] = useState<SupplierSortField>("reliabilityScore");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("table");
 
   // Edit supplier state
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
@@ -206,8 +206,8 @@ export default function Suppliers() {
   return (
     <div>
       <TopBar
-        title="Supplier Directory"
-        subtitle="Manage registered vendor profiles, delivery compliance ratings, on-time fulfillment rates, and lead times"
+        title="Supplier Dashboard"
+        subtitle="Who are we buying from? — Performance & delivery reliability"
       />
 
       <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
@@ -223,7 +223,7 @@ export default function Suppliers() {
         ) : (
           <>
             {/* SEARCH, FILTER & SORT CONTROL BAR */}
-            <div className="rounded-xl border border-[--color-border] bg-[--color-surface-0] p-3.5 sm:p-4 shadow-2xs space-y-3">
+            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-0)] p-3.5 sm:p-4 shadow-2xs space-y-3">
               {/* TOP ROW: SEARCH + SORT + VIEW MODE */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 {/* Search Bar */}
@@ -233,13 +233,13 @@ export default function Suppliers() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search by supplier name, category, city, contact person…"
-                    className="w-full rounded-lg border border-[--color-border] bg-[--color-surface-1] pl-9 pr-8 py-2 text-xs sm:text-sm text-[--color-ink-900] placeholder:text-[--color-ink-400] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] pl-9 pr-8 py-2 text-xs sm:text-sm text-[var(--color-ink-900)] placeholder:text-[var(--color-ink-400)] focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
-                  <Search size={15} className="absolute left-3 top-2.5 text-[--color-ink-400]" />
+                  <Search size={15} className="absolute left-3 top-2.5 text-[var(--color-ink-400)]" />
                   {search && (
                     <button
                       onClick={() => setSearch("")}
-                      className="absolute right-2.5 top-2.5 text-[--color-ink-400] hover:text-[--color-ink-700] cursor-pointer"
+                      className="absolute right-2.5 top-2.5 text-[var(--color-ink-400)] hover:text-[var(--color-ink-700)] cursor-pointer"
                     >
                       <X size={14} />
                     </button>
@@ -248,12 +248,12 @@ export default function Suppliers() {
 
                 {/* Sort & View Mode */}
                 <div className="flex items-center gap-2 shrink-0">
-                  <div className="flex items-center gap-1.5 text-xs text-[--color-ink-500]">
+                  <div className="flex items-center gap-1.5 text-xs text-[var(--color-ink-500)]">
                     <span className="hidden sm:inline font-medium">Sort:</span>
                     <select
                       value={sortField}
                       onChange={(e) => setSortField(e.target.value as SupplierSortField)}
-                      className="rounded-lg border border-[--color-border] bg-[--color-surface-1] px-2.5 py-1.5 text-xs font-semibold text-[--color-ink-900] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                      className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] px-2.5 py-1.5 text-xs font-semibold text-[var(--color-ink-900)] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                     >
                       <option value="reliabilityScore">Reliability Score</option>
                       <option value="onTimeDeliveryRate">On-Time Rate</option>
@@ -266,21 +266,21 @@ export default function Suppliers() {
                     <button
                       onClick={() => setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))}
                       title={`Sort ${sortDirection === "asc" ? "Ascending" : "Descending"} (Click to flip)`}
-                      className="rounded-lg border border-[--color-border] bg-[--color-surface-1] p-1.5 text-[--color-ink-700] hover:text-[--color-ink-900] hover:bg-[--color-surface-2] active:scale-95 transition-all cursor-pointer"
+                      className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] p-1.5 text-[var(--color-ink-700)] hover:text-[var(--color-ink-900)] hover:bg-[var(--color-surface-2)] active:scale-95 transition-all cursor-pointer"
                     >
                       {sortDirection === "asc" ? <ArrowUp size={15} /> : <ArrowDown size={15} />}
                     </button>
                   </div>
 
                   {/* View Mode Toggle */}
-                  <div className="flex items-center rounded-lg border border-[--color-border] bg-[--color-surface-1] p-0.5">
+                  <div className="flex items-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] p-0.5">
                     <button
                       onClick={() => setViewMode("grid")}
                       title="Grid Cards View"
                       className={`p-1.5 rounded-md text-xs transition-colors cursor-pointer ${
                         viewMode === "grid"
-                          ? "bg-[--color-surface-0] text-blue-600 dark:text-blue-400 shadow-2xs font-semibold"
-                          : "text-[--color-ink-400] hover:text-[--color-ink-700]"
+                          ? "bg-[var(--color-surface-0)] text-blue-600 dark:text-blue-400 shadow-2xs font-semibold"
+                          : "text-[var(--color-ink-400)] hover:text-[var(--color-ink-700)]"
                       }`}
                     >
                       <LayoutGrid size={15} />
@@ -290,8 +290,8 @@ export default function Suppliers() {
                       title="Table Matrix View"
                       className={`p-1.5 rounded-md text-xs transition-colors cursor-pointer ${
                         viewMode === "table"
-                          ? "bg-[--color-surface-0] text-blue-600 dark:text-blue-400 shadow-2xs font-semibold"
-                          : "text-[--color-ink-400] hover:text-[--color-ink-700]"
+                          ? "bg-[var(--color-surface-0)] text-blue-600 dark:text-blue-400 shadow-2xs font-semibold"
+                          : "text-[var(--color-ink-400)] hover:text-[var(--color-ink-700)]"
                       }`}
                     >
                       <TableIcon size={15} />
@@ -301,9 +301,9 @@ export default function Suppliers() {
               </div>
 
               {/* SECOND ROW: FILTER DROPDOWNS BAR */}
-              <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2.5 border-t border-[--color-border]">
+              <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2.5 border-t border-[var(--color-border)]">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-semibold text-[--color-ink-500] hidden sm:inline mr-1">
+                  <span className="text-xs font-semibold text-[var(--color-ink-500)] hidden sm:inline mr-1">
                     Filters:
                   </span>
 
@@ -314,7 +314,7 @@ export default function Suppliers() {
                     className={`rounded-lg border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[210px] truncate ${
                       categoryFilter !== "All"
                         ? "border-blue-500 bg-blue-50/40 text-blue-700 dark:text-blue-300 font-semibold"
-                        : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-800]"
+                        : "border-[var(--color-border)] bg-[var(--color-surface-1)] text-[var(--color-ink-800)]"
                     }`}
                   >
                     <option value="All">All Categories ({categories.length})</option>
@@ -332,7 +332,7 @@ export default function Suppliers() {
                     className={`rounded-lg border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${
                       reliabilityFilter !== "All"
                         ? "border-blue-500 bg-blue-50/40 text-blue-700 dark:text-blue-300 font-semibold"
-                        : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-800]"
+                        : "border-[var(--color-border)] bg-[var(--color-surface-1)] text-[var(--color-ink-800)]"
                     }`}
                   >
                     <option value="All">All Reliability</option>
@@ -348,7 +348,7 @@ export default function Suppliers() {
                     className={`rounded-lg border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${
                       leadTimeFilter !== "All"
                         ? "border-blue-500 bg-blue-50/40 text-blue-700 dark:text-blue-300 font-semibold"
-                        : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-800]"
+                        : "border-[var(--color-border)] bg-[var(--color-surface-1)] text-[var(--color-ink-800)]"
                     }`}
                   >
                     <option value="All">All Lead Times</option>
@@ -363,7 +363,7 @@ export default function Suppliers() {
                     className={`rounded-lg border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${
                       ordersFilter !== "All"
                         ? "border-blue-500 bg-blue-50/40 text-blue-700 dark:text-blue-300 font-semibold"
-                        : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-800]"
+                        : "border-[var(--color-border)] bg-[var(--color-surface-1)] text-[var(--color-ink-800)]"
                     }`}
                   >
                     <option value="All">All Orders</option>
@@ -374,8 +374,8 @@ export default function Suppliers() {
 
                 {/* Right Count & Reset */}
                 <div className="flex items-center gap-3 ml-auto text-xs">
-                  <span className="text-[--color-ink-500] font-medium">
-                    Showing <strong className="text-[--color-ink-900]">{filteredAndSortedSuppliers.length}</strong> of {suppliers.length}
+                  <span className="text-[var(--color-ink-500)] font-medium">
+                    Showing <strong className="text-[var(--color-ink-900)]">{filteredAndSortedSuppliers.length}</strong> of {suppliers.length}
                   </span>
 
                   {hasActiveFilters && (
@@ -391,8 +391,8 @@ export default function Suppliers() {
 
               {/* THIRD ROW: ACTIVE FILTER CHIPS (IF ANY ACTIVE) */}
               {hasActiveFilters && (
-                <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-[--color-border] text-xs">
-                  <span className="text-[--color-ink-500] text-[11px] font-medium">Active:</span>
+                <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-[var(--color-border)] text-xs">
+                  <span className="text-[var(--color-ink-500)] text-[11px] font-medium">Active:</span>
 
                   {search && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 px-2 py-0.5 text-[11px] text-blue-700 dark:text-blue-300">
@@ -443,22 +443,22 @@ export default function Suppliers() {
                 {filteredAndSortedSuppliers.map((s, idx) => (
                   <div
                     key={`supp-card-${s.id}-${idx}`}
-                    className="rounded-xl border border-[--color-border] bg-[--color-surface-0] p-4 transition-all hover:border-[--color-border-strong] hover:shadow-xs group"
+                    className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-0)] p-4 transition-all hover:border-[var(--color-border-strong)] hover:shadow-xs group"
                   >
                     <div className="flex items-start justify-between">
                       <div className="min-w-0 pr-2">
-                        <p className="text-sm font-bold text-[--color-ink-900] truncate" title={s.name}>
+                        <p className="text-sm font-bold text-[var(--color-ink-900)] truncate" title={s.name}>
                           {s.name}
                         </p>
-                        <p className="text-xs text-[--color-ink-500] mt-0.5 font-medium truncate" title={s.category}>
+                        <p className="text-xs text-[var(--color-ink-500)] mt-0.5 font-medium truncate" title={s.category}>
                           {s.category}
                         </p>
                         {s.address && (
                           <p
-                            className="text-[11px] text-[--color-ink-400] flex items-center gap-1 mt-1 truncate max-w-[200px]"
+                            className="text-[11px] text-[var(--color-ink-400)] flex items-center gap-1 mt-1 truncate max-w-[200px]"
                             title={s.address}
                           >
-                            <MapPin size={11} className="shrink-0 text-[--color-ink-400]" /> {s.address}
+                            <MapPin size={11} className="shrink-0 text-[var(--color-ink-400)]" /> {s.address}
                           </p>
                         )}
                       </div>
@@ -469,14 +469,14 @@ export default function Suppliers() {
                             openEditModal(s);
                           }}
                           title="Edit Supplier"
-                          className="rounded-lg p-1.5 text-[--color-ink-400] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-[--color-surface-2] transition-colors cursor-pointer"
+                          className="rounded-lg p-1.5 text-[var(--color-ink-400)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
                         >
                           <Pencil size={13} />
                         </button>
                         <button
                           onClick={() => setSelectedSupplier(s)}
                           title="View Details"
-                          className="rounded-lg p-1.5 text-[--color-ink-400] hover:text-[--color-ink-700] hover:bg-[--color-surface-2] transition-colors cursor-pointer"
+                          className="rounded-lg p-1.5 text-[var(--color-ink-400)] hover:text-[var(--color-ink-700)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
                         >
                           <ChevronRight size={15} />
                         </button>
@@ -498,38 +498,38 @@ export default function Suppliers() {
               </div>
             ) : null}
 
-            {/* COMPARISON MATRIX */}
-            <div className="rounded-md border border-[--color-border] bg-[--color-surface-0] p-4 shadow-2xs">
+            {/* COMPARISON MATRIX (Rendered when in table view OR at the bottom of grid view) */}
+            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-0)] p-4 shadow-2xs">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-xs sm:text-sm font-bold text-[--color-ink-900]">
-                  Supplier Performance Matrix
+                <h2 className="text-xs sm:text-sm font-bold text-[var(--color-ink-900)]">
+                  Supplier Performance Comparison Matrix
                 </h2>
-                <span className="text-xs text-[--color-ink-500]">
-                  {filteredAndSortedSuppliers.length} suppliers registered
+                <span className="text-xs text-[var(--color-ink-500)]">
+                  {filteredAndSortedSuppliers.length} records
                 </span>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs min-w-[620px]">
                   <thead>
-                    <tr className="border-b border-[--color-border] text-left text-[11px] font-semibold text-[--color-ink-500] uppercase tracking-wider bg-[--color-surface-1]/50">
+                    <tr className="border-b border-[var(--color-border)] text-left text-xs font-semibold text-[var(--color-ink-500)] uppercase tracking-wider bg-[var(--color-surface-1)]/40">
                       <th className="py-2.5 px-3">Supplier Name</th>
                       <th className="py-2.5 px-2">Primary Category</th>
-                      <th className="py-2.5 px-2 text-right">Reliability Score</th>
-                      <th className="py-2.5 px-2 text-right">On-Time Rate</th>
-                      <th className="py-2.5 px-2 text-right">Avg Lead Time</th>
-                      <th className="py-2.5 px-2 text-right">Open Orders</th>
+                      <th className="py-2.5 px-2">Reliability Score</th>
+                      <th className="py-2.5 px-2">On-Time Rate</th>
+                      <th className="py-2.5 px-2">Average Lead Time</th>
+                      <th className="py-2.5 px-2">Open Orders</th>
                       <th className="py-2.5 px-3 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[--color-border]">
+                  <tbody className="divide-y divide-[var(--color-border)]">
                     {filteredAndSortedSuppliers.map((s, idx) => (
                       <tr
                         key={`supp-row-${s.id}-${idx}`}
-                        className="hover:bg-[--color-surface-1]/70 transition-colors"
+                        className="hover:bg-[var(--color-surface-1)]/70 transition-colors"
                       >
-                        <td className="py-2.5 px-3 font-semibold text-[--color-ink-900]">{s.name}</td>
-                        <td className="py-2.5 px-2 text-[--color-ink-600]">{s.category}</td>
-                        <td className="py-2.5 px-2 tabular text-right font-bold text-[--color-ink-900]">
+                        <td className="py-2.5 px-3 font-semibold text-[var(--color-ink-900)]">{s.name}</td>
+                        <td className="py-2.5 px-2 text-[var(--color-ink-600)]">{s.category}</td>
+                        <td className="py-2.5 px-2 tabular font-bold text-[var(--color-ink-900)]">
                           <span
                             className={
                               (s.reliabilityScore ?? 92) >= 95
@@ -539,12 +539,12 @@ export default function Suppliers() {
                                 : "text-amber-600 dark:text-amber-400"
                             }
                           >
-                            {s.reliabilityScore ?? 92}%
+                            {s.reliabilityScore ?? 92} / 100
                           </span>
                         </td>
-                        <td className="py-2.5 px-2 tabular text-right text-[--color-ink-800]">{s.onTimeDeliveryRate ?? 95}%</td>
-                        <td className="py-2.5 px-2 tabular text-right text-[--color-ink-800]">{s.avgLeadTimeDays ?? 7} days</td>
-                        <td className="py-2.5 px-2 tabular text-right font-bold text-[--color-ink-900]">{s.openOrders ?? 0}</td>
+                        <td className="py-2.5 px-2 tabular text-[var(--color-ink-800)]">{s.onTimeDeliveryRate ?? 95}%</td>
+                        <td className="py-2.5 px-2 tabular text-[var(--color-ink-800)]">{s.avgLeadTimeDays ?? 7} days</td>
+                        <td className="py-2.5 px-2 tabular text-[var(--color-ink-800)]">{s.openOrders ?? 0}</td>
                         <td className="py-2.5 px-3 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <button
@@ -553,10 +553,10 @@ export default function Suppliers() {
                             >
                               View
                             </button>
-                            <span className="text-[--color-ink-300]">·</span>
+                            <span className="text-[var(--color-ink-300)]">·</span>
                             <button
                               onClick={() => openEditModal(s)}
-                              className="text-xs font-semibold text-[--color-ink-600] hover:text-[--color-ink-900] hover:underline cursor-pointer"
+                              className="text-xs font-semibold text-[var(--color-ink-600)] hover:text-[var(--color-ink-900)] hover:underline cursor-pointer"
                             >
                               Edit
                             </button>
@@ -592,17 +592,17 @@ export default function Suppliers() {
           onClick={() => setEditingSupplier(null)}
         >
           <div
-            className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl border border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 shadow-2xl text-xs space-y-4 text-[--color-ink-900]"
+            className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-0)] p-5 sm:p-6 shadow-2xl text-xs space-y-4 text-[var(--color-ink-900)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-start border-b border-[--color-border] pb-3">
+            <div className="flex justify-between items-start border-b border-[var(--color-border)] pb-3">
               <div>
-                <h3 className="text-sm font-bold text-[--color-ink-900]">Edit Supplier Details</h3>
-                <p className="text-xs text-[--color-ink-500] mt-0.5">{editingSupplier.name}</p>
+                <h3 className="text-sm font-bold text-[var(--color-ink-900)]">Edit Supplier Details</h3>
+                <p className="text-xs text-[var(--color-ink-500)] mt-0.5">{editingSupplier.name}</p>
               </div>
               <button
                 onClick={() => setEditingSupplier(null)}
-                className="rounded-lg p-1 text-[--color-ink-400] hover:text-[--color-ink-700] hover:bg-[--color-surface-2] transition-colors cursor-pointer"
+                className="rounded-lg p-1 text-[var(--color-ink-400)] hover:text-[var(--color-ink-700)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
               >
                 <X size={16} />
               </button>
@@ -610,111 +610,111 @@ export default function Suppliers() {
 
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-[--color-ink-700] mb-1">Supplier Name</label>
+                <label className="block text-xs font-semibold text-[var(--color-ink-700)] mb-1">Supplier Name</label>
                 <input
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full rounded-lg border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-xs text-[--color-ink-900] focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs text-[var(--color-ink-900)] focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[--color-ink-700] mb-1">Primary Category</label>
+                <label className="block text-xs font-semibold text-[var(--color-ink-700)] mb-1">Primary Category</label>
                 <input
                   type="text"
                   value={editCategory}
                   onChange={(e) => setEditCategory(e.target.value)}
-                  className="w-full rounded-lg border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-xs text-[--color-ink-900] focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs text-[var(--color-ink-900)] focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   placeholder="e.g. Brake Systems, Transmission Spares"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[--color-ink-700] mb-1">Supplier Address</label>
+                <label className="block text-xs font-semibold text-[var(--color-ink-700)] mb-1">Supplier Address</label>
                 <textarea
                   rows={2}
                   value={editAddress}
                   onChange={(e) => setEditAddress(e.target.value)}
-                  className="w-full rounded-lg border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-xs text-[--color-ink-900] focus:ring-1 focus:ring-blue-500 focus:outline-none resize-none"
+                  className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs text-[var(--color-ink-900)] focus:ring-1 focus:ring-blue-500 focus:outline-none resize-none"
                   placeholder="Street / Industrial Area, City, State, PIN"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[--color-ink-700] mb-1">Contact Person</label>
+                  <label className="block text-xs font-semibold text-[var(--color-ink-700)] mb-1">Contact Person</label>
                   <input
                     type="text"
                     value={editContactName}
                     onChange={(e) => setEditContactName(e.target.value)}
-                    className="w-full rounded-lg border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-xs text-[--color-ink-900] focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs text-[var(--color-ink-900)] focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[--color-ink-700] mb-1">Avg Lead Time (Days)</label>
+                  <label className="block text-xs font-semibold text-[var(--color-ink-700)] mb-1">Avg Lead Time (Days)</label>
                   <input
                     type="number"
                     min="1"
                     value={editLeadTime}
                     onChange={(e) => setEditLeadTime(Number(e.target.value))}
-                    className="w-full rounded-lg border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-xs text-[--color-ink-900] focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs text-[var(--color-ink-900)] focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[--color-ink-700] mb-1">Contact Email</label>
+                  <label className="block text-xs font-semibold text-[var(--color-ink-700)] mb-1">Contact Email</label>
                   <input
                     type="email"
                     value={editEmail}
                     onChange={(e) => setEditEmail(e.target.value)}
-                    className="w-full rounded-lg border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-xs text-[--color-ink-900] focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs text-[var(--color-ink-900)] focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[--color-ink-700] mb-1">Contact Phone</label>
+                  <label className="block text-xs font-semibold text-[var(--color-ink-700)] mb-1">Contact Phone</label>
                   <input
                     type="text"
                     value={editPhone}
                     onChange={(e) => setEditPhone(e.target.value)}
-                    className="w-full rounded-lg border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-xs text-[--color-ink-900] focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs text-[var(--color-ink-900)] focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[--color-ink-700] mb-1">Reliability Score (0-100)</label>
+                  <label className="block text-xs font-semibold text-[var(--color-ink-700)] mb-1">Reliability Score (0-100)</label>
                   <input
                     type="number"
                     min="0"
                     max="100"
                     value={editReliability}
                     onChange={(e) => setEditReliability(Number(e.target.value))}
-                    className="w-full rounded-lg border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-xs text-[--color-ink-900] focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs text-[var(--color-ink-900)] focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[--color-ink-700] mb-1">On-Time Rate % (0-100)</label>
+                  <label className="block text-xs font-semibold text-[var(--color-ink-700)] mb-1">On-Time Rate % (0-100)</label>
                   <input
                     type="number"
                     min="0"
                     max="100"
                     value={editOnTime}
                     onChange={(e) => setEditOnTime(Number(e.target.value))}
-                    className="w-full rounded-lg border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-xs text-[--color-ink-900] focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs text-[var(--color-ink-900)] focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[--color-border]">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[var(--color-border)]">
               <button
                 type="button"
                 onClick={() => setEditingSupplier(null)}
-                className="rounded-lg border border-[--color-border] bg-[--color-surface-1] px-3.5 py-2 text-xs font-semibold text-[--color-ink-700] hover:bg-[--color-surface-2] cursor-pointer"
+                className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3.5 py-2 text-xs font-semibold text-[var(--color-ink-700)] hover:bg-[var(--color-surface-2)] cursor-pointer"
               >
                 Cancel
               </button>
@@ -736,11 +736,11 @@ export default function Suppliers() {
 
 function Row({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className="flex justify-between border-b border-[--color-border] pb-1 last:border-0">
-      <span className="text-[--color-ink-500] font-normal">{label}</span>
+    <div className="flex justify-between border-b border-[var(--color-border)] pb-1 last:border-0">
+      <span className="text-[var(--color-ink-500)] font-normal">{label}</span>
       <span
         className={`tabular font-semibold ${
-          highlight ? "text-emerald-600 dark:text-emerald-400" : "text-[--color-ink-900]"
+          highlight ? "text-emerald-600 dark:text-emerald-400" : "text-[var(--color-ink-900)]"
         }`}
       >
         {value}
@@ -769,25 +769,25 @@ function SupplierDetailDrawer({
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs" onClick={onClose}>
       <div
-        className="h-full w-full sm:max-w-md overflow-y-auto border-l border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 space-y-4 shadow-xl text-[--color-ink-900]"
+        className="h-full w-full sm:max-w-md overflow-y-auto border-l border-[var(--color-border)] bg-[var(--color-surface-0)] p-5 sm:p-6 space-y-4 shadow-xl text-[var(--color-ink-900)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between border-b border-[--color-border] pb-3">
+        <div className="flex items-start justify-between border-b border-[var(--color-border)] pb-3">
           <div>
             <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold">{supplier.category}</p>
-            <h2 className="text-base font-bold text-[--color-ink-900] mt-0.5">{supplier.name}</h2>
+            <h2 className="text-base font-bold text-[var(--color-ink-900)] mt-0.5">{supplier.name}</h2>
           </div>
           <div className="flex items-center gap-1.5">
             <button
               onClick={onEdit}
-              className="inline-flex items-center gap-1 rounded-lg border border-[--color-border] bg-[--color-surface-1] px-2.5 py-1 text-xs font-semibold text-[--color-ink-700] hover:text-[--color-ink-900] hover:bg-[--color-surface-2] transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] px-2.5 py-1 text-xs font-semibold text-[var(--color-ink-700)] hover:text-[var(--color-ink-900)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
             >
               <Pencil size={12} />
               <span>Edit</span>
             </button>
             <button
               onClick={onClose}
-              className="rounded-lg p-1 text-[--color-ink-400] hover:text-[--color-ink-700] hover:bg-[--color-surface-2] transition-colors cursor-pointer"
+              className="rounded-lg p-1 text-[var(--color-ink-400)] hover:text-[var(--color-ink-700)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
             >
               <X size={16} />
             </button>
@@ -796,63 +796,63 @@ function SupplierDetailDrawer({
 
         {/* METRICS */}
         <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="rounded-lg border border-[--color-border] bg-[--color-surface-1] p-2.5">
-            <p className="text-[11px] text-[--color-ink-500] font-medium">Reliability Rating</p>
+          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] p-2.5">
+            <p className="text-[11px] text-[var(--color-ink-500)] font-medium">Reliability Rating</p>
             <p className="text-sm font-bold text-blue-600 dark:text-blue-400 mt-0.5">{supplier.reliabilityScore ?? 92}/100</p>
           </div>
-          <div className="rounded-lg border border-[--color-border] bg-[--color-surface-1] p-2.5">
-            <p className="text-[11px] text-[--color-ink-500] font-medium">On-Time Delivery</p>
-            <p className="text-sm font-bold text-[--color-ink-900] mt-0.5">{supplier.onTimeDeliveryRate ?? 95}%</p>
+          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] p-2.5">
+            <p className="text-[11px] text-[var(--color-ink-500)] font-medium">On-Time Delivery</p>
+            <p className="text-sm font-bold text-[var(--color-ink-900)] mt-0.5">{supplier.onTimeDeliveryRate ?? 95}%</p>
           </div>
-          <div className="rounded-lg border border-[--color-border] bg-[--color-surface-1] p-2.5">
-            <p className="text-[11px] text-[--color-ink-500] font-medium">Avg Lead Time</p>
-            <p className="text-xs font-bold text-[--color-ink-900] mt-0.5">{supplier.avgLeadTimeDays ?? 7} days</p>
+          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] p-2.5">
+            <p className="text-[11px] text-[var(--color-ink-500)] font-medium">Avg Lead Time</p>
+            <p className="text-xs font-bold text-[var(--color-ink-900)] mt-0.5">{supplier.avgLeadTimeDays ?? 7} days</p>
           </div>
-          <div className="rounded-lg border border-[--color-border] bg-[--color-surface-1] p-2.5">
-            <p className="text-[11px] text-[--color-ink-500] font-medium">Open Orders</p>
-            <p className="text-xs font-bold text-[--color-ink-900] mt-0.5">{supplier.openOrders ?? 0}</p>
+          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] p-2.5">
+            <p className="text-[11px] text-[var(--color-ink-500)] font-medium">Open Orders</p>
+            <p className="text-xs font-bold text-[var(--color-ink-900)] mt-0.5">{supplier.openOrders ?? 0}</p>
           </div>
         </div>
 
         {/* CONTACT INFO */}
-        <div className="rounded-lg border border-[--color-border] bg-[--color-surface-1] p-3 text-xs space-y-2">
-          <p className="font-bold text-[--color-ink-900] text-xs mb-1">Contact & Address</p>
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] p-3 text-xs space-y-2">
+          <p className="font-bold text-[var(--color-ink-900)] text-xs mb-1">Contact & Address</p>
           {supplier.address ? (
-            <div className="flex items-start gap-2 text-[--color-ink-700]">
-              <MapPin size={13} className="text-[--color-ink-400] shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2 text-[var(--color-ink-700)]">
+              <MapPin size={13} className="text-[var(--color-ink-400)] shrink-0 mt-0.5" />
               <span className="leading-relaxed">{supplier.address}</span>
             </div>
           ) : null}
           {supplier.contactName ? (
-            <p className="text-[--color-ink-700] text-xs font-medium">Officer: {supplier.contactName}</p>
+            <p className="text-[var(--color-ink-700)] text-xs font-medium">Officer: {supplier.contactName}</p>
           ) : null}
           {supplier.contactEmail ? (
-            <div className="flex items-center gap-2 text-[--color-ink-700]">
-              <Mail size={13} className="text-[--color-ink-400] shrink-0" /> {supplier.contactEmail}
+            <div className="flex items-center gap-2 text-[var(--color-ink-700)]">
+              <Mail size={13} className="text-[var(--color-ink-400)] shrink-0" /> {supplier.contactEmail}
             </div>
           ) : null}
           {supplier.contactPhone ? (
-            <div className="flex items-center gap-2 text-[--color-ink-700]">
-              <Phone size={13} className="text-[--color-ink-400] shrink-0" /> {supplier.contactPhone}
+            <div className="flex items-center gap-2 text-[var(--color-ink-700)]">
+              <Phone size={13} className="text-[var(--color-ink-400)] shrink-0" /> {supplier.contactPhone}
             </div>
           ) : null}
         </div>
 
         {/* PURCHASE ORDERS ASSOCIATED */}
         <div className="space-y-2">
-          <p className="text-xs font-bold text-[--color-ink-900]">Associated Purchase Orders ({purchaseOrders.length})</p>
+          <p className="text-xs font-bold text-[var(--color-ink-900)]">Associated Purchase Orders ({purchaseOrders.length})</p>
           {purchaseOrders.length === 0 ? (
-            <p className="text-xs text-[--color-ink-500]">No purchase orders recorded for this supplier.</p>
+            <p className="text-xs text-[var(--color-ink-500)]">No purchase orders recorded for this supplier.</p>
           ) : (
             <div className="space-y-1.5 max-h-48 overflow-y-auto">
               {purchaseOrders.map((po) => (
-                <div key={po.poNumber} className="rounded-lg border border-[--color-border] bg-[--color-surface-1] p-2 text-xs flex justify-between items-center">
+                <div key={po.poNumber} className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] p-2 text-xs flex justify-between items-center">
                   <div>
-                    <span className="font-semibold text-[--color-ink-900]">{po.poNumber}</span>
-                    <span className="text-[--color-ink-500] ml-2">{po.poDate}</span>
+                    <span className="font-semibold text-[var(--color-ink-900)]">{po.poNumber}</span>
+                    <span className="text-[var(--color-ink-500)] ml-2">{po.poDate}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="tabular font-medium text-[--color-ink-900]">₹{po.total.toLocaleString("en-IN")}</span>
+                    <span className="tabular font-medium text-[var(--color-ink-900)]">₹{po.total.toLocaleString("en-IN")}</span>
                     <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-slate-200 dark:bg-zinc-700 text-slate-800 dark:text-zinc-200">
                       {po.status}
                     </span>
@@ -865,15 +865,15 @@ function SupplierDetailDrawer({
 
         {/* PRICE HISTORY */}
         <div className="space-y-2">
-          <p className="text-xs font-bold text-[--color-ink-900]">Recent Quoted Prices ({priceHistory.length})</p>
+          <p className="text-xs font-bold text-[var(--color-ink-900)]">Recent Quoted Prices ({priceHistory.length})</p>
           {priceHistory.length === 0 ? (
-            <p className="text-xs text-[--color-ink-500]">No price records available.</p>
+            <p className="text-xs text-[var(--color-ink-500)]">No price records available.</p>
           ) : (
             <div className="space-y-1.5 max-h-48 overflow-y-auto">
               {priceHistory.map((pr, idx) => (
-                <div key={idx} className="rounded-lg border border-[--color-border] bg-[--color-surface-1] p-2 text-xs flex justify-between items-center">
-                  <span className="text-[--color-ink-600]">{pr.date}</span>
-                  <span className="tabular font-semibold text-[--color-ink-900]">₹{pr.unitPrice.toLocaleString("en-IN")}</span>
+                <div key={idx} className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] p-2 text-xs flex justify-between items-center">
+                  <span className="text-[var(--color-ink-600)]">{pr.date}</span>
+                  <span className="tabular font-semibold text-[var(--color-ink-900)]">₹{pr.unitPrice.toLocaleString("en-IN")}</span>
                 </div>
               ))}
             </div>

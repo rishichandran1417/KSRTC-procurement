@@ -13,7 +13,7 @@ import {
   Cpu,
   Calculator,
   BarChart3,
-  Sparkles,
+  BotMessageSquare,
   CheckCircle2,
   AlertTriangle,
   Save,
@@ -70,9 +70,9 @@ const INTEGRATIONS: IntegrationConfig[] = [
   {
     id: "scion",
     endpointKey: "chat",
-    name: "KSRTC SCION Intelligence Engine",
-    description: "Conversational AI Copilot processing user supply chain queries via Gemini API.",
-    icon: Sparkles,
+    name: "Supply Chain Decision Assistant",
+    description: "Decision-support service answering queries on inventory position, forecasts, and PuLP optimization.",
+    icon: BotMessageSquare,
     probePath: "",
     defaultPlaceholder: "/api/chat",
   },
@@ -87,26 +87,26 @@ export default function Settings() {
 
       <div className="p-4 sm:p-6 space-y-5 max-w-6xl">
         {/* API Specification Helper Drawer */}
-        <div className="rounded-lg border border-[--color-border] bg-[--color-surface-0] p-4 text-xs">
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] p-4 text-xs">
           <div className="flex items-center justify-between">
             <button
               onClick={() => setShowApiDoc(!showApiDoc)}
-              className="flex items-center gap-2 font-semibold text-[--color-ink-800] hover:text-[--color-forecast-600] cursor-pointer"
+              className="flex items-center gap-2 font-semibold text-[var(--color-ink-800)] hover:text-[var(--color-forecast-600)] cursor-pointer"
             >
               <HelpCircle size={15} />
               <span>How your hosted database API should be structured {showApiDoc ? "▲" : "▼"}</span>
             </button>
-            <span className="text-[--color-ink-400] text-[11px]">Backend Requirements</span>
+            <span className="text-[var(--color-ink-400)] text-[11px]">Backend Requirements</span>
           </div>
 
           {showApiDoc && (
-            <div className="mt-3 pt-3 border-t border-[--color-border] space-y-3 text-[--color-ink-600] leading-relaxed">
+            <div className="mt-3 pt-3 border-t border-[var(--color-border)] space-y-3 text-[var(--color-ink-600)] leading-relaxed">
               <p>
-                <strong>Central Source of Truth:</strong> The frontend connects directly to your hosted FastAPI backend at <code className="bg-[--color-surface-2] px-1 py-0.5 rounded text-[--color-ink-900]">/api/v1/db</code>. All inventory, suppliers, and purchase orders are persisted in PostgreSQL.
+                <strong>Central Source of Truth:</strong> The frontend connects directly to your hosted FastAPI backend at <code className="bg-[var(--color-surface-2)] px-1 py-0.5 rounded text-[var(--color-ink-900)]">/api/v1/db</code>. All inventory, suppliers, and purchase orders are persisted in PostgreSQL.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-                <div className="bg-[--color-surface-1] p-3 rounded border border-[--color-border]">
-                  <p className="font-bold text-[--color-ink-900] mb-1">Expected Endpoints:</p>
+                <div className="bg-[var(--color-surface-1)] p-3 rounded border border-[var(--color-border)]">
+                  <p className="font-bold text-[var(--color-ink-900)] mb-1">Expected Endpoints:</p>
                   <ul className="list-disc pl-4 space-y-1 font-mono text-[11px]">
                     <li><strong className="text-emerald-500">GET</strong> /health - verifies database connectivity</li>
                     <li><strong className="text-emerald-500">GET</strong> /inventory - returns item list</li>
@@ -116,8 +116,8 @@ export default function Settings() {
                     <li><strong className="text-emerald-500">GET</strong> /suppliers - returns supplier list</li>
                   </ul>
                 </div>
-                <div className="bg-[--color-surface-1] p-3 rounded border border-[--color-border]">
-                  <p className="font-bold text-[--color-ink-900] mb-1">Critical Setup for Hosted APIs:</p>
+                <div className="bg-[var(--color-surface-1)] p-3 rounded border border-[var(--color-border)]">
+                  <p className="font-bold text-[var(--color-ink-900)] mb-1">Critical Setup for Hosted APIs:</p>
                   <ul className="list-disc pl-4 space-y-1 text-[11px]">
                     <li><strong>HTTPS Required:</strong> Browsers block unencrypted <code className="text-red-400">http://</code> endpoints (Mixed Content). Always use an <code className="text-emerald-400">https://</code> URL.</li>
                     <li><strong>Enable CORS:</strong> Allow origin <code className="text-amber-400">Access-Control-Allow-Origin: *</code> on your FastAPI backend.</li>
@@ -191,16 +191,16 @@ function IntegrationCard({
   const isConfigured = Boolean(url.trim());
 
   return (
-    <div className="rounded-lg border border-[--color-border] bg-[--color-surface-0] p-4 sm:p-5 flex flex-col justify-between space-y-4 shadow-xs">
+    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] p-4 sm:p-5 flex flex-col justify-between space-y-4 shadow-xs">
       <div>
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
           <div className="flex items-start gap-2.5">
-            <div className="rounded-md p-2.5 bg-[--color-surface-1] text-blue-500 shrink-0 mt-0.5">
+            <div className="rounded-md p-2.5 bg-[var(--color-surface-1)] text-blue-500 shrink-0 mt-0.5">
               <IconComp size={20} />
             </div>
             <div>
-              <p className="text-sm font-bold text-[--color-ink-900]">{integration.name}</p>
-              <p className="text-xs text-[--color-ink-500] leading-relaxed mt-0.5">{integration.description}</p>
+              <p className="text-sm font-bold text-[var(--color-ink-900)]">{integration.name}</p>
+              <p className="text-xs text-[var(--color-ink-500)] leading-relaxed mt-0.5">{integration.description}</p>
             </div>
           </div>
 
@@ -238,9 +238,9 @@ function IntegrationCard({
 
         <div className="mt-4">
           <div className="flex items-center justify-between mb-1">
-            <label className="text-xs font-semibold text-[--color-ink-700]">Service Endpoint URL</label>
+            <label className="text-xs font-semibold text-[var(--color-ink-700)]">Service Endpoint URL</label>
             {integration.probePath && (
-              <span className="text-[10px] text-[--color-ink-400] font-mono">
+              <span className="text-[10px] text-[var(--color-ink-400)] font-mono">
                 Probe: {integration.probePath}
               </span>
             )}
@@ -256,7 +256,7 @@ function IntegrationCard({
                 if (e.key === "Enter") handleSave();
               }}
               placeholder={integration.defaultPlaceholder}
-              className="flex-1 rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-xs font-mono text-[--color-ink-900] focus:outline-hidden focus:border-blue-500"
+              className="flex-1 rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-1.5 text-xs font-mono text-[var(--color-ink-900)] focus:outline-hidden focus:border-blue-500"
             />
             {integration.endpointKey && (
               <button
@@ -265,7 +265,7 @@ function IntegrationCard({
                 className={`flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium border transition-colors shrink-0 cursor-pointer ${
                   isSaved
                     ? "bg-emerald-600 text-white border-emerald-600"
-                    : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-700] hover:bg-[--color-surface-2]"
+                    : "border-[var(--color-border)] bg-[var(--color-surface-1)] text-[var(--color-ink-700)] hover:bg-[var(--color-surface-2)]"
                 }`}
               >
                 {isSaved ? <CheckCircle2 size={13} /> : <Save size={13} />}
@@ -297,14 +297,14 @@ function IntegrationCard({
         )}
       </div>
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-t border-[--color-border] pt-3 text-xs text-[--color-ink-500]">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-t border-[var(--color-border)] pt-3 text-xs text-[var(--color-ink-500)]">
         <span>
           {integration.endpointKey ? (url ? "Saved locally in browser" : "No custom URL configured") : "Built-in server endpoint"}
         </span>
         <button
           onClick={handleTestConnection}
           disabled={testing}
-          className="flex items-center gap-1.5 rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-xs font-medium text-[--color-ink-700] hover:bg-[--color-surface-2] disabled:opacity-50 w-full sm:w-auto justify-center transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-1.5 text-xs font-medium text-[var(--color-ink-700)] hover:bg-[var(--color-surface-2)] disabled:opacity-50 w-full sm:w-auto justify-center transition-colors cursor-pointer"
         >
           <RefreshCw size={12} className={testing ? "animate-spin" : ""} />
           {testing ? "Testing Endpoint…" : "Test Connection"}

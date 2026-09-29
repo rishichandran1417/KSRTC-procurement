@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Eye, PackageCheck, XCircle, Plus, X, FileText, Pencil, Trash2,
   Search, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight,
-  ChevronsLeft, ChevronsRight, Sparkles, MapPin, Filter, RotateCcw,
+  ChevronsLeft, ChevronsRight, MapPin, Filter, RotateCcw,
   Truck, ClipboardPaste
 } from "lucide-react";
 import { TopBar } from "../components/layout/TopBar";
@@ -352,15 +352,14 @@ export default function PurchaseOrders() {
 
   const renderSortHeader = (label: string, field: typeof sortField, className = "") => {
     const isActive = sortField === field;
-    const isRight = className.includes("text-right");
     return (
       <th
         onClick={() => handleSort(field)}
         className={`cursor-pointer py-2.5 px-3 transition-colors hover:text-blue-600 dark:hover:text-blue-400 group select-none ${
-          isActive ? "text-blue-600 dark:text-blue-400 font-semibold" : "text-[--color-ink-500]"
+          isActive ? "text-blue-600 dark:text-blue-400 font-semibold" : "text-[var(--color-ink-500)]"
         } ${className}`}
       >
-        <div className={`inline-flex items-center gap-1 ${isRight ? "justify-end w-full" : ""}`}>
+        <div className="inline-flex items-center gap-1">
           <span>{label}</span>
           <span className="shrink-0">
             {isActive ? (
@@ -381,22 +380,22 @@ export default function PurchaseOrders() {
   return (
     <div>
       <TopBar
-        title={activeTab === "schedule" ? "Purchase Orders — Delivery Pipeline" : "Purchase Orders"}
+        title={activeTab === "schedule" ? "Supply Delivery & Rescheduling" : "Purchase Orders"}
         subtitle={
           activeTab === "schedule"
-            ? "Monitor expected supplier arrivals, reschedule delivery milestones, and confirm warehouse intake"
-            : "Track procurement lifecycle, manage supplier commitments, delivery schedules, and receipts"
+            ? "When will supplies arrive? — Interactive delivery pipeline, rescheduling & receiving"
+            : "What did we order? — Purchase order lifecycle management"
         }
         actions={
           <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full sm:w-auto">
             {/* View Switcher: Orders List vs Supply Scheduling / Rescheduling */}
-            <div className="flex items-center rounded-lg border border-[--color-border] bg-[--color-surface-1] p-0.5">
+            <div className="flex items-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] p-0.5">
               <button
                 onClick={() => setActiveTab("orders")}
                 className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                   activeTab === "orders"
-                    ? "bg-[--color-surface-0] text-blue-600 dark:text-blue-400 shadow-2xs font-bold"
-                    : "text-[--color-ink-500] hover:text-[--color-ink-900]"
+                    ? "bg-[var(--color-surface-0)] text-blue-600 dark:text-blue-400 shadow-2xs font-bold"
+                    : "text-[var(--color-ink-500)] hover:text-[var(--color-ink-900)]"
                 }`}
                 title="All Purchase Orders Table"
               >
@@ -408,8 +407,8 @@ export default function PurchaseOrders() {
                 onClick={() => setActiveTab("schedule")}
                 className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                   activeTab === "schedule"
-                    ? "bg-[--color-surface-0] text-blue-600 dark:text-blue-400 shadow-2xs font-bold"
-                    : "text-[--color-ink-500] hover:text-[--color-ink-900]"
+                    ? "bg-[var(--color-surface-0)] text-blue-600 dark:text-blue-400 shadow-2xs font-bold"
+                    : "text-[var(--color-ink-500)] hover:text-[var(--color-ink-900)]"
                 }`}
                 title="Interactive Supply Delivery & Rescheduling Pipeline"
               >
@@ -467,7 +466,7 @@ export default function PurchaseOrders() {
           <>
             {/* TOOLBAR */}
             <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2.5 bg-[--color-surface-0] p-3 rounded-lg border border-[--color-border]">
+          <div className="flex flex-wrap items-center gap-2.5 bg-[var(--color-surface-0)] p-3 rounded-lg border border-[var(--color-border)]">
             {/* SEARCH */}
             <div className="relative flex-1 sm:w-64 min-w-[180px]">
               <input
@@ -477,16 +476,16 @@ export default function PurchaseOrders() {
                   setSearch(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full rounded-md border border-[--color-border] bg-[--color-surface-1] pl-8 pr-7 py-1.5 text-xs text-[--color-ink-900] placeholder:text-[--color-ink-400] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface-1)] pl-8 pr-7 py-1.5 text-xs text-[var(--color-ink-900)] placeholder:text-[var(--color-ink-400)] focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
-              <Search size={13} className="absolute left-2.5 top-2.5 text-[--color-ink-400]" />
+              <Search size={13} className="absolute left-2.5 top-2.5 text-[var(--color-ink-400)]" />
               {search && (
                 <button
                   onClick={() => {
                     setSearch("");
                     setCurrentPage(1);
                   }}
-                  className="absolute right-2 top-2 text-[--color-ink-400] hover:text-[--color-ink-700] p-0.5 rounded cursor-pointer"
+                  className="absolute right-2 top-2 text-[var(--color-ink-400)] hover:text-[var(--color-ink-700)] p-0.5 rounded cursor-pointer"
                 >
                   <X size={12} />
                 </button>
@@ -503,7 +502,7 @@ export default function PurchaseOrders() {
               className={`flex-1 sm:flex-initial min-w-[120px] rounded-md border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${
                 statusFilter !== "All"
                   ? "border-blue-500 bg-blue-50/40 text-blue-700 dark:text-blue-300 font-medium"
-                  : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-800]"
+                  : "border-[var(--color-border)] bg-[var(--color-surface-1)] text-[var(--color-ink-800)]"
               }`}
               title="Filter by Status"
             >
@@ -528,7 +527,7 @@ export default function PurchaseOrders() {
               className={`flex-1 sm:flex-initial min-w-[130px] rounded-md border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[200px] truncate ${
                 supplierFilter !== "All"
                   ? "border-blue-500 bg-blue-50/40 text-blue-700 dark:text-blue-300 font-medium"
-                  : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-800]"
+                  : "border-[var(--color-border)] bg-[var(--color-surface-1)] text-[var(--color-ink-800)]"
               }`}
               title="Filter by Supplier"
             >
@@ -550,7 +549,7 @@ export default function PurchaseOrders() {
               className={`flex-1 sm:flex-initial min-w-[110px] rounded-md border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${
                 dateFilter !== "All"
                   ? "border-blue-500 bg-blue-50/40 text-blue-700 dark:text-blue-300 font-medium"
-                  : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-800]"
+                  : "border-[var(--color-border)] bg-[var(--color-surface-1)] text-[var(--color-ink-800)]"
               }`}
               title="Filter by Order Date"
             >
@@ -572,7 +571,7 @@ export default function PurchaseOrders() {
               className={`flex-1 sm:flex-initial min-w-[110px] rounded-md border px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${
                 amountFilter !== "All"
                   ? "border-blue-500 bg-blue-50/40 text-blue-700 dark:text-blue-300 font-medium"
-                  : "border-[--color-border] bg-[--color-surface-1] text-[--color-ink-800]"
+                  : "border-[var(--color-border)] bg-[var(--color-surface-1)] text-[var(--color-ink-800)]"
               }`}
               title="Filter by Order Total Amount"
             >
@@ -584,15 +583,15 @@ export default function PurchaseOrders() {
             </select>
 
             {/* SORT CONTROLS */}
-            <div className="flex items-center gap-1.5 text-xs pl-0 sm:pl-2 border-t sm:border-t-0 sm:border-l border-[--color-border] pt-2 sm:pt-0 w-full sm:w-auto justify-between sm:justify-start">
-              <span className="text-[--color-ink-500]">Sort:</span>
+            <div className="flex items-center gap-1.5 text-xs pl-0 sm:pl-2 border-t sm:border-t-0 sm:border-l border-[var(--color-border)] pt-2 sm:pt-0 w-full sm:w-auto justify-between sm:justify-start">
+              <span className="text-[var(--color-ink-500)]">Sort:</span>
               <select
                 value={sortField}
                 onChange={(e) => {
                   setSortField(e.target.value as typeof sortField);
                   setCurrentPage(1);
                 }}
-                className="flex-1 sm:flex-initial rounded-md border border-[--color-border] bg-[--color-surface-1] px-2.5 py-1.5 text-xs text-[--color-ink-800] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                className="flex-1 sm:flex-initial rounded-md border border-[var(--color-border)] bg-[var(--color-surface-1)] px-2.5 py-1.5 text-xs text-[var(--color-ink-800)] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
               >
                 <option value="poDate">PO Date</option>
                 <option value="poNumber">PO Number</option>
@@ -606,7 +605,7 @@ export default function PurchaseOrders() {
                 type="button"
                 onClick={() => setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))}
                 title={`Sort Direction: ${sortDirection === "asc" ? "Ascending (Low to High / A-Z)" : "Descending (High to Low / Z-A)"}. Click to toggle.`}
-                className="inline-flex items-center gap-1 rounded-md border border-[--color-border] bg-[--color-surface-1] hover:bg-[--color-surface-2] px-2 py-1.5 text-xs font-medium text-[--color-ink-700] hover:text-[--color-ink-900] transition-colors cursor-pointer shrink-0"
+                className="inline-flex items-center gap-1 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] px-2 py-1.5 text-xs font-medium text-[var(--color-ink-700)] hover:text-[var(--color-ink-900)] transition-colors cursor-pointer shrink-0"
               >
                 {sortDirection === "asc" ? (
                   <>
@@ -625,9 +624,9 @@ export default function PurchaseOrders() {
 
           {/* ACTIVE FILTER PILLS & STATS BAR */}
           {isFiltered && (
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 px-3 py-2 rounded-lg bg-[--color-surface-1] border border-[--color-border] text-xs">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 px-3 py-2 rounded-lg bg-[var(--color-surface-1)] border border-[var(--color-border)] text-xs">
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-[--color-ink-500] flex items-center gap-1">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-500)] flex items-center gap-1">
                   <Filter size={11} className="text-blue-500" />
                   <span>Active Filters ({activeFiltersCount}):</span>
                 </span>
@@ -685,21 +684,21 @@ export default function PurchaseOrders() {
                 </button>
               </div>
 
-              <div className="text-[11px] text-[--color-ink-600] font-medium">
-                Showing <strong className="text-[--color-ink-900]">{sortedAndFilteredOrders.length}</strong> of <strong className="text-[--color-ink-900]">{orders.length}</strong> · Value: <strong className="text-blue-600 dark:text-blue-400 font-semibold">₹{filteredTotalValue.toLocaleString("en-IN")}</strong>
+              <div className="text-[11px] text-[var(--color-ink-600)] font-medium">
+                Showing <strong className="text-[var(--color-ink-900)]">{sortedAndFilteredOrders.length}</strong> of <strong className="text-[var(--color-ink-900)]">{orders.length}</strong> · Value: <strong className="text-blue-600 dark:text-blue-400 font-semibold">₹{filteredTotalValue.toLocaleString("en-IN")}</strong>
               </div>
             </div>
           )}
         </div>
 
             {orders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-[--color-border] bg-[--color-surface-0] p-8 text-center sm:p-12">
+          <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-surface-0)] p-8 text-center sm:p-12">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
               <Plus size={20} />
             </div>
             <div>
-              <h3 className="text-sm font-medium text-[--color-ink-900]">No purchase orders recorded yet</h3>
-              <p className="mt-1 max-w-md text-xs text-[--color-ink-500]">
+              <h3 className="text-sm font-medium text-[var(--color-ink-900)]">No purchase orders recorded yet</h3>
+              <p className="mt-1 max-w-md text-xs text-[var(--color-ink-500)]">
                 Create a new purchase order manually or populate from PuLP optimization recommendations or critical low-stock alerts.
               </p>
             </div>
@@ -712,18 +711,18 @@ export default function PurchaseOrders() {
               </button>
               <button
                 onClick={() => navigate("/procurement")}
-                className="flex items-center gap-1.5 rounded-md border border-[--color-border] bg-[--color-surface-0] px-3.5 py-1.5 text-xs font-medium text-[--color-ink-700] hover:bg-[--color-surface-1] transition-all cursor-pointer"
+                className="flex items-center gap-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-0)] px-3.5 py-1.5 text-xs font-medium text-[var(--color-ink-700)] hover:bg-[var(--color-surface-1)] transition-all cursor-pointer"
               >
                 Run PuLP Optimizer
               </button>
             </div>
           </div>
         ) : sortedAndFilteredOrders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-[--color-border] bg-[--color-surface-0] p-8 text-center sm:p-12">
-            <Filter size={28} className="text-[--color-ink-400]" />
+          <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-surface-0)] p-8 text-center sm:p-12">
+            <Filter size={28} className="text-[var(--color-ink-400)]" />
             <div>
-              <h3 className="text-sm font-medium text-[--color-ink-900]">No matching purchase orders</h3>
-              <p className="mt-1 max-w-md text-xs text-[--color-ink-500]">
+              <h3 className="text-sm font-medium text-[var(--color-ink-900)]">No matching purchase orders</h3>
+              <p className="mt-1 max-w-md text-xs text-[var(--color-ink-500)]">
                 No orders matched your selected filters or search query. Clear one or more filters or click below to reset all filters.
               </p>
             </div>
@@ -735,43 +734,42 @@ export default function PurchaseOrders() {
             </button>
           </div>
         ) : (
-          <div className="rounded-lg border border-[--color-border] bg-[--color-surface-0] overflow-hidden shadow-2xs">
+          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] overflow-hidden shadow-2xs">
             <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-xs min-w-[680px]">
                 <thead>
-                  <tr className="border-b border-[--color-border] bg-[--color-surface-1]/60 text-left text-xs font-medium text-[--color-ink-500]">
+                  <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-1)]/60 text-left text-xs font-medium text-[var(--color-ink-500)]">
                     {renderSortHeader("PO Number", "poNumber", "px-4")}
                     {renderSortHeader("Supplier", "supplier", "px-3")}
                     {renderSortHeader("PO Date", "poDate", "px-3")}
                     {renderSortHeader("Expected Delivery", "expectedDelivery", "px-3")}
-                    {renderSortHeader("Total Amount", "total", "px-3 text-right")}
+                    {renderSortHeader("Total Amount", "total", "px-3")}
                     {renderSortHeader("Status", "status", "px-3")}
-                    <th className="px-3 py-2.5 text-right pr-4 text-[--color-ink-500] font-medium">Actions</th>
+                    <th className="px-3 py-2.5 text-right pr-4 text-[var(--color-ink-500)] font-medium">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[--color-border]">
+                <tbody className="divide-y divide-[var(--color-border)]">
                   {paginatedOrders.map((po, idx) => (
                     <tr
                       key={`po-list-${po.poNumber}-${idx}`}
-                      className={`hover:bg-[--color-surface-1] transition-colors ${
+                      className={`hover:bg-[var(--color-surface-1)] transition-colors ${
                         po.isNew ? "bg-blue-500/5 dark:bg-blue-500/10" : ""
                       }`}
                     >
-                      <td className="px-4 py-2.5 font-medium text-[--color-ink-900]">
+                      <td className="px-4 py-2.5 font-medium text-[var(--color-ink-900)]">
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-xs">{po.poNumber}</span>
                           {po.isNew && (
-                            <span className="inline-flex items-center gap-1 rounded bg-blue-500/15 px-1.5 py-0.5 text-[9px] font-bold text-blue-600 dark:text-blue-400 border border-blue-500/30">
-                              <Sparkles size={10} className="text-blue-500" />
+                            <span className="inline-flex items-center rounded bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:text-blue-300 border border-blue-500/20">
                               NEW
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 text-[--color-ink-700]">{po.supplier}</td>
-                      <td className="px-3 py-2.5 text-[--color-ink-600]">{po.poDate}</td>
-                      <td className="px-3 py-2.5 text-[--color-ink-600]">{po.expectedDelivery}</td>
-                      <td className="tabular px-3 py-2.5 font-semibold text-right text-[--color-ink-900]">
+                      <td className="px-3 py-2.5 text-[var(--color-ink-700)]">{po.supplier}</td>
+                      <td className="px-3 py-2.5 text-[var(--color-ink-600)]">{po.poDate}</td>
+                      <td className="px-3 py-2.5 text-[var(--color-ink-600)]">{po.expectedDelivery}</td>
+                      <td className="tabular px-3 py-2.5 font-semibold text-[var(--color-ink-900)]">
                         ₹{po.total.toLocaleString("en-IN")}
                       </td>
                       <td className="px-3 py-2.5">
@@ -782,7 +780,7 @@ export default function PurchaseOrders() {
                           <button
                             onClick={() => setViewing(po)}
                             title="View PO Details"
-                            className="inline-flex items-center justify-center rounded border border-[--color-border] bg-[--color-surface-1] p-1.5 text-[--color-ink-600] hover:text-[--color-ink-900] hover:bg-[--color-surface-2] transition-colors cursor-pointer"
+                            className="inline-flex items-center justify-center rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-1.5 text-[var(--color-ink-600)] hover:text-[var(--color-ink-900)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
                             aria-label="View Details"
                           >
                             <Eye size={13} />
@@ -791,7 +789,7 @@ export default function PurchaseOrders() {
                           <button
                             onClick={() => openEditModal(po)}
                             title="Edit PO Details"
-                            className="inline-flex items-center justify-center rounded border border-[--color-border] bg-[--color-surface-1] p-1.5 text-[--color-ink-600] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-[--color-surface-2] transition-colors cursor-pointer"
+                            className="inline-flex items-center justify-center rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-1.5 text-[var(--color-ink-600)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
                             aria-label="Edit Order Details"
                           >
                             <Pencil size={13} />
@@ -836,15 +834,15 @@ export default function PurchaseOrders() {
             </div>
 
             {/* PAGINATION FOOTER */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[--color-border] px-4 py-3 bg-[--color-surface-0]">
-              <div className="flex items-center gap-3 text-xs text-[--color-ink-500]">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[var(--color-border)] px-4 py-3 bg-[var(--color-surface-0)]">
+              <div className="flex items-center gap-3 text-xs text-[var(--color-ink-500)]">
                 <span>
-                  Showing <strong className="text-[--color-ink-900]">{startIdx + 1}</strong> to{" "}
-                  <strong className="text-[--color-ink-900]">{Math.min(startIdx + (pageSize === -1 ? totalItems : pageSize), totalItems)}</strong> of{" "}
-                  <strong className="text-[--color-ink-900]">{totalItems.toLocaleString("en-IN")}</strong> purchase orders
+                  Showing <strong className="text-[var(--color-ink-900)]">{startIdx + 1}</strong> to{" "}
+                  <strong className="text-[var(--color-ink-900)]">{Math.min(startIdx + (pageSize === -1 ? totalItems : pageSize), totalItems)}</strong> of{" "}
+                  <strong className="text-[var(--color-ink-900)]">{totalItems.toLocaleString("en-IN")}</strong> purchase orders
                 </span>
 
-                <div className="hidden sm:flex items-center gap-1.5 pl-3 border-l border-[--color-border]">
+                <div className="hidden sm:flex items-center gap-1.5 pl-3 border-l border-[var(--color-border)]">
                   <span>Rows:</span>
                   <select
                     value={pageSize}
@@ -852,7 +850,7 @@ export default function PurchaseOrders() {
                       setPageSize(Number(e.target.value));
                       setCurrentPage(1);
                     }}
-                    className="rounded border border-[--color-border] bg-[--color-surface-0] px-1.5 py-0.5 text-xs text-[--color-ink-800]"
+                    className="rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-1.5 py-0.5 text-xs text-[var(--color-ink-800)]"
                   >
                     <option value={25}>25</option>
                     <option value={50}>50</option>
@@ -868,7 +866,7 @@ export default function PurchaseOrders() {
                   <button
                     onClick={() => setCurrentPage(1)}
                     disabled={safeCurrentPage === 1}
-                    className="p-1 rounded border border-[--color-border] text-[--color-ink-600] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[--color-surface-1]"
+                    className="p-1 rounded border border-[var(--color-border)] text-[var(--color-ink-600)] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--color-surface-1)]"
                     title="First page"
                   >
                     <ChevronsLeft size={14} />
@@ -877,7 +875,7 @@ export default function PurchaseOrders() {
                   <button
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={safeCurrentPage === 1}
-                    className="p-1 rounded border border-[--color-border] text-[--color-ink-600] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[--color-surface-1]"
+                    className="p-1 rounded border border-[var(--color-border)] text-[var(--color-ink-600)] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--color-surface-1)]"
                     title="Previous page"
                   >
                     <ChevronLeft size={14} />
@@ -886,7 +884,7 @@ export default function PurchaseOrders() {
                   <div className="flex items-center gap-1 px-1">
                     {getPageNumbers().map((num, i) =>
                       num === "..." ? (
-                        <span key={`dots-${i}`} className="px-1 text-xs text-[--color-ink-400]">
+                        <span key={`dots-${i}`} className="px-1 text-xs text-[var(--color-ink-400)]">
                           …
                         </span>
                       ) : (
@@ -896,7 +894,7 @@ export default function PurchaseOrders() {
                           className={`min-w-[26px] h-[26px] rounded text-xs font-medium transition-colors ${
                             safeCurrentPage === num
                               ? "bg-blue-600 text-white font-semibold"
-                              : "border border-[--color-border] text-[--color-ink-700] hover:bg-[--color-surface-1]"
+                              : "border border-[var(--color-border)] text-[var(--color-ink-700)] hover:bg-[var(--color-surface-1)]"
                           }`}
                         >
                           {num}
@@ -908,7 +906,7 @@ export default function PurchaseOrders() {
                   <button
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={safeCurrentPage === totalPages}
-                    className="p-1 rounded border border-[--color-border] text-[--color-ink-600] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[--color-surface-1]"
+                    className="p-1 rounded border border-[var(--color-border)] text-[var(--color-ink-600)] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--color-surface-1)]"
                     title="Next page"
                   >
                     <ChevronRight size={14} />
@@ -917,7 +915,7 @@ export default function PurchaseOrders() {
                   <button
                     onClick={() => setCurrentPage(totalPages)}
                     disabled={safeCurrentPage === totalPages}
-                    className="p-1 rounded border border-[--color-border] text-[--color-ink-600] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[--color-surface-1]"
+                    className="p-1 rounded border border-[var(--color-border)] text-[var(--color-ink-600)] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--color-surface-1)]"
                     title="Last page"
                   >
                     <ChevronsRight size={14} />
@@ -938,11 +936,11 @@ export default function PurchaseOrders() {
           onClick={() => setViewing(null)}
         >
           <div
-            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border border-[--color-border] bg-[--color-surface-0] p-5 shadow-xl text-xs space-y-4 text-[--color-ink-900]"
+            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] p-5 shadow-xl text-xs space-y-4 text-[var(--color-ink-900)]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex justify-between items-start border-b border-[--color-border] pb-3">
+            <div className="flex justify-between items-start border-b border-[var(--color-border)] pb-3">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-900/60">
@@ -950,11 +948,11 @@ export default function PurchaseOrders() {
                   </span>
                   <StatusBadge label={viewing.status} />
                 </div>
-                <h3 className="text-base font-medium text-[--color-ink-900] leading-tight">
+                <h3 className="text-base font-medium text-[var(--color-ink-900)] leading-tight">
                   {viewing.supplier}
                 </h3>
                 {viewing.supplierAddress && (
-                  <p className="text-xs text-[--color-ink-500] flex items-center gap-1 mt-0.5">
+                  <p className="text-xs text-[var(--color-ink-500)] flex items-center gap-1 mt-0.5">
                     <MapPin size={11} className="text-blue-500 shrink-0" />
                     <span>{viewing.supplierAddress}</span>
                   </p>
@@ -962,7 +960,7 @@ export default function PurchaseOrders() {
               </div>
               <button
                 onClick={() => setViewing(null)}
-                className="rounded p-1 text-[--color-ink-400] hover:text-[--color-ink-700] hover:bg-[--color-surface-2] transition-colors cursor-pointer"
+                className="rounded p-1 text-[var(--color-ink-400)] hover:text-[var(--color-ink-700)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
                 title="Close"
               >
                 <X size={16} />
@@ -971,69 +969,69 @@ export default function PurchaseOrders() {
 
             {/* Metadata Badges */}
             <div className="grid grid-cols-2 gap-2.5 text-xs">
-              <div className="rounded border border-[--color-border] bg-[--color-surface-1] p-2.5">
-                <span className="text-[--color-ink-500] block mb-0.5 font-normal">PO Date</span>
-                <span className="font-medium text-[--color-ink-900]">{viewing.poDate}</span>
+              <div className="rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-2.5">
+                <span className="text-[var(--color-ink-500)] block mb-0.5 font-normal">PO Date</span>
+                <span className="font-medium text-[var(--color-ink-900)]">{viewing.poDate}</span>
               </div>
-              <div className="rounded border border-[--color-border] bg-[--color-surface-1] p-2.5">
-                <span className="text-[--color-ink-500] block mb-0.5 font-normal">Expected Delivery</span>
-                <span className="font-medium text-[--color-ink-900]">{viewing.expectedDelivery}</span>
+              <div className="rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-2.5">
+                <span className="text-[var(--color-ink-500)] block mb-0.5 font-normal">Expected Delivery</span>
+                <span className="font-medium text-[var(--color-ink-900)]">{viewing.expectedDelivery}</span>
               </div>
             </div>
 
             {viewing.notes ? (
-              <div className="rounded border border-[--color-border] bg-[--color-surface-1] p-2.5 text-xs text-[--color-ink-700]">
-                <span className="font-medium text-[--color-ink-900] block mb-0.5">Order Notes:</span>
+              <div className="rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-2.5 text-xs text-[var(--color-ink-700)]">
+                <span className="font-medium text-[var(--color-ink-900)] block mb-0.5">Order Notes:</span>
                 {viewing.notes}
               </div>
             ) : null}
 
             {/* Line Items */}
             <div>
-              <p className="text-xs font-medium text-[--color-ink-500] mb-2">
+              <p className="text-xs font-medium text-[var(--color-ink-500)] mb-2">
                 Order Line Items ({viewing.lines?.length || 0})
               </p>
-              <div className="space-y-1.5 border border-[--color-border] rounded-md p-2.5 bg-[--color-surface-1]">
+              <div className="space-y-1.5 border border-[var(--color-border)] rounded-md p-2.5 bg-[var(--color-surface-1)]">
                 {viewing.lines && viewing.lines.length > 0 ? (
                   viewing.lines.map((l, i) => (
                     <div
                       key={i}
-                      className="flex items-center justify-between border-b border-[--color-border] last:border-0 pb-1.5 last:pb-0 text-xs"
+                      className="flex items-center justify-between border-b border-[var(--color-border)] last:border-0 pb-1.5 last:pb-0 text-xs"
                     >
                       <div className="min-w-0 pr-2">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <p className="font-medium text-[--color-ink-900] truncate">{l.part}</p>
+                          <p className="font-medium text-[var(--color-ink-900)] truncate">{l.part}</p>
                           {l.category && (
-                            <span className="rounded bg-[--color-surface-2] px-1.5 py-0.2 text-[10px] font-medium text-[--color-ink-600] border border-[--color-border]">
+                            <span className="rounded bg-[var(--color-surface-2)] px-1.5 py-0.2 text-[10px] font-medium text-[var(--color-ink-600)] border border-[var(--color-border)]">
                               {l.category}
                             </span>
                           )}
                         </div>
-                        <p className="text-[--color-ink-500] mt-0.5">
+                        <p className="text-[var(--color-ink-500)] mt-0.5">
                           {l.quantity} units × ₹{l.unitPrice.toLocaleString("en-IN")}
                         </p>
                       </div>
-                      <span className="tabular font-medium text-[--color-ink-900] shrink-0">
+                      <span className="tabular font-medium text-[var(--color-ink-900)] shrink-0">
                         ₹{l.totalCost.toLocaleString("en-IN")}
                       </span>
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-[--color-ink-400]">No itemized lines recorded.</p>
+                  <p className="text-xs text-[var(--color-ink-400)]">No itemized lines recorded.</p>
                 )}
               </div>
             </div>
 
             {/* Total Order Value */}
-            <div className="flex items-center justify-between border-t border-[--color-border] pt-3 text-xs">
-              <span className="font-normal text-[--color-ink-600]">Total Order Value</span>
+            <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-3 text-xs">
+              <span className="font-normal text-[var(--color-ink-600)]">Total Order Value</span>
               <span className="tabular text-sm font-semibold text-blue-600 dark:text-blue-400">
                 ₹{viewing.total.toLocaleString("en-IN")}
               </span>
             </div>
 
             {/* Modal Actions */}
-            <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-[--color-border]">
+            <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-[var(--color-border)]">
               <button
                 type="button"
                 onClick={() => {
@@ -1041,7 +1039,7 @@ export default function PurchaseOrders() {
                   setViewing(null);
                   openEditModal(poToEdit);
                 }}
-                className="inline-flex items-center gap-1.5 rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-xs font-medium text-[--color-ink-700] hover:bg-[--color-surface-2] hover:text-[--color-ink-900] transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-1.5 text-xs font-medium text-[var(--color-ink-700)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink-900)] transition-colors cursor-pointer"
               >
                 <Pencil size={13} />
                 <span>Edit Order</span>
@@ -1083,7 +1081,7 @@ export default function PurchaseOrders() {
               <button
                 type="button"
                 onClick={() => setViewing(null)}
-                className="rounded border border-[--color-border] bg-[--color-surface-2] px-3 py-1.5 text-xs font-normal text-[--color-ink-700] hover:bg-[--color-surface-1] hover:text-[--color-ink-900] transition-colors cursor-pointer"
+                className="rounded border border-[var(--color-border)] bg-[var(--color-surface-2)] px-3 py-1.5 text-xs font-normal text-[var(--color-ink-700)] hover:bg-[var(--color-surface-1)] hover:text-[var(--color-ink-900)] transition-colors cursor-pointer"
               >
                 Close
               </button>
@@ -1099,17 +1097,17 @@ export default function PurchaseOrders() {
           onClick={() => setEditingPo(null)}
         >
           <div
-            className="w-full max-w-6xl max-h-[92vh] overflow-y-auto rounded-lg border border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 shadow-2xl text-xs space-y-4 text-[--color-ink-900]"
+            className="w-full max-w-6xl max-h-[92vh] overflow-y-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] p-5 sm:p-6 shadow-2xl text-xs space-y-4 text-[var(--color-ink-900)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-start border-b border-[--color-border] pb-3">
+            <div className="flex justify-between items-start border-b border-[var(--color-border)] pb-3">
               <div>
-                <h3 className="text-base font-semibold text-[--color-ink-900]">Edit Purchase Order</h3>
-                <p className="text-xs text-[--color-ink-500] font-mono mt-0.5">{editingPo.poNumber}</p>
+                <h3 className="text-base font-semibold text-[var(--color-ink-900)]">Edit Purchase Order</h3>
+                <p className="text-xs text-[var(--color-ink-500)] font-mono mt-0.5">{editingPo.poNumber}</p>
               </div>
               <button
                 onClick={() => setEditingPo(null)}
-                className="rounded p-1 text-[--color-ink-400] hover:text-[--color-ink-700] hover:bg-[--color-surface-2] transition-colors cursor-pointer"
+                className="rounded p-1 text-[var(--color-ink-400)] hover:text-[var(--color-ink-700)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -1117,39 +1115,39 @@ export default function PurchaseOrders() {
 
             <div className="space-y-3.5">
               <div>
-                <label className="block text-xs font-semibold text-[--color-ink-700] mb-1">Supplier Name</label>
+                <label className="block text-xs font-semibold text-[var(--color-ink-700)] mb-1">Supplier Name</label>
                 <input
                   type="text"
                   value={editSupplier}
                   onChange={(e) => setEditSupplier(e.target.value)}
-                  className="w-full rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-xs font-medium text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs font-medium text-[var(--color-ink-900)] focus:border-blue-500 focus:outline-none"
                   placeholder="e.g. Ashok Leyland OEM Spares Division"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[--color-ink-700] mb-1">Supplier Address</label>
+                <label className="block text-xs font-semibold text-[var(--color-ink-700)] mb-1">Supplier Address</label>
                 <textarea
                   rows={2}
                   value={editSupplierAddress}
                   onChange={(e) => setEditSupplierAddress(e.target.value)}
-                  className="w-full rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-xs font-normal text-[--color-ink-900] focus:border-blue-500 focus:outline-none resize-none leading-relaxed"
+                  className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs font-normal text-[var(--color-ink-900)] focus:border-blue-500 focus:outline-none resize-none leading-relaxed"
                   placeholder="e.g. Plot 42, Electronics & Heavy Auto Cluster, South Kalamassery, Ernakulam, Kerala - 683104"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[--color-ink-700] mb-1">Expected Delivery</label>
+                  <label className="block text-xs font-semibold text-[var(--color-ink-700)] mb-1">Expected Delivery</label>
                   <input
                     type="date"
                     value={editExpectedDelivery}
                     onChange={(e) => setEditExpectedDelivery(e.target.value)}
-                    className="w-full rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-xs text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs text-[var(--color-ink-900)] focus:border-blue-500 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[--color-ink-700] mb-1">Status</label>
+                  <label className="block text-xs font-semibold text-[var(--color-ink-700)] mb-1">Status</label>
                   <select
                     value={editStatus}
                     onChange={(e) => {
@@ -1161,7 +1159,7 @@ export default function PurchaseOrders() {
                         );
                       }
                     }}
-                    className="w-full rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-xs font-medium text-[--color-ink-900] focus:border-blue-500 focus:outline-none cursor-pointer"
+                    className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs font-medium text-[var(--color-ink-900)] focus:border-blue-500 focus:outline-none cursor-pointer"
                   >
                     <option value="Ordered">Ordered / Pending</option>
                     <option value="Partially Received">Partially Received (Partial Delivery)</option>
@@ -1172,12 +1170,12 @@ export default function PurchaseOrders() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[--color-ink-700] mb-1">Order Notes</label>
+                <label className="block text-xs font-semibold text-[var(--color-ink-700)] mb-1">Order Notes</label>
                 <textarea
                   rows={2}
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
-                  className="w-full rounded border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-xs text-[--color-ink-900] focus:border-blue-500 focus:outline-none resize-none leading-relaxed"
+                  className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs text-[var(--color-ink-900)] focus:border-blue-500 focus:outline-none resize-none leading-relaxed"
                   placeholder="Add notes or delivery requirements..."
                 />
               </div>
@@ -1186,7 +1184,7 @@ export default function PurchaseOrders() {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-[--color-ink-700]">Line Items ({editLines.length})</label>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-700)]">Line Items ({editLines.length})</label>
                     <span className="text-[10px] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-900/60 font-medium">
                       Tracks Ordered vs Received Units (Partial Receiving Supported)
                     </span>
@@ -1200,40 +1198,6 @@ export default function PurchaseOrders() {
                   </button>
                 </div>
 
-                {/* Quick Add Popular Spares Bar */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-2 text-xs">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[--color-ink-400] shrink-0">
-                    Quick Spares:
-                  </span>
-                  {[
-                    "Air Filter - Secondary Element (Heavy Commercial)",
-                    "Brake Lining Set (Leyland Viking / Cheetah)",
-                    "Clutch Plate Assembly 380mm (Organic)",
-                    "Engine Oil Filter Spin-On",
-                    "Heavy Commercial Radial Bus Tyre 295/80 R22.5",
-                    "AC Compressor Assembly (KSRTC Std Bus / Heavy Commercial)",
-                  ].map((pName) => (
-                    <button
-                      key={pName}
-                      type="button"
-                      onClick={() => {
-                        const item = inventoryCatalog.find((i) => i.part.toLowerCase() === pName.toLowerCase());
-                        const price = item?.unitCost || 0;
-                        const cat = item?.category || "";
-                        setEditLines((prev) => {
-                          if (prev.length === 1 && !prev[0].part.trim()) {
-                            return [{ part: pName, category: cat, quantity: 1, unitPrice: price, totalCost: price, receivedQuantity: 0 }];
-                          }
-                          return [...prev, { part: pName, category: cat, quantity: 1, unitPrice: price, totalCost: price, receivedQuantity: 0 }];
-                        });
-                      }}
-                      className="shrink-0 rounded-full border border-[--color-border] bg-[--color-surface-1] hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2.5 py-0.5 text-[11px] font-medium text-[--color-ink-700] hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
-                    >
-                      + {pName.split("(")[0].trim()}
-                    </button>
-                  ))}
-                </div>
-
                 <datalist id="ksrtc-edit-spares-datalist">
                   {inventoryCatalog.map((item) => (
                     <option key={item.id} value={item.part}>
@@ -1242,7 +1206,7 @@ export default function PurchaseOrders() {
                   ))}
                 </datalist>
 
-                <div className="space-y-2.5 border border-[--color-border] rounded-md p-3 bg-[--color-surface-1]">
+                <div className="space-y-2.5 border border-[var(--color-border)] rounded-md p-3 bg-[var(--color-surface-1)]">
                   {editLines.map((line, i) => {
                     const ordered = Number(line.quantity) || 0;
                     const rec = Number(line.receivedQuantity) || 0;
@@ -1250,7 +1214,7 @@ export default function PurchaseOrders() {
                     const isFull = rec >= ordered && ordered > 0;
 
                     return (
-                      <div key={i} className="flex flex-col gap-2 border-b border-[--color-border] last:border-0 pb-3 last:pb-0">
+                      <div key={i} className="flex flex-col gap-2 border-b border-[var(--color-border)] last:border-0 pb-3 last:pb-0">
                         <div className="flex flex-col md:flex-row md:items-center gap-2">
                           {/* Component Name with Paste Button and Datalist */}
                           <div className="flex-1 min-w-[340px] flex items-center gap-1.5">
@@ -1286,7 +1250,7 @@ export default function PurchaseOrders() {
                                 }
                               }}
                               placeholder="Type, paste, or select component name…"
-                              className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-3 py-1.5 text-xs text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
+                              className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-3 py-1.5 text-xs text-[var(--color-ink-900)] focus:border-blue-500 focus:outline-none"
                             />
                             <button
                               type="button"
@@ -1309,7 +1273,7 @@ export default function PurchaseOrders() {
                                 } catch {}
                               }}
                               title="Paste component name from clipboard"
-                              className="shrink-0 inline-flex items-center gap-1 rounded border border-[--color-border] bg-[--color-surface-0] hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2 py-1.5 text-[11px] font-medium text-blue-600 dark:text-blue-400 transition-colors cursor-pointer"
+                              className="shrink-0 inline-flex items-center gap-1 rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2 py-1.5 text-[11px] font-medium text-blue-600 dark:text-blue-400 transition-colors cursor-pointer"
                             >
                               <ClipboardPaste size={12} />
                               <span>Paste</span>
@@ -1322,13 +1286,13 @@ export default function PurchaseOrders() {
                             value={line.category || ""}
                             onChange={(e) => handleLineChange(i, "category", e.target.value)}
                             placeholder="Category"
-                            className="w-full md:w-48 min-w-[170px] rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs text-[--color-ink-900]"
+                            className="w-full md:w-48 min-w-[170px] rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-2.5 py-1.5 text-xs text-[var(--color-ink-900)]"
                           />
 
                           {/* Ordered & Received & Price */}
                           <div className="flex flex-wrap items-center gap-2 shrink-0">
                             <div className="flex items-center gap-1">
-                              <span className="text-[10px] text-[--color-ink-500] font-medium">Ordered:</span>
+                              <span className="text-[10px] text-[var(--color-ink-500)] font-medium">Ordered:</span>
                               <input
                                 type="number"
                                 min="1"
@@ -1343,7 +1307,7 @@ export default function PurchaseOrders() {
                                   }
                                 }}
                                 placeholder="Qty"
-                                className="w-16 rounded border border-[--color-border] bg-[--color-surface-0] px-2 py-1.5 text-xs text-[--color-ink-900] text-center font-medium"
+                                className="w-16 rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-2 py-1.5 text-xs text-[var(--color-ink-900)] text-center font-medium"
                                 title="Total Quantity Ordered"
                               />
                             </div>
@@ -1375,7 +1339,7 @@ export default function PurchaseOrders() {
                                   }
                                 }}
                                 placeholder="0"
-                                className="w-14 rounded border border-emerald-400 dark:border-emerald-700 bg-[--color-surface-0] px-1.5 py-0.5 text-xs text-[--color-ink-900] text-center font-bold"
+                                className="w-14 rounded border border-emerald-400 dark:border-emerald-700 bg-[var(--color-surface-0)] px-1.5 py-0.5 text-xs text-[var(--color-ink-900)] text-center font-bold"
                                 title="Quantity Actually Arrived / Received"
                               />
                               <button
@@ -1392,7 +1356,7 @@ export default function PurchaseOrders() {
                             </div>
 
                             <div className="flex items-center gap-1">
-                              <span className="text-[--color-ink-500]">₹</span>
+                              <span className="text-[var(--color-ink-500)]">₹</span>
                               <input
                                 type="number"
                                 min="0"
@@ -1407,7 +1371,7 @@ export default function PurchaseOrders() {
                                   }
                                 }}
                                 placeholder="Price"
-                                className="w-20 rounded border border-[--color-border] bg-[--color-surface-0] px-2 py-1.5 text-xs text-[--color-ink-900] text-right"
+                                className="w-20 rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-2 py-1.5 text-xs text-[var(--color-ink-900)] text-right"
                               />
                             </div>
 
@@ -1419,7 +1383,7 @@ export default function PurchaseOrders() {
                               type="button"
                               onClick={() => removeLine(i)}
                               disabled={editLines.length <= 1}
-                              className="p-1.5 text-[--color-ink-400] hover:text-rose-500 disabled:opacity-30 cursor-pointer"
+                              className="p-1.5 text-[var(--color-ink-400)] hover:text-rose-500 disabled:opacity-30 cursor-pointer"
                               title="Delete Item"
                             >
                               <Trash2 size={14} />
@@ -1446,7 +1410,7 @@ export default function PurchaseOrders() {
                 </div>
 
                 <div className="mt-2.5 flex justify-between items-center text-xs px-1">
-                  <span className="text-[--color-ink-500] font-medium">Calculated Order Total</span>
+                  <span className="text-[var(--color-ink-500)] font-medium">Calculated Order Total</span>
                   <span className="font-bold text-sm text-blue-600 dark:text-blue-400">
                     ₹{editLines
                       .reduce((sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0), 0)
@@ -1456,11 +1420,11 @@ export default function PurchaseOrders() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-[--color-border]">
+            <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-[var(--color-border)]">
               <button
                 type="button"
                 onClick={() => setEditingPo(null)}
-                className="rounded border border-[--color-border] bg-[--color-surface-1] px-4 py-2 text-xs font-medium text-[--color-ink-700] hover:bg-[--color-surface-2] cursor-pointer"
+                className="rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] px-4 py-2 text-xs font-medium text-[var(--color-ink-700)] hover:bg-[var(--color-surface-2)] cursor-pointer"
               >
                 Cancel
               </button>

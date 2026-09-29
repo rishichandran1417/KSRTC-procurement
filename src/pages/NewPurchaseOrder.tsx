@@ -59,7 +59,7 @@ export default function NewPurchaseOrder() {
   const [notes, setNotes] = useState(
     state.notes ||
       (queryPart
-        ? `Fast-Track Procurement authorized via KSRTC SCION Copilot recommendation.`
+        ? `Fast-Track Procurement authorized via KSRTC Decision Support recommendation.`
         : isCriticalBuy
         ? "Emergency Critical Stockout Procurement (Critical Buy)"
         : prefilledItems.length > 0
@@ -353,22 +353,22 @@ interface FormLineItem {
 
       <div className="p-4 sm:p-6 w-full space-y-4">
         {/* TOP QUICK ACTION & BREADCRUMB */}
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-[--color-surface-0] p-3 rounded-lg border border-[--color-border]">
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-[var(--color-surface-0)] p-3 rounded-lg border border-[var(--color-border)]">
           <button
             onClick={() => navigate("/purchase-orders")}
-            className="flex items-center gap-1.5 text-xs font-medium text-[--color-ink-600] hover:text-[--color-ink-900] cursor-pointer"
+            className="flex items-center gap-1.5 text-xs font-medium text-[var(--color-ink-600)] hover:text-[var(--color-ink-900)] cursor-pointer"
           >
             <ArrowLeft size={14} /> Back to Purchase Orders
           </button>
 
           <div className="flex items-center gap-3">
-            <span className="text-xs text-[--color-ink-500]">
+            <span className="text-xs text-[var(--color-ink-500)]">
               Total: <strong className="text-sm font-bold text-blue-600 dark:text-blue-400">₹{total.toLocaleString("en-IN")}</strong>
             </span>
             <button
               type="button"
               onClick={() => setShowPdf(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[--color-border] bg-[--color-surface-1] hover:bg-[--color-surface-2] px-3 py-1.5 text-xs font-semibold text-[--color-ink-700] hover:text-[--color-ink-900] active:scale-95 transition-all cursor-pointer shadow-2xs"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] px-3 py-1.5 text-xs font-semibold text-[var(--color-ink-700)] hover:text-[var(--color-ink-900)] active:scale-95 transition-all cursor-pointer shadow-2xs"
             >
               <FileText size={13} className="text-blue-600 dark:text-blue-400" />
               <span>View PDF</span>
@@ -396,12 +396,12 @@ interface FormLineItem {
           </div>
         ) : null}
 
-        <div className="rounded-xl border border-[--color-border] bg-[--color-surface-0] p-4 sm:p-6 space-y-4 sm:space-y-6 shadow-2xs">
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-0)] p-4 sm:p-6 space-y-4 sm:space-y-6 shadow-2xs">
           {/* TOP GRID: PO Number & Delivery Date */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <div className="mb-1 flex items-center justify-between">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[--color-ink-500]">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-500)]">
                   PO Number
                 </label>
                 <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Auto-generated</span>
@@ -411,27 +411,27 @@ interface FormLineItem {
                 value={poNumber}
                 onChange={(e) => setPoNumber(e.target.value)}
                 placeholder="e.g. KSRTC/PO/2026/03282"
-                className="w-full rounded-lg border border-[--color-border] bg-[--color-surface-0] px-3 py-2 text-sm font-medium font-mono text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] px-3 py-2 text-sm font-medium font-mono text-[var(--color-ink-900)] focus:border-blue-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[--color-ink-500]">
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-500)]">
                 Expected Delivery Date
               </label>
               <input
                 type="date"
                 value={expectedDelivery}
                 onChange={(e) => setExpectedDelivery(e.target.value)}
-                className="w-full rounded-lg border border-[--color-border] bg-[--color-surface-0] px-3 py-2 text-sm text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] px-3 py-2 text-sm text-[var(--color-ink-900)] focus:border-blue-500 focus:outline-none"
               />
             </div>
           </div>
 
           {/* SUPPLIER NAME & ADDRESS SECTION */}
-          <div className="rounded-xl border border-[--color-border] bg-[--color-surface-1]/50 p-4 space-y-3">
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-1)]/50 p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-[--color-ink-700] flex items-center gap-1.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-ink-700)] flex items-center gap-1.5">
                 <Building2 size={14} className="text-blue-600 dark:text-blue-400" />
                 <span>Supplier & Dispatch Details</span>
               </span>
@@ -440,14 +440,14 @@ interface FormLineItem {
                   <Check size={12} /> Address auto-filled from vendor master
                 </span>
               ) : (
-                <span className="text-[10px] text-[--color-ink-400]">Select a supplier below to auto-fill address</span>
+                <span className="text-[10px] text-[var(--color-ink-400)]">Select a supplier below to auto-fill address</span>
               )}
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {/* SUPPLIER NAME WITH AUTOCOMPLETE */}
               <div ref={supplierContainerRef} className="relative">
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[--color-ink-500] flex items-center justify-between">
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-500)] flex items-center justify-between">
                   <span>Supplier Name *</span>
                   {supplier && (
                     <span className="text-[10px] text-blue-600 dark:text-blue-400 font-normal">Approved KSRTC Vendor</span>
@@ -469,12 +469,12 @@ interface FormLineItem {
                     }}
                     onFocus={() => setShowSupplierDropdown(true)}
                     placeholder="Type to search standard suppliers…"
-                    className="w-full rounded-lg border border-[--color-border] bg-[--color-surface-0] px-3 py-2 text-sm font-medium text-[--color-ink-900] focus:border-blue-500 focus:outline-none pr-8"
+                    className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] px-3 py-2 text-sm font-medium text-[var(--color-ink-900)] focus:border-blue-500 focus:outline-none pr-8"
                   />
                   <button
                     type="button"
                     onClick={() => setShowSupplierDropdown(!showSupplierDropdown)}
-                    className="absolute right-2 top-2.5 text-[--color-ink-400] hover:text-[--color-ink-700] transition-colors cursor-pointer"
+                    className="absolute right-2 top-2.5 text-[var(--color-ink-400)] hover:text-[var(--color-ink-700)] transition-colors cursor-pointer"
                   >
                     <ChevronDown size={14} />
                   </button>
@@ -482,13 +482,13 @@ interface FormLineItem {
 
                 {/* SUPPLIER DROPDOWN POPUP */}
                 {showSupplierDropdown && (
-                  <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border border-[--color-border] bg-[--color-surface-0] shadow-2xl py-1 text-xs">
-                    <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[--color-ink-400] bg-[--color-surface-1] border-b border-[--color-border] flex items-center justify-between">
+                  <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] shadow-2xl py-1 text-xs">
+                    <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-400)] bg-[var(--color-surface-1)] border-b border-[var(--color-border)] flex items-center justify-between">
                       <span>Registered Vendors ({filteredSuppliers.length})</span>
                       <span className="text-[10px] font-normal text-blue-600 dark:text-blue-400">Click to fill</span>
                     </div>
                     {filteredSuppliers.length === 0 ? (
-                      <div className="px-3 py-2 text-xs text-[--color-ink-400] italic">
+                      <div className="px-3 py-2 text-xs text-[var(--color-ink-400)] italic">
                         No matching registered suppliers. You can keep typing custom supplier name.
                       </div>
                     ) : (
@@ -497,19 +497,19 @@ interface FormLineItem {
                           key={s.id || s.name}
                           type="button"
                           onClick={() => handleSelectSupplier(s)}
-                          className="w-full text-left px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-950/40 border-b border-[--color-border] last:border-0 transition-colors cursor-pointer group"
+                          className="w-full text-left px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-950/40 border-b border-[var(--color-border)] last:border-0 transition-colors cursor-pointer group"
                         >
                           <div className="flex items-center justify-between gap-2">
-                            <p className="font-semibold text-xs text-[--color-ink-900] group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                            <p className="font-semibold text-xs text-[var(--color-ink-900)] group-hover:text-blue-600 dark:group-hover:text-blue-400">
                               {s.name}
                             </p>
-                            <span className="rounded bg-[--color-surface-2] px-1.5 py-0.2 text-[10px] font-medium text-[--color-ink-600] shrink-0">
+                            <span className="rounded bg-[var(--color-surface-2)] px-1.5 py-0.2 text-[10px] font-medium text-[var(--color-ink-600)] shrink-0">
                               {s.category}
                             </span>
                           </div>
                           {s.address && (
-                            <p className="text-[11px] text-[--color-ink-500] truncate mt-0.5 flex items-center gap-1">
-                              <MapPin size={10} className="shrink-0 text-[--color-ink-400]" />
+                            <p className="text-[11px] text-[var(--color-ink-500)] truncate mt-0.5 flex items-center gap-1">
+                              <MapPin size={10} className="shrink-0 text-[var(--color-ink-400)]" />
                               <span>{s.address}</span>
                             </p>
                           )}
@@ -522,7 +522,7 @@ interface FormLineItem {
 
               {/* SUPPLIER ADDRESS (AUTO-FILLED & EDITABLE) */}
               <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[--color-ink-500] flex items-center gap-1">
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-500)] flex items-center gap-1">
                   <MapPin size={11} className="text-blue-600 dark:text-blue-400" />
                   <span>Supplier Address (Auto-filled)</span>
                 </label>
@@ -531,7 +531,7 @@ interface FormLineItem {
                   value={supplierAddress}
                   onChange={(e) => setSupplierAddress(e.target.value)}
                   placeholder="Auto-fills upon choosing supplier, or type full postal address..."
-                  className="w-full rounded-lg border border-[--color-border] bg-[--color-surface-0] px-3 py-2 text-xs font-medium text-[--color-ink-900] focus:border-blue-500 focus:outline-none resize-none leading-relaxed"
+                  className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] px-3 py-2 text-xs font-medium text-[var(--color-ink-900)] focus:border-blue-500 focus:outline-none resize-none leading-relaxed"
                 />
               </div>
             </div>
@@ -541,7 +541,7 @@ interface FormLineItem {
           <div>
             <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-[--color-ink-500]">
+                <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-500)]">
                   Order Line Items ({lines.length})
                 </label>
                 <span className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.2 rounded border border-blue-200 dark:border-blue-900/60 font-medium">
@@ -557,61 +557,26 @@ interface FormLineItem {
               </button>
             </div>
 
-            {/* QUICK-ADD POPULAR KSRTC SPARES BAR */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-2 text-xs">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[--color-ink-400] shrink-0">
-                Quick Add:
-              </span>
-              {[
-                "Brake Lining Set (Leyland Viking / Cheetah)",
-                "Clutch Plate Assembly 380mm (Organic)",
-                "Engine Oil Filter Spin-On",
-                "Primary Fuel Filter Water Separator Cartridge",
-                "Heavy Commercial Radial Bus Tyre 295/80 R22.5",
-                "Alternator 28V 80A Heavy Commercial Bus",
-              ].map((pName) => (
-                <button
-                  key={pName}
-                  type="button"
-                  onClick={() => {
-                    const item = inventoryList.find((i) => i.part.toLowerCase() === pName.toLowerCase());
-                    const price = item?.unitCost || 0;
-                    const cat = item?.category || "";
-                    // If first line is empty, replace it; otherwise append
-                    setLines((prev) => {
-                      if (prev.length === 1 && !prev[0].part.trim()) {
-                        return [{ part: pName, category: cat, quantity: 1, unitPrice: price, totalCost: price }];
-                      }
-                      return [...prev, { part: pName, category: cat, quantity: 1, unitPrice: price, totalCost: price }];
-                    });
-                  }}
-                  className="shrink-0 rounded-full border border-[--color-border] bg-[--color-surface-1] hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2.5 py-0.5 text-[11px] font-medium text-[--color-ink-700] hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
-                >
-                  + {pName.split("(")[0].trim()}
-                </button>
-              ))}
-            </div>
-
-            <div ref={tableContainerRef} className="rounded-lg border border-[--color-border] overflow-x-auto">
+            <div ref={tableContainerRef} className="rounded-lg border border-[var(--color-border)] overflow-x-auto">
               <table className="w-full text-sm min-w-[700px]">
                 <thead>
-                  <tr className="border-b border-[--color-border] bg-[--color-surface-1] text-left text-xs uppercase tracking-wider text-[--color-ink-500]">
+                  <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-1)] text-left text-xs uppercase tracking-wider text-[var(--color-ink-500)]">
                     <th className="px-2.5 py-2.5 w-9 text-center">#</th>
                     <th className="px-3 py-2.5 min-w-[360px]">Part / Item (Auto-suggest & Paste)</th>
                     <th className="px-3 py-2.5 w-52">Category</th>
                     <th className="px-2.5 py-2.5 w-24 text-center">Qty</th>
-                    <th className="px-3 py-2.5 w-32 text-right">Unit Price (₹)</th>
-                    <th className="px-3 py-2.5 w-32 text-right">Line Total</th>
+                    <th className="px-3 py-2.5 w-32">Unit Price (₹)</th>
+                    <th className="px-3 py-2.5 w-32">Line Total</th>
                     <th className="px-2 py-2.5 w-9 text-center"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[--color-border]">
+                <tbody className="divide-y divide-[var(--color-border)]">
                   {lines.map((l, i) => {
                     const matchingParts = getMatchingParts(l.part);
                     const matchingCategories = getMatchingCategories(l.category || "");
                     return (
-                      <tr key={i} className="hover:bg-[--color-surface-1]/50 transition-colors">
-                        <td className="px-2.5 py-2.5 text-center text-xs font-mono text-[--color-ink-400]">
+                      <tr key={i} className="hover:bg-[var(--color-surface-1)]/50 transition-colors">
+                        <td className="px-2.5 py-2.5 text-center text-xs font-mono text-[var(--color-ink-400)]">
                           {i + 1}
                         </td>
                         <td className="px-3 py-2.5 relative min-w-[360px]">
@@ -648,7 +613,7 @@ interface FormLineItem {
                                 setActiveCategoryDropdown(null);
                               }}
                               placeholder="Type, paste, or select spare part…"
-                              className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs font-medium text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
+                              className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-2.5 py-1.5 text-xs font-medium text-[var(--color-ink-900)] focus:border-blue-500 focus:outline-none"
                             />
                             <button
                               type="button"
@@ -672,7 +637,7 @@ interface FormLineItem {
                                 } catch {}
                               }}
                               title="Paste component name from clipboard"
-                              className="shrink-0 inline-flex items-center gap-1 rounded border border-[--color-border] bg-[--color-surface-1] hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2 py-1.5 text-[11px] font-medium text-blue-600 dark:text-blue-400 transition-colors cursor-pointer"
+                              className="shrink-0 inline-flex items-center gap-1 rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2 py-1.5 text-[11px] font-medium text-blue-600 dark:text-blue-400 transition-colors cursor-pointer"
                             >
                               <ClipboardPaste size={12} />
                               <span>Paste</span>
@@ -681,15 +646,15 @@ interface FormLineItem {
 
                           {/* PART AUTOCOMPLETE POPUP */}
                           {activePartDropdown === i && (
-                            <div className="absolute left-3 right-3 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border border-[--color-border] bg-[--color-surface-0] shadow-2xl py-1 text-xs">
-                              <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[--color-ink-400] bg-[--color-surface-1] border-b border-[--color-border] flex items-center justify-between">
+                            <div className="absolute left-3 right-3 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] shadow-2xl py-1 text-xs">
+                              <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-400)] bg-[var(--color-surface-1)] border-b border-[var(--color-border)] flex items-center justify-between">
                                 <span>Suggested Spares Catalog ({matchingParts.length})</span>
                                 <span className="text-[10px] font-normal text-blue-600 dark:text-blue-400">
                                   Auto-fills name, category & price
                                 </span>
                               </div>
                               {matchingParts.length === 0 ? (
-                                <div className="px-3 py-2 text-xs text-[--color-ink-400] italic">
+                                <div className="px-3 py-2 text-xs text-[var(--color-ink-400)] italic">
                                   No matching standard parts. You can keep typing custom part name.
                                 </div>
                               ) : (
@@ -698,14 +663,14 @@ interface FormLineItem {
                                     key={item.id}
                                     type="button"
                                     onClick={() => handleSelectPart(i, item)}
-                                    className="w-full text-left px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-950/40 border-b border-[--color-border] last:border-0 transition-colors flex items-center justify-between gap-3 cursor-pointer group"
+                                    className="w-full text-left px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-950/40 border-b border-[var(--color-border)] last:border-0 transition-colors flex items-center justify-between gap-3 cursor-pointer group"
                                   >
                                     <div className="min-w-0 flex-1">
-                                      <p className="font-semibold text-xs text-[--color-ink-900] group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">
+                                      <p className="font-semibold text-xs text-[var(--color-ink-900)] group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">
                                         {item.part}
                                       </p>
-                                      <div className="flex items-center gap-2 mt-0.5 text-[11px] text-[--color-ink-500]">
-                                        <span className="rounded bg-[--color-surface-2] px-1.5 py-0.2 font-medium">
+                                      <div className="flex items-center gap-2 mt-0.5 text-[11px] text-[var(--color-ink-500)]">
+                                        <span className="rounded bg-[var(--color-surface-2)] px-1.5 py-0.2 font-medium">
                                           {item.category}
                                         </span>
                                         <span>Stock: {item.currentStock} units</span>
@@ -713,10 +678,10 @@ interface FormLineItem {
                                     </div>
                                     {item.unitCost ? (
                                       <div className="text-right shrink-0">
-                                        <span className="text-xs font-semibold tabular text-[--color-ink-800]">
+                                        <span className="text-xs font-semibold tabular text-[var(--color-ink-800)]">
                                           ₹{item.unitCost.toLocaleString("en-IN")}
                                         </span>
-                                        <span className="block text-[10px] text-[--color-ink-400]">Std Cost</span>
+                                        <span className="block text-[10px] text-[var(--color-ink-400)]">Std Cost</span>
                                       </div>
                                     ) : null}
                                   </button>
@@ -742,18 +707,18 @@ interface FormLineItem {
                               setActivePartDropdown(null);
                             }}
                             placeholder="Select/type category…"
-                            className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
+                            className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-2.5 py-1.5 text-xs text-[var(--color-ink-900)] focus:border-blue-500 focus:outline-none"
                           />
 
                           {/* CATEGORY AUTOCOMPLETE POPUP */}
                           {activeCategoryDropdown === i && (
-                            <div className="absolute left-3 right-3 top-full z-50 mt-1 max-h-52 overflow-y-auto rounded-lg border border-[--color-border] bg-[--color-surface-0] shadow-2xl py-1 text-xs">
-                              <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[--color-ink-400] bg-[--color-surface-1] border-b border-[--color-border] flex items-center justify-between">
+                            <div className="absolute left-3 right-3 top-full z-50 mt-1 max-h-52 overflow-y-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] shadow-2xl py-1 text-xs">
+                              <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-400)] bg-[var(--color-surface-1)] border-b border-[var(--color-border)] flex items-center justify-between">
                                 <span>Suggested Categories</span>
                                 <span className="text-[10px] font-normal text-blue-600 dark:text-blue-400">Click to choose</span>
                               </div>
                               {matchingCategories.length === 0 ? (
-                                <div className="px-3 py-2 text-xs text-[--color-ink-400] italic">
+                                <div className="px-3 py-2 text-xs text-[var(--color-ink-400)] italic">
                                   Custom category. Press Tab or Enter to continue.
                                 </div>
                               ) : (
@@ -762,8 +727,8 @@ interface FormLineItem {
                                     key={cat}
                                     type="button"
                                     onClick={() => handleSelectCategory(i, cat)}
-                                    className={`w-full text-left px-3 py-1.5 hover:bg-blue-50 dark:hover:bg-blue-950/40 border-b border-[--color-border] last:border-0 transition-colors flex items-center justify-between text-xs cursor-pointer ${
-                                      l.category === cat ? "font-semibold text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/20" : "text-[--color-ink-800]"
+                                    className={`w-full text-left px-3 py-1.5 hover:bg-blue-50 dark:hover:bg-blue-950/40 border-b border-[var(--color-border)] last:border-0 transition-colors flex items-center justify-between text-xs cursor-pointer ${
+                                      l.category === cat ? "font-semibold text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/20" : "text-[var(--color-ink-800)]"
                                     }`}
                                   >
                                     <span>{cat}</span>
@@ -789,7 +754,7 @@ interface FormLineItem {
                                 updateLineQty(i, 1);
                               }
                             }}
-                            className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2 py-1.5 text-xs text-center tabular font-semibold text-[--color-ink-900]"
+                            className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-2 py-1.5 text-xs text-center tabular font-semibold text-[var(--color-ink-900)]"
                           />
                         </td>
                         <td className="px-3 py-2.5">
@@ -807,10 +772,10 @@ interface FormLineItem {
                               }
                             }}
                             placeholder="0"
-                            className="w-full rounded border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs tabular text-right text-[--color-ink-900]"
+                            className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-2.5 py-1.5 text-xs tabular text-[var(--color-ink-900)]"
                           />
                         </td>
-                        <td className="px-3 py-2.5 tabular font-bold text-xs text-right text-[--color-ink-900]">
+                        <td className="px-3 py-2.5 tabular font-bold text-xs text-[var(--color-ink-900)]">
                           ₹{l.totalCost.toLocaleString("en-IN")}
                         </td>
                         <td className="px-2 py-2.5 text-center">
@@ -818,7 +783,7 @@ interface FormLineItem {
                             type="button"
                             onClick={() => removeLine(i)}
                             title="Remove item"
-                            className="text-[--color-ink-400] hover:text-red-500 cursor-pointer transition-colors p-1"
+                            className="text-[var(--color-ink-400)] hover:text-red-500 cursor-pointer transition-colors p-1"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -837,22 +802,22 @@ interface FormLineItem {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[--color-ink-500]">
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-500)]">
               Order Notes / Reference
             </label>
             <input
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Enter purchase order notes or reference"
-              className="w-full rounded-lg border border-[--color-border] bg-[--color-surface-0] px-3 py-2 text-sm text-[--color-ink-900] focus:border-blue-500 focus:outline-none"
+              className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] px-3 py-2 text-sm text-[var(--color-ink-900)] focus:border-blue-500 focus:outline-none"
             />
           </div>
 
           {/* BOTTOM SUBMISSION ROW */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-[--color-border] pt-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-[var(--color-border)] pt-5">
             <div>
-              <p className="text-xs text-[--color-ink-500]">Total PO Value</p>
-              <p className="text-2xl font-bold tabular text-[--color-ink-900]">
+              <p className="text-xs text-[var(--color-ink-500)]">Total PO Value</p>
+              <p className="text-2xl font-bold tabular text-[var(--color-ink-900)]">
                 ₹{total.toLocaleString("en-IN")}
               </p>
             </div>
@@ -861,7 +826,7 @@ interface FormLineItem {
               <button
                 type="button"
                 onClick={() => navigate("/purchase-orders")}
-                className="flex-1 sm:flex-none rounded-md border border-[--color-border] bg-[--color-surface-0] hover:bg-[--color-surface-1] px-4 py-2 text-xs font-medium text-[--color-ink-700] transition-colors cursor-pointer text-center"
+                className="flex-1 sm:flex-none rounded-md border border-[var(--color-border)] bg-[var(--color-surface-0)] hover:bg-[var(--color-surface-1)] px-4 py-2 text-xs font-medium text-[var(--color-ink-700)] transition-colors cursor-pointer text-center"
               >
                 Cancel
               </button>

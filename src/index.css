@@ -116,204 +116,112 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: 9999px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* ═══════════════════════════════════════════════════════════════
+   GLOBAL FORM CONTROL TEXT COLOR — Accessibility / Readability
+   Ensures typed text is always dark/visible in all form controls.
+   Placeholders remain muted gray. Caret is clearly visible.
+   ═══════════════════════════════════════════════════════════════ */
+input,
+textarea,
+select {
+  color: var(--color-ink-900, #0f172a);
+  caret-color: var(--color-ink-900, #0f172a);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-ink-400, #94a3b8);
+  opacity: 1;
+}
+
+/* Ensure select option text is readable */
+select option {
+  color: var(--color-ink-900, #0f172a);
+  background-color: var(--color-surface-0, #ffffff);
+}
+
+/* Prevent browser autofill from overriding text color */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--color-ink-900, #0f172a);
+  -webkit-box-shadow: 0 0 0px 1000px var(--color-surface-1, #f8fafc) inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Focused inputs retain dark text */
+input:focus,
+textarea:focus,
+select:focus {
+  color: var(--color-ink-900, #0f172a);
+}
+
+/* Disabled inputs use muted color */
+input:disabled,
+textarea:disabled,
+select:disabled {
+  color: var(--color-ink-400, #94a3b8);
+  opacity: 0.7;
+}
+
+/* Datalist option text (autocomplete suggestions) */
+datalist option {
+  color: var(--color-ink-900, #0f172a);
+}
+
+@media (prefers-color-scheme: dark) {
+  input,
+  textarea,
+  select {
+    color: var(--color-ink-900, #f4f4f5);
+    caret-color: var(--color-ink-900, #f4f4f5);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-ink-400, #71717a);
+  }
+
+  select option {
+    color: var(--color-ink-900, #f4f4f5);
+    background-color: var(--color-surface-0, #18181b);
+  }
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus,
+  select:-webkit-autofill {
+    -webkit-text-fill-color: var(--color-ink-900, #f4f4f5);
+    -webkit-box-shadow: 0 0 0px 1000px var(--color-surface-1, #09090b) inset;
+  }
+
+  input:disabled,
+  textarea:disabled,
+  select:disabled {
+    color: var(--color-ink-400, #71717a);
+  }
+
+  datalist option {
+    color: var(--color-ink-900, #f4f4f5);
+  }
+}
 
 .tabular { font-variant-numeric: tabular-nums; }
 
-/* Custom SCION Logo Glow Loader Animation */
-@keyframes scionGlow {
-  0%, 100% {
-    filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.4));
-    transform: scale(1);
-  }
-  50% {
-    filter: drop-shadow(0 0 14px rgba(37, 99, 235, 0.7));
-    transform: scale(1.05);
-  }
-}
-
-.scion-loader-logo {
-  animation: scionGlow 2s ease-in-out infinite;
-}
-
-/* Ensure solid surface backgrounds and text colors across the entire application */
-.bg-\[--color-surface-0\],
-[class*="bg-[--color-surface-0]"] {
-  background-color: var(--color-surface-0, #ffffff) !important;
-}
-
-.bg-\[--color-surface-1\],
-[class*="bg-[--color-surface-1]"] {
-  background-color: var(--color-surface-1, #f8fafc) !important;
-}
-
-.bg-\[--color-surface-2\],
-[class*="bg-[--color-surface-2]"] {
-  background-color: var(--color-surface-2, #f1f5f9) !important;
-}
-
-/* Forecast colors and primary action button fallbacks */
-.bg-\[--color-forecast-50\],
-[class*="bg-[--color-forecast-50]"] {
-  background-color: var(--color-forecast-50, #eff6ff) !important;
-}
-
-.bg-\[--color-forecast-500\],
-[class*="bg-[--color-forecast-500]"] {
-  background-color: var(--color-forecast-500, #2563eb) !important;
-}
-
-.bg-\[--color-forecast-600\],
-[class*="bg-[--color-forecast-600]"] {
-  background-color: var(--color-forecast-600, #1d4ed8) !important;
-}
-
-.bg-\[--color-forecast-700\],
-[class*="bg-[--color-forecast-700]"] {
-  background-color: var(--color-forecast-700, #1e40af) !important;
-}
-
-.hover\:bg-\[--color-forecast-700\]:hover,
-[class*="hover:bg-[--color-forecast-700]"]:hover {
-  background-color: var(--color-forecast-700, #1e40af) !important;
-}
-
-/* Optimize colors */
-.bg-\[--color-optimize-50\],
-[class*="bg-[--color-optimize-50]"] {
-  background-color: var(--color-optimize-50, #f5f3ff) !important;
-}
-
-.bg-\[--color-optimize-500\],
-[class*="bg-[--color-optimize-500]"] {
-  background-color: var(--color-optimize-500, #7c3aed) !important;
-}
-
-.hover\:bg-\[--color-optimize-700\]:hover,
-[class*="hover:bg-[--color-optimize-700]"]:hover {
-  background-color: var(--color-optimize-700, #6d28d9) !important;
-}
-
-/* Critical, healthy, and warning backgrounds */
-.bg-\[--color-critical-50\],
-[class*="bg-[--color-critical-50]"] {
-  background-color: var(--color-critical-50, #fff1f2) !important;
-}
-
-.bg-\[--color-critical-500\],
-[class*="bg-[--color-critical-500]"] {
-  background-color: var(--color-critical-500, #e11d48) !important;
-}
-
-.bg-\[--color-healthy-50\],
-[class*="bg-[--color-healthy-50]"] {
-  background-color: var(--color-healthy-50, #ecfdf5) !important;
-}
-
-.bg-\[--color-healthy-500\],
-[class*="bg-[--color-healthy-500]"] {
-  background-color: var(--color-healthy-500, #059669) !important;
-}
-
-.bg-\[--color-warning-50\],
-[class*="bg-[--color-warning-50]"] {
-  background-color: var(--color-warning-50, #fffbeb) !important;
-}
-
-.bg-\[--color-warning-500\],
-[class*="bg-[--color-warning-500]"] {
-  background-color: var(--color-warning-500, #d97706) !important;
-}
-
-/* Ink text fallbacks */
-.text-\[--color-ink-900\],
-[class*="text-[--color-ink-900]"] {
-  color: var(--color-ink-900, #0f172a) !important;
-}
-
-.text-\[--color-ink-700\],
-[class*="text-[--color-ink-700]"] {
-  color: var(--color-ink-700, #334155) !important;
-}
-
-.text-\[--color-ink-600\],
-[class*="text-[--color-ink-600]"] {
-  color: var(--color-ink-600, #475569) !important;
-}
-
-.text-\[--color-ink-500\],
-[class*="text-[--color-ink-500]"] {
-  color: var(--color-ink-500, #64748b) !important;
-}
-
-.text-\[--color-ink-400\],
-[class*="text-[--color-ink-400]"] {
-  color: var(--color-ink-400, #94a3b8) !important;
-}
-
-/* Accent text fallbacks */
-.text-\[--color-forecast-500\],
-[class*="text-[--color-forecast-500]"] {
-  color: var(--color-forecast-500, #2563eb) !important;
-}
-
-.text-\[--color-forecast-600\],
-[class*="text-[--color-forecast-600]"] {
-  color: var(--color-forecast-600, #1d4ed8) !important;
-}
-
-.text-\[--color-forecast-700\],
-[class*="text-[--color-forecast-700]"] {
-  color: var(--color-forecast-700, #1e40af) !important;
-}
-
-.text-\[--color-optimize-500\],
-[class*="text-[--color-optimize-500]"] {
-  color: var(--color-optimize-500, #7c3aed) !important;
-}
-
-.text-\[--color-optimize-600\],
-[class*="text-[--color-optimize-600]"] {
-  color: var(--color-optimize-600, #6d28d9) !important;
-}
-
-.text-\[--color-optimize-700\],
-[class*="text-[--color-optimize-700]"] {
-  color: var(--color-optimize-700, #6d28d9) !important;
-}
-
-.text-\[--color-critical-500\],
-[class*="text-[--color-critical-500]"] {
-  color: var(--color-critical-500, #e11d48) !important;
-}
-
-.text-\[--color-critical-600\],
-[class*="text-[--color-critical-600]"] {
-  color: var(--color-critical-600, #be123c) !important;
-}
-
-.text-\[--color-healthy-600\],
-[class*="text-[--color-healthy-600]"] {
-  color: var(--color-healthy-600, #047857) !important;
-}
-
-.text-\[--color-warning-600\],
-[class*="text-[--color-warning-600]"] {
-  color: var(--color-warning-600, #b45309) !important;
-}
-
-/* Border fallbacks */
-.border-\[--color-border\],
-[class*="border-[--color-border]"] {
-  border-color: var(--color-border, #e2e8f0) !important;
-}
-
-.border-\[--color-border-strong\],
-[class*="border-[--color-border-strong]"] {
-  border-color: var(--color-border-strong, #cbd5e1) !important;
-}
+/* Custom property fallbacks are no longer needed.
+   All component classes now use [var(--color-*)] syntax
+   which Tailwind v4 compiles to correct var() CSS natively. */
 
 /* Custom sleek scrollbar for kanban boards and scrollable tables */
 .custom-scrollbar::-webkit-scrollbar {

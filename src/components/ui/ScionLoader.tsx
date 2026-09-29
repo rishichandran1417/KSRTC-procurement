@@ -6,19 +6,19 @@ interface ScionLoaderProps {
 }
 
 export function ScionLoader({
-  text = "SCION is analyzing data…",
+  text = "Analyzing supply chain data…",
   fullPage = false,
 }: ScionLoaderProps) {
   const content = (
-    <div className="flex items-center gap-3 py-2 text-xs font-semibold text-cyan-400">
-      <div className="h-7 w-7 rounded-lg bg-[--color-surface-1] border border-cyan-500/30 flex items-center justify-center p-1 shrink-0 shadow-sm">
+    <div className="flex items-center gap-2.5 py-2 text-xs font-medium text-blue-600 dark:text-blue-400">
+      <div className="h-6 w-6 rounded border border-blue-500/20 bg-blue-500/10 flex items-center justify-center p-0.5 shrink-0">
         <img
           src="/scion-logo.png"
-          alt="SCION Loader"
-          className="h-5 w-5 scion-loader-logo object-contain"
+          alt="Loader"
+          className="h-4 w-4 object-contain"
         />
       </div>
-      <span className="animate-pulse tracking-wide">{text}</span>
+      <span className="tracking-normal">{text}</span>
     </div>
   );
 

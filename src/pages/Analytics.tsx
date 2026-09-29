@@ -28,8 +28,8 @@ export default function Analytics() {
         subtitle="Evaluate supplier delivery compliance, lead times, quality scores, and price variance reports"
       />
       <div className="p-4 sm:p-6 space-y-4">
-        <div className="flex items-center gap-2 rounded-md border border-[--color-border] bg-[--color-surface-1] p-3 text-xs text-[--color-ink-700]">
-          <BarChart3 className="text-[--color-forecast-600]" size={18} />
+        <div className="flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-1)] p-3 text-xs text-[var(--color-ink-700)]">
+          <BarChart3 className="text-[var(--color-forecast-600)]" size={18} />
           <span>
             This container renders your interactive Vendor Performance analytics dashboard. Configure your embed URL under <strong>Settings → Integrations</strong>.
           </span>
@@ -37,7 +37,7 @@ export default function Analytics() {
 
         <PowerBIEmbed config={config} loading={loading} error={error} onRetry={load} />
 
-        <p className="text-xs text-[--color-ink-500]">
+        <p className="text-xs text-[var(--color-ink-500)]">
           Covers vendor/supplier delivery lead times, on-time in-full (OTIF) fulfillment rates, quality rejection counts, unit cost variance, and depot supplier performance rankings across KSRTC workshops.
         </p>
       </div>

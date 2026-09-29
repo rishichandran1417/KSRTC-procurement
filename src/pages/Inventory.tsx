@@ -25,7 +25,6 @@ export type InventorySortField =
   | "currentStock"
   | "safetyStock"
   | "reorderPoint"
-  | "unitCost"
   | "forecastDemand"
   | "daysOfSupply"
   | "status";
@@ -63,7 +62,7 @@ export default function Inventory() {
   useEffect(() => {
     load();
     const handleInvChange = () => {
-      getInventory().then(setItems).catch(() => {});
+      getInventory().then(setItems).catch(() => { });
     };
     window.addEventListener("ksrtc_inventory_changed", handleInvChange);
     return () => window.removeEventListener("ksrtc_inventory_changed", handleInvChange);
@@ -74,7 +73,7 @@ export default function Inventory() {
       setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
     } else {
       setSortField(field);
-      if (["currentStock", "safetyStock", "reorderPoint", "unitCost", "forecastDemand", "daysOfSupply"].includes(field)) {
+      if (["currentStock", "safetyStock", "reorderPoint", "forecastDemand", "daysOfSupply"].includes(field)) {
         setSortDirection("desc");
       } else {
         setSortDirection("asc");
@@ -115,9 +114,6 @@ export default function Inventory() {
         case "reorderPoint":
           cmp = (a.reorderPoint ?? 0) - (b.reorderPoint ?? 0);
           break;
-        case "unitCost":
-          cmp = (a.unitCost ?? 0) - (b.unitCost ?? 0);
-          break;
         case "forecastDemand":
           cmp = (a.forecastDemand ?? 0) - (b.forecastDemand ?? 0);
           break;
@@ -156,27 +152,15 @@ export default function Inventory() {
     return [1, "...", safeCurrentPage - 1, safeCurrentPage, safeCurrentPage + 1, "...", totalPages];
   };
 
-  const renderSortHeader = (
-    label: string,
-    field: InventorySortField,
-    className = "",
-    align: "left" | "right" | "center" = "left"
-  ) => {
+  const renderSortHeader = (label: string, field: InventorySortField, className = "") => {
     const isActive = sortField === field;
     return (
       <th
         onClick={() => handleSort(field)}
-        className={`cursor-pointer py-2.5 px-3 transition-colors hover:text-blue-600 dark:hover:text-blue-400 group select-none text-[11px] font-semibold uppercase tracking-wider ${
-          align === "right" ? "text-right" : align === "center" ? "text-center" : "text-left"
-        } ${
-          isActive ? "text-blue-600 dark:text-blue-400" : "text-[--color-ink-500]"
-        } ${className}`}
+        className={`cursor-pointer py-3 px-3 transition-colors hover:text-blue-600 dark:hover:text-blue-400 group select-none ${isActive ? "text-blue-600 dark:text-blue-400 font-semibold" : "text-[var(--color-ink-500)]"
+          } ${className}`}
       >
-        <div
-          className={`inline-flex items-center gap-1 ${
-            align === "right" ? "justify-end w-full" : align === "center" ? "justify-center w-full" : ""
-          }`}
-        >
+        <div className="inline-flex items-center gap-1">
           <span>{label}</span>
           <span className="shrink-0">
             {isActive ? (
@@ -196,23 +180,20 @@ export default function Inventory() {
 
   return (
     <div>
-      <TopBar
-        title="Central Depot Inventory"
-        subtitle="Monitor fleet spare part balances, safety thresholds, reorder triggers, and item valuations across depots"
-      />
+      <TopBar title="Inventory Management" subtitle="What do we have? — Current stock levels & safety thresholds" />
 
       <div className="p-4 sm:p-6">
         {totalAlerts > 0 && (
-          <div className="mb-5 flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-lg border border-rose-500/25 bg-rose-500/5 dark:bg-rose-950/20 p-3.5 sm:p-4 text-xs sm:text-sm">
+          <div className="mb-5 flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-lg border border-rose-500/30 bg-[#F5F6F8] dark:bg-zinc-900/90 p-3.5 sm:p-4 text-xs sm:text-sm">
             <div className="flex items-start sm:items-center gap-3">
               <div className="p-1.5 rounded-md bg-rose-500/10 text-rose-500 shrink-0 mt-0.5 sm:mt-0">
                 <AlertTriangle size={18} />
               </div>
               <div>
-                <p className="font-semibold text-rose-900 dark:text-rose-200">
+                <p className="font-bold text-slate-900 dark:text-zinc-100">
                   Low Stock Alert: {totalAlerts} items require attention
                 </p>
-                <p className="text-rose-700/80 dark:text-rose-400/80 text-xs">
+                <p className="text-slate-900 dark:text-zinc-200 text-xs font-medium">
                   {criticalItems.length} critical stockout risk &bull; {warningItems.length} below reorder threshold
                 </p>
               </div>
@@ -220,11 +201,10 @@ export default function Inventory() {
             <div className="flex flex-wrap items-center gap-2 shrink-0">
               <button
                 onClick={() => setStatusFilter(statusFilter === "Critical" ? "All" : "Critical")}
-                className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
-                  statusFilter === "Critical"
+                className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${statusFilter === "Critical"
                     ? "border-rose-500 bg-rose-500/15 text-rose-700 dark:text-rose-300 font-semibold"
-                    : "border-[--color-border] bg-[--color-surface-0] text-[--color-ink-700] hover:bg-[--color-surface-1]"
-                }`}
+                    : "border-[var(--color-border)] bg-[var(--color-surface-0)] text-[var(--color-ink-700)] hover:bg-[var(--color-surface-1)]"
+                  }`}
               >
                 {statusFilter === "Critical" ? "✓ Filtered Critical" : "Filter Critical"}
               </button>
@@ -259,7 +239,7 @@ export default function Inventory() {
               </button>
               <button
                 onClick={openAlertModal}
-                className="rounded-md border border-[--color-border] bg-[--color-surface-0] hover:bg-[--color-surface-1] text-[--color-ink-700] px-3 py-1.5 text-xs font-medium shadow-2xs transition-colors cursor-pointer"
+                className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface-0)] hover:bg-[var(--color-surface-1)] text-[var(--color-ink-700)] px-3 py-1.5 text-xs font-medium shadow-2xs transition-colors cursor-pointer"
               >
                 Review All Alerts →
               </button>
@@ -277,9 +257,9 @@ export default function Inventory() {
                   setSearch(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full rounded-md border border-[--color-border] bg-[--color-surface-0] pl-8 pr-3 py-1.5 text-sm text-[--color-ink-900] placeholder:text-[--color-ink-400] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface-0)] pl-8 pr-3 py-1.5 text-sm text-[var(--color-ink-900)] placeholder:text-[var(--color-ink-400)] focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
-              <Search size={14} className="absolute left-2.5 top-2.5 text-[--color-ink-400]" />
+              <Search size={14} className="absolute left-2.5 top-2.5 text-[var(--color-ink-400)]" />
             </div>
 
             <select
@@ -288,7 +268,7 @@ export default function Inventory() {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="rounded-md border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-sm text-[--color-ink-800] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+              className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface-0)] px-2.5 py-1.5 text-sm text-[var(--color-ink-800)] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
             >
               {["All", "Healthy", "Warning", "Critical"].map((s) => (
                 <option key={s} value={s}>{s} Stock</option>
@@ -296,7 +276,7 @@ export default function Inventory() {
             </select>
 
             <div className="flex items-center gap-1.5 text-xs">
-              <span className="text-[--color-ink-500] hidden sm:inline">Sort:</span>
+              <span className="text-[var(--color-ink-500)] hidden sm:inline">Sort:</span>
               <select
                 value={`${sortField}-${sortDirection}`}
                 onChange={(e) => {
@@ -305,7 +285,7 @@ export default function Inventory() {
                   setSortDirection(d);
                   setCurrentPage(1);
                 }}
-                className="rounded-md border border-[--color-border] bg-[--color-surface-0] px-2.5 py-1.5 text-xs text-[--color-ink-800] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface-0)] px-2.5 py-1.5 text-xs text-[var(--color-ink-800)] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
               >
                 <option value="part-asc">Part Name (A → Z)</option>
                 <option value="part-desc">Part Name (Z → A)</option>
@@ -342,93 +322,78 @@ export default function Inventory() {
             }
           />
         ) : (
-          <div className="rounded-lg border border-[--color-border] bg-[--color-surface-0] overflow-hidden shadow-2xs">
+          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] overflow-hidden shadow-2xs">
             <div className="overflow-x-auto">
-              <table className="w-full text-xs sm:text-sm min-w-[880px]">
+              <table className="w-full text-sm min-w-[780px]">
                 <thead>
-                  <tr className="border-b border-[--color-border] bg-[--color-surface-1] text-left text-[11px] font-semibold uppercase tracking-wider text-[--color-ink-500] sticky top-0 z-10">
-                    {renderSortHeader("Part / Item", "part", "px-3.5")}
+                  <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-1)]/50 text-left text-xs font-medium uppercase tracking-wider text-[var(--color-ink-500)]">
+                    {renderSortHeader("Part / Item", "part", "px-4")}
                     {renderSortHeader("Category", "category")}
-                    {renderSortHeader("Current Stock", "currentStock", "", "right")}
-                    {renderSortHeader("Safety Stock", "safetyStock", "", "right")}
-                    {renderSortHeader("Reorder Point", "reorderPoint", "", "right")}
-                    {renderSortHeader("Unit Cost (₹)", "unitCost", "", "right")}
-                    {renderSortHeader("Forecast", "forecastDemand", "", "right")}
-                    {renderSortHeader("Days Supply", "daysOfSupply", "", "right")}
-                    {renderSortHeader("Stock Status", "status", "", "center")}
-                    <th className="px-3 py-2.5 text-right pr-4 text-[--color-ink-500] font-semibold text-[11px] uppercase tracking-wider">Actions</th>
+                    {renderSortHeader("Current Stock", "currentStock")}
+                    {renderSortHeader("Safety Stock", "safetyStock")}
+                    {renderSortHeader("Reorder Point", "reorderPoint")}
+                    {renderSortHeader("Forecast Demand", "forecastDemand")}
+                    {renderSortHeader("Days of Supply", "daysOfSupply")}
+                    {renderSortHeader("Stock Status", "status")}
+                    <th className="px-3 py-3 text-right pr-4 text-[var(--color-ink-500)] font-medium">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[--color-border]">
+                <tbody className="divide-y divide-[var(--color-border)]">
                   {paginatedItems.map((item, idx) => (
                     <tr
                       key={`inv-${item.id}-${idx}`}
-                      className="hover:bg-[--color-surface-1]/60 transition-colors group"
+                      className="hover:bg-[var(--color-surface-1)]/70 transition-colors group"
                     >
                       <td
                         onClick={() => setSelectedDetail(item)}
-                        className="cursor-pointer px-3.5 py-2.5 text-[--color-ink-900] hover:text-blue-600 transition-colors"
+                        className="cursor-pointer px-4 py-3 font-medium text-[var(--color-ink-900)] hover:text-blue-600 transition-colors"
                       >
-                        <div className="font-semibold text-xs sm:text-sm text-[--color-ink-900]">{item.part}</div>
-                        {item.primarySupplier ? (
-                          <div className="text-[11px] text-[--color-ink-400] truncate max-w-xs">{item.primarySupplier}</div>
-                        ) : null}
+                        {item.part}
                       </td>
-                      <td className="px-3 py-2.5 text-xs text-[--color-ink-600]">{item.category}</td>
-                      <td className="px-3 py-2.5 text-right">
+                      <td className="px-3 py-3 text-[var(--color-ink-600)]">{item.category}</td>
+                      <td className="px-3 py-3">
                         <button
                           type="button"
                           onClick={() => setAdjustingItem(item)}
                           title="Click to adjust stock quantity"
-                          className="inline-flex items-center justify-end gap-1.5 rounded px-2 py-0.5 text-right transition-colors hover:bg-[--color-surface-2] cursor-pointer"
+                          className="inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-left transition-colors hover:bg-[var(--color-surface-2)] cursor-pointer"
                         >
-                          <span className="tabular font-bold text-xs sm:text-sm text-[--color-ink-900]">
-                            {item.currentStock.toLocaleString("en-IN")}
-                          </span>
-                          <Sliders size={11} className="text-[--color-ink-400] opacity-40 group-hover:opacity-100 transition-opacity" />
+                          <span className="tabular font-semibold text-sm text-[var(--color-ink-900)]">{item.currentStock}</span>
+                          <Sliders size={11} className="text-[var(--color-ink-400)] opacity-40 group-hover:opacity-100 transition-opacity" />
                         </button>
                       </td>
-                      <td className="tabular px-3 py-2.5 text-right text-xs text-[--color-ink-600]">
-                        {item.safetyStock.toLocaleString("en-IN")}
-                      </td>
-                      <td className="tabular px-3 py-2.5 text-right text-xs text-[--color-ink-600]">
-                        {item.reorderPoint.toLocaleString("en-IN")}
-                      </td>
-                      <td className="tabular px-3 py-2.5 text-right font-medium text-xs sm:text-sm text-[--color-ink-900]">
-                        ₹{(item.unitCost || 0).toLocaleString("en-IN")}
-                      </td>
-                      <td className="tabular px-3 py-2.5 text-right text-xs text-[--color-ink-700]">
-                        {item.forecastDemand.toLocaleString("en-IN")} <span className="text-[10px] text-[--color-ink-400]">/mo</span>
-                      </td>
-                      <td className="tabular px-3 py-2.5 text-right">
+                      <td className="tabular px-3 py-3 text-[var(--color-ink-500)]">{item.safetyStock}</td>
+                      <td className="tabular px-3 py-3 text-[var(--color-ink-500)]">{item.reorderPoint}</td>
+                      <td className="tabular px-3 py-3 text-[var(--color-ink-700)]">{item.forecastDemand} <span className="text-[11px] text-[var(--color-ink-400)]">/mo</span></td>
+                      <td className="tabular px-3 py-3">
                         {item.daysOfSupply <= 5 ? (
                           <span className="inline-flex items-center gap-1 font-semibold text-rose-600 dark:text-rose-400 text-xs">
                             {item.daysOfSupply}d
                             <span className="text-[10px] font-normal opacity-80">(low)</span>
                           </span>
                         ) : (
-                          <span className="text-[--color-ink-700] font-medium text-xs">{item.daysOfSupply}d</span>
+                          <span className="text-[var(--color-ink-700)] font-medium">{item.daysOfSupply}d</span>
                         )}
                       </td>
-                      <td className="px-3 py-2.5 text-center">
+                      <td className="px-3 py-3">
                         <StatusBadge label={item.status} />
                       </td>
-                      <td className="px-3 py-2.5 text-right pr-4">
+                      <td className="px-3 py-3 text-right pr-4">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => setAdjustingItem(item)}
                             title="Adjust quantity"
-                            className="inline-flex items-center gap-1 rounded border border-[--color-border] bg-[--color-surface-1] hover:bg-[--color-surface-2] px-2 py-1 text-xs font-medium text-[--color-ink-700] hover:text-[--color-ink-900] transition-colors cursor-pointer shadow-2xs"
+                            className="inline-flex items-center gap-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] px-2.5 py-1 text-xs font-medium text-[var(--color-ink-700)] hover:text-[var(--color-ink-900)] transition-colors cursor-pointer shadow-2xs"
                           >
-                            <Sliders size={11} className="text-[--color-ink-500]" />
+                            <Sliders size={12} className="text-[var(--color-ink-500)]" />
                             <span>Adjust</span>
                           </button>
                           <button
                             onClick={() => setEditingItem(item)}
                             title="Edit Part Details"
-                            className="rounded border border-[--color-border] bg-[--color-surface-1] hover:bg-[--color-surface-2] p-1 text-[--color-ink-600] hover:text-[--color-ink-900] transition-colors cursor-pointer shadow-2xs"
+                            className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] p-1.5 text-[var(--color-ink-600)] hover:text-[var(--color-ink-900)] transition-colors cursor-pointer shadow-2xs"
                           >
-                            <Edit3 size={12} />
+                            <Edit3 size={13} />
                           </button>
                         </div>
                       </td>
@@ -439,15 +404,15 @@ export default function Inventory() {
             </div>
 
             {/* PAGINATION FOOTER */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[--color-border] px-4 py-3 bg-[--color-surface-0]">
-              <div className="flex items-center gap-3 text-xs text-[--color-ink-500]">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[var(--color-border)] px-4 py-3 bg-[var(--color-surface-0)]">
+              <div className="flex items-center gap-3 text-xs text-[var(--color-ink-500)]">
                 <span>
-                  Showing <strong className="text-[--color-ink-900]">{startIdx + 1}</strong> to{" "}
-                  <strong className="text-[--color-ink-900]">{Math.min(startIdx + (pageSize === -1 ? totalItems : pageSize), totalItems)}</strong> of{" "}
-                  <strong className="text-[--color-ink-900]">{totalItems.toLocaleString("en-IN")}</strong> parts
+                  Showing <strong className="text-[var(--color-ink-900)]">{startIdx + 1}</strong> to{" "}
+                  <strong className="text-[var(--color-ink-900)]">{Math.min(startIdx + (pageSize === -1 ? totalItems : pageSize), totalItems)}</strong> of{" "}
+                  <strong className="text-[var(--color-ink-900)]">{totalItems.toLocaleString("en-IN")}</strong> parts
                 </span>
 
-                <div className="hidden sm:flex items-center gap-1.5 pl-3 border-l border-[--color-border]">
+                <div className="hidden sm:flex items-center gap-1.5 pl-3 border-l border-[var(--color-border)]">
                   <span>Rows:</span>
                   <select
                     value={pageSize}
@@ -455,7 +420,7 @@ export default function Inventory() {
                       setPageSize(Number(e.target.value));
                       setCurrentPage(1);
                     }}
-                    className="rounded border border-[--color-border] bg-[--color-surface-0] px-1.5 py-0.5 text-xs text-[--color-ink-800]"
+                    className="rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-1.5 py-0.5 text-xs text-[var(--color-ink-800)]"
                   >
                     <option value={25}>25</option>
                     <option value={50}>50</option>
@@ -470,7 +435,7 @@ export default function Inventory() {
                   <button
                     onClick={() => setCurrentPage(1)}
                     disabled={safeCurrentPage === 1}
-                    className="p-1 rounded border border-[--color-border] text-[--color-ink-600] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[--color-surface-1]"
+                    className="p-1 rounded border border-[var(--color-border)] text-[var(--color-ink-600)] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--color-surface-1)]"
                     title="First page"
                   >
                     <ChevronsLeft size={14} />
@@ -479,7 +444,7 @@ export default function Inventory() {
                   <button
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={safeCurrentPage === 1}
-                    className="p-1 rounded border border-[--color-border] text-[--color-ink-600] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[--color-surface-1]"
+                    className="p-1 rounded border border-[var(--color-border)] text-[var(--color-ink-600)] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--color-surface-1)]"
                     title="Previous page"
                   >
                     <ChevronLeft size={14} />
@@ -488,18 +453,17 @@ export default function Inventory() {
                   <div className="flex items-center gap-1 px-1">
                     {getPageNumbers().map((num, i) =>
                       num === "..." ? (
-                        <span key={`dots-${i}`} className="px-1 text-xs text-[--color-ink-400]">
+                        <span key={`dots-${i}`} className="px-1 text-xs text-[var(--color-ink-400)]">
                           …
                         </span>
                       ) : (
                         <button
                           key={`page-${num}`}
                           onClick={() => setCurrentPage(Number(num))}
-                          className={`min-w-[26px] h-[26px] rounded text-xs font-medium transition-colors ${
-                            safeCurrentPage === num
+                          className={`min-w-[26px] h-[26px] rounded text-xs font-medium transition-colors ${safeCurrentPage === num
                               ? "bg-blue-600 text-white font-semibold"
-                              : "border border-[--color-border] text-[--color-ink-700] hover:bg-[--color-surface-1]"
-                          }`}
+                              : "border border-[var(--color-border)] text-[var(--color-ink-700)] hover:bg-[var(--color-surface-1)]"
+                            }`}
                         >
                           {num}
                         </button>
@@ -510,7 +474,7 @@ export default function Inventory() {
                   <button
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={safeCurrentPage === totalPages}
-                    className="p-1 rounded border border-[--color-border] text-[--color-ink-600] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[--color-surface-1]"
+                    className="p-1 rounded border border-[var(--color-border)] text-[var(--color-ink-600)] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--color-surface-1)]"
                     title="Next page"
                   >
                     <ChevronRight size={14} />
@@ -519,7 +483,7 @@ export default function Inventory() {
                   <button
                     onClick={() => setCurrentPage(totalPages)}
                     disabled={safeCurrentPage === totalPages}
-                    className="p-1 rounded border border-[--color-border] text-[--color-ink-600] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[--color-surface-1]"
+                    className="p-1 rounded border border-[var(--color-border)] text-[var(--color-ink-600)] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--color-surface-1)]"
                     title="Last page"
                   >
                     <ChevronsRight size={14} />
@@ -598,23 +562,23 @@ function InventoryDetailDrawer({ item, onClose, onAdjustStock }: { item: Invento
     item.forecastDemand !== undefined && item.forecastDemand !== null
       ? `${item.forecastDemand} units`
       : item.reorderPoint
-      ? `${Math.round(item.reorderPoint * 1.5)} units`
-      : "—";
+        ? `${Math.round(item.reorderPoint * 1.5)} units`
+        : "—";
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="h-full w-full sm:max-w-md overflow-y-auto border-l border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 shadow-2xl text-[--color-ink-900]"
+        className="h-full w-full sm:max-w-md overflow-y-auto border-l border-[var(--color-border)] bg-[var(--color-surface-0)] p-5 sm:p-6 shadow-2xl text-[var(--color-ink-900)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between border-b border-[--color-border] pb-3">
+        <div className="flex items-start justify-between border-b border-[var(--color-border)] pb-3">
           <div>
-            <h2 className="text-lg font-bold text-[--color-ink-900]">{item.part}</h2>
-            <p className="text-xs text-[--color-ink-500]">Category: {item.category}</p>
+            <h2 className="text-lg font-bold text-[var(--color-ink-900)]">{item.part}</h2>
+            <p className="text-xs text-[var(--color-ink-500)]">Category: {item.category}</p>
           </div>
           <button
             onClick={onClose}
-            className="rounded p-1 text-[--color-ink-400] hover:text-[--color-ink-700] hover:bg-[--color-surface-1] transition-colors cursor-pointer"
+            className="rounded p-1 text-[var(--color-ink-400)] hover:text-[var(--color-ink-700)] hover:bg-[var(--color-surface-1)] transition-colors cursor-pointer"
           >
             <X size={18} />
           </button>
@@ -639,16 +603,16 @@ function InventoryDetailDrawer({ item, onClose, onAdjustStock }: { item: Invento
         </button>
 
         {item.notes ? (
-          <div className="mt-3 rounded-lg border border-[--color-border] bg-[--color-surface-1] p-2.5 text-xs">
-            <span className="font-semibold text-[--color-ink-700]">Notes: </span>
-            <span className="text-[--color-ink-500]">{item.notes}</span>
+          <div className="mt-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] p-2.5 text-xs">
+            <span className="font-semibold text-[var(--color-ink-700)]">Notes: </span>
+            <span className="text-[var(--color-ink-500)]">{item.notes}</span>
           </div>
         ) : null}
 
-        <p className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-[--color-ink-500]">
+        <p className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-[var(--color-ink-500)]">
           Historical Consumption (Past 6 Months)
         </p>
-        <div className="rounded-lg border border-[--color-border] bg-[--color-surface-1] p-2">
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] p-2">
           <ResponsiveContainer width="100%" height={140}>
             <LineChart data={consumption}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -691,24 +655,37 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function AddInventoryModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
   const [part, setPart] = useState("");
-  const [category, setCategory] = useState("Brake Parts");
+  const [category, setCategory] = useState("Brake Systems");
   const [currentStock, setCurrentStock] = useState(100);
   const [safetyStock, setSafetyStock] = useState(50);
   const [reorderPoint, setReorderPoint] = useState(80);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [catalog, setCatalog] = useState<InventoryItem[]>([]);
+
+  useEffect(() => {
+    getInventory().then(setCatalog).catch(() => {});
+  }, []);
+
+  const existingCategories = useMemo(() => {
+    const set = new Set<string>(["Brake Systems", "Filters & Lubrication", "Transmission & Powertrain", "Tyres & Rubber", "Electrical Components & Sensors", "Suspension & Steering", "Engine & Cooling", "Hardware & Fasteners"]);
+    catalog.forEach((i) => {
+      if (i.category) set.add(i.category);
+    });
+    return Array.from(set).sort();
+  }, [catalog]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!part.trim()) return;
     setSubmitting(true);
     const payload: AddInventoryPayload = {
-      part,
-      category,
+      part: part.trim(),
+      category: category.trim(),
       currentStock,
       safetyStock,
       reorderPoint,
-      notes,
+      notes: notes.trim(),
     };
     addInventoryItem(payload)
       .then(() => {
@@ -723,103 +700,141 @@ function AddInventoryModal({ onClose, onAdded }: { onClose: () => void; onAdded:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4" onClick={onClose}>
       <div
-        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 shadow-2xl text-[--color-ink-900]"
+        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] p-5 sm:p-6 shadow-xl text-[var(--color-ink-900)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-[--color-border] pb-3 mb-4">
-          <h2 className="text-base font-semibold text-[--color-ink-900]">Add New Inventory Item</h2>
-          <button onClick={onClose} className="rounded p-1 text-[--color-ink-400] hover:text-[--color-ink-700] hover:bg-[--color-surface-1] transition-colors cursor-pointer">
-            <X size={18} />
+        <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3 mb-4">
+          <div>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--color-ink-900)]">Add New Inventory Item</h2>
+            <p className="text-xs text-[var(--color-ink-500)] mt-0.5">Register spare part in central stores catalog</p>
+          </div>
+          <button onClick={onClose} className="rounded p-1 text-[var(--color-ink-400)] hover:text-[var(--color-ink-700)] hover:bg-[var(--color-surface-1)] transition-colors cursor-pointer">
+            <X size={16} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-sm">
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-[--color-ink-700]">Part / Component Name *</label>
-            <input
-              required
-              placeholder="e.g., Fuel Filter FF-505"
-              value={part}
-              onChange={(e) => setPart(e.target.value)}
-              className="w-full rounded-md border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-sm text-[--color-ink-900] placeholder:text-[--color-ink-400] focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
+        <datalist id="database-inventory-parts-list">
+          {catalog.map((i) => (
+            <option key={i.id} value={i.part}>
+              {i.category ? `${i.category} • ` : ""}Stock: {i.currentStock}
+            </option>
+          ))}
+        </datalist>
 
-          <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          {/* 1. IDENTIFICATION */}
+          <div className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-ink-500)]">
+              Identification
+            </p>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-[--color-ink-700]">Category</label>
+              <label className="mb-1 block font-medium text-[var(--color-ink-700)]">Part / Component Name *</label>
+              <input
+                required
+                list="database-inventory-parts-list"
+                placeholder="Type or select existing component name…"
+                value={part}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setPart(val);
+                  const matched = catalog.find((i) => i.part.toLowerCase() === val.trim().toLowerCase());
+                  if (matched) {
+                    if (matched.category) setCategory(matched.category);
+                    if (matched.safetyStock) setSafetyStock(matched.safetyStock);
+                    if (matched.reorderPoint) setReorderPoint(matched.reorderPoint);
+                  }
+                }}
+                className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-3 py-1.5 text-xs text-[var(--color-ink-900)] placeholder:text-[var(--color-ink-400)] focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block font-medium text-[var(--color-ink-700)]">Category</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded-md border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-sm text-[--color-ink-900] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-3 py-1.5 text-xs text-[var(--color-ink-900)] focus:outline-none focus:border-blue-500 cursor-pointer"
               >
-                {["Brake Parts", "Filters", "Bearings", "Tyres", "Electricals", "Fluids", "Engine", "Transmission"].map((c) => (
+                {existingCategories.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* 2. STOCK PARAMETERS */}
+          <div className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-ink-500)]">
+              Stock Parameters
+            </p>
+            <div className="grid grid-cols-3 gap-2.5">
+              <div>
+                <label className="mb-1 block font-medium text-[var(--color-ink-700)]">Current Stock</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={currentStock}
+                  onChange={(e) => setCurrentStock(Math.max(0, Number(e.target.value)))}
+                  className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-2.5 py-1.5 text-xs tabular font-semibold text-[var(--color-ink-900)] focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block font-medium text-[var(--color-ink-700)]">Safety Stock</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={safetyStock}
+                  onChange={(e) => setSafetyStock(Math.max(0, Number(e.target.value)))}
+                  className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-2.5 py-1.5 text-xs tabular text-[var(--color-ink-900)] focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block font-medium text-[var(--color-ink-700)]">Reorder Point</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={reorderPoint}
+                  onChange={(e) => setReorderPoint(Math.max(0, Number(e.target.value)))}
+                  className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-2.5 py-1.5 text-xs tabular text-[var(--color-ink-900)] focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 3. STORAGE & NOTES */}
+          <div className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-ink-500)]">
+              Storage & Notes
+            </p>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-[--color-ink-700]">Current Stock Quantity</label>
-              <input
-                type="number"
-                min="0"
-                value={currentStock}
-                onChange={(e) => setCurrentStock(Math.max(0, Number(e.target.value)))}
-                className="w-full rounded-md border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-sm tabular text-[--color-ink-900] focus:outline-none focus:ring-1 focus:ring-blue-500"
+              <textarea
+                rows={2}
+                placeholder="Depot bin number, shelf position, or special handling notes…"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-3 py-1.5 text-xs text-[var(--color-ink-900)] placeholder:text-[var(--color-ink-400)] focus:outline-none focus:border-blue-500 resize-none"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-[--color-ink-700]">Safety Stock Threshold</label>
-              <input
-                type="number"
-                min="0"
-                value={safetyStock}
-                onChange={(e) => setSafetyStock(Math.max(0, Number(e.target.value)))}
-                className="w-full rounded-md border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-sm tabular text-[--color-ink-900] focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-[--color-ink-700]">Reorder Trigger Point</label>
-              <input
-                type="number"
-                min="0"
-                value={reorderPoint}
-                onChange={(e) => setReorderPoint(Math.max(0, Number(e.target.value)))}
-                className="w-full rounded-md border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-sm tabular text-[--color-ink-900] focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-[--color-ink-700]">Notes / Storage Location</label>
-            <textarea
-              rows={2}
-              placeholder="Storage location or notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="w-full rounded-md border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-sm text-[--color-ink-900] placeholder:text-[--color-ink-400] focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
-
-          <div className="mt-5 flex justify-end gap-2.5 pt-3 border-t border-[--color-border]">
+          <div className="flex justify-end gap-2 pt-2 border-t border-[var(--color-border)]">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-[--color-border] px-3.5 py-1.5 text-xs font-medium text-[--color-ink-700] hover:bg-[--color-surface-1] transition-colors cursor-pointer"
+              className="rounded border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-ink-700)] hover:bg-[var(--color-surface-1)] transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-4 py-1.5 text-xs font-semibold text-white shadow-2xs transition-colors cursor-pointer"
+              className="rounded bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-4 py-1.5 text-xs font-semibold text-white shadow-xs transition-colors cursor-pointer"
             >
-              {submitting ? "Saving…" : "Add Item"}
+              {submitting ? "Saving…" : "Add Inventory Item"}
             </button>
           </div>
         </form>
@@ -846,7 +861,7 @@ function EditInventoryModal({ item, onClose, onUpdated }: { item: InventoryItem;
       currentStock,
       safetyStock,
       reorderPoint,
-      notes,
+      notes: notes.trim(),
     })
       .then(() => {
         setSubmitting(false);
@@ -860,98 +875,116 @@ function EditInventoryModal({ item, onClose, onUpdated }: { item: InventoryItem;
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4" onClick={onClose}>
       <div
-        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 shadow-2xl text-[--color-ink-900]"
+        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] p-5 sm:p-6 shadow-xl text-[var(--color-ink-900)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-[--color-border] pb-3 mb-4">
+        <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3 mb-4">
           <div>
-            <h2 className="text-base font-semibold text-[--color-ink-900]">Edit Inventory Item</h2>
-            <p className="text-xs text-[--color-ink-500] mt-0.5">{item.part}</p>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--color-ink-900)]">Edit Inventory Item</h2>
+            <p className="text-xs text-[var(--color-ink-500)] font-mono mt-0.5">{item.part}</p>
           </div>
-          <button onClick={onClose} className="rounded p-1 text-[--color-ink-400] hover:text-[--color-ink-700] hover:bg-[--color-surface-1] transition-colors cursor-pointer">
-            <X size={18} />
+          <button onClick={onClose} className="rounded p-1 text-[var(--color-ink-400)] hover:text-[var(--color-ink-700)] hover:bg-[var(--color-surface-1)] transition-colors cursor-pointer">
+            <X size={16} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-sm">
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-[--color-ink-700]">Part / Component Name</label>
-            <input
-              required
-              value={part}
-              onChange={(e) => setPart(e.target.value)}
-              className="w-full rounded-md border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-sm text-[--color-ink-900] focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          {/* 1. IDENTIFICATION */}
+          <div className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-ink-500)]">
+              Identification
+            </p>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-[--color-ink-700]">Category</label>
+              <label className="mb-1 block font-medium text-[var(--color-ink-700)]">Part / Component Name *</label>
+              <input
+                required
+                value={part}
+                onChange={(e) => setPart(e.target.value)}
+                className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-3 py-1.5 text-xs font-medium text-[var(--color-ink-900)] focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block font-medium text-[var(--color-ink-700)]">Category</label>
               <input
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded-md border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-sm text-[--color-ink-900] focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-[--color-ink-700]">Current Stock Count</label>
-              <input
-                type="number"
-                min="0"
-                value={currentStock}
-                onChange={(e) => setCurrentStock(Math.max(0, Number(e.target.value)))}
-                className="w-full rounded-md border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-sm tabular text-[--color-ink-900] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-3 py-1.5 text-xs text-[var(--color-ink-900)] focus:outline-none focus:border-blue-500"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-[--color-ink-700]">Safety Stock Threshold</label>
-              <input
-                type="number"
-                min="0"
-                value={safetyStock}
-                onChange={(e) => setSafetyStock(Math.max(0, Number(e.target.value)))}
-                className="w-full rounded-md border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-sm tabular text-[--color-ink-900] focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
+          {/* 2. STOCK PARAMETERS */}
+          <div className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-ink-500)]">
+              Stock Parameters
+            </p>
+            <div className="grid grid-cols-3 gap-2.5">
+              <div>
+                <label className="mb-1 block font-medium text-[var(--color-ink-700)]">Current Stock</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={currentStock}
+                  onChange={(e) => setCurrentStock(Math.max(0, Number(e.target.value)))}
+                  className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-2.5 py-1.5 text-xs tabular font-semibold text-[var(--color-ink-900)] focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block font-medium text-[var(--color-ink-700)]">Safety Stock</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={safetyStock}
+                  onChange={(e) => setSafetyStock(Math.max(0, Number(e.target.value)))}
+                  className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-2.5 py-1.5 text-xs tabular text-[var(--color-ink-900)] focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block font-medium text-[var(--color-ink-700)]">Reorder Point</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={reorderPoint}
+                  onChange={(e) => setReorderPoint(Math.max(0, Number(e.target.value)))}
+                  className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-2.5 py-1.5 text-xs tabular text-[var(--color-ink-900)] focus:outline-none focus:border-blue-500"
+                />
+              </div>
             </div>
+          </div>
+
+          {/* 3. STORAGE & NOTES */}
+          <div className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-ink-500)]">
+              Storage & Notes
+            </p>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-[--color-ink-700]">Reorder Trigger Point</label>
-              <input
-                type="number"
-                min="0"
-                value={reorderPoint}
-                onChange={(e) => setReorderPoint(Math.max(0, Number(e.target.value)))}
-                className="w-full rounded-md border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-sm tabular text-[--color-ink-900] focus:outline-none focus:ring-1 focus:ring-blue-500"
+              <textarea
+                rows={2}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Depot bin number or storage notes…"
+                className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-0)] px-3 py-1.5 text-xs text-[var(--color-ink-900)] focus:outline-none focus:border-blue-500 resize-none"
               />
             </div>
           </div>
 
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-[--color-ink-700]">Location & Storage Notes</label>
-            <textarea
-              rows={2}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="w-full rounded-md border border-[--color-border] bg-[--color-surface-1] px-3 py-2 text-sm text-[--color-ink-900] focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
-
-          <div className="mt-5 flex justify-end gap-2.5 pt-3 border-t border-[--color-border]">
+          <div className="flex justify-end gap-2 pt-2 border-t border-[var(--color-border)]">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-[--color-border] px-3.5 py-1.5 text-xs font-medium text-[--color-ink-700] hover:bg-[--color-surface-1] transition-colors cursor-pointer"
+              className="rounded border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-ink-700)] hover:bg-[var(--color-surface-1)] transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-4 py-1.5 text-xs font-semibold text-white shadow-2xs transition-colors cursor-pointer"
+              className="rounded bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-4 py-1.5 text-xs font-semibold text-white shadow-xs transition-colors cursor-pointer"
             >
               {submitting ? "Saving…" : "Save Changes"}
             </button>
@@ -999,28 +1032,28 @@ function AdjustQuantityModal({ item, onClose, onAdjusted }: { item: InventoryIte
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4" onClick={onClose}>
       <div
-        className="w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-xl border border-[--color-border] bg-[--color-surface-0] p-5 sm:p-6 shadow-2xl text-sm text-[--color-ink-900]"
+        className="w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-0)] p-5 sm:p-6 shadow-2xl text-sm text-[var(--color-ink-900)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-[--color-border] pb-3 mb-4">
+        <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3 mb-4">
           <div>
-            <h3 className="font-semibold text-[--color-ink-900]">Adjust Stock Quantity</h3>
-            <p className="text-xs text-[--color-ink-500] mt-0.5">{item.part}</p>
+            <h3 className="font-semibold text-[var(--color-ink-900)]">Adjust Stock Quantity</h3>
+            <p className="text-xs text-[var(--color-ink-500)] mt-0.5">{item.part}</p>
           </div>
-          <button onClick={onClose} className="rounded p-1 text-[--color-ink-400] hover:text-[--color-ink-700] hover:bg-[--color-surface-1] transition-colors cursor-pointer">
+          <button onClick={onClose} className="rounded p-1 text-[var(--color-ink-400)] hover:text-[var(--color-ink-700)] hover:bg-[var(--color-surface-1)] transition-colors cursor-pointer">
             <X size={18} />
           </button>
         </div>
 
-        <div className="rounded-lg bg-[--color-surface-1] border border-[--color-border] p-3 mb-4">
-          <p className="text-xs text-[--color-ink-500]">Current On-Hand Stock</p>
-          <p className="text-2xl font-bold tabular text-[--color-ink-900] mt-0.5">{item.currentStock} <span className="text-xs font-normal text-[--color-ink-500]">units</span></p>
+        <div className="rounded-lg bg-[var(--color-surface-1)] border border-[var(--color-border)] p-3 mb-4">
+          <p className="text-xs text-[var(--color-ink-500)]">Current On-Hand Stock</p>
+          <p className="text-2xl font-bold tabular text-[var(--color-ink-900)] mt-0.5">{item.currentStock} <span className="text-xs font-normal text-[var(--color-ink-500)]">units</span></p>
         </div>
 
         {/* Set Exact New Stock */}
-        <form onSubmit={applyExact} className="space-y-3 pb-4 border-b border-[--color-border]">
+        <form onSubmit={applyExact} className="space-y-3 pb-4 border-b border-[var(--color-border)]">
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-[--color-ink-700]">
+            <label className="mb-1.5 block text-xs font-medium text-[var(--color-ink-700)]">
               Set Exact Stock Count
             </label>
             <div className="flex gap-2">
@@ -1029,7 +1062,7 @@ function AdjustQuantityModal({ item, onClose, onAdjusted }: { item: InventoryIte
                 min="0"
                 value={exactStock}
                 onChange={(e) => setExactStock(Math.max(0, Number(e.target.value)))}
-                className="flex-1 rounded-md border border-[--color-border] bg-[--color-surface-1] px-3 py-1.5 text-sm tabular font-semibold text-[--color-ink-900] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="flex-1 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-1.5 text-sm tabular font-semibold text-[var(--color-ink-900)] focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               <button
                 type="submit"
@@ -1044,7 +1077,7 @@ function AdjustQuantityModal({ item, onClose, onAdjusted }: { item: InventoryIte
 
         {/* Quick Adjustment Options */}
         <div className="mt-4 space-y-2.5">
-          <label className="block text-xs font-medium text-[--color-ink-700]">
+          <label className="block text-xs font-medium text-[var(--color-ink-700)]">
             Quick Step Adjustment
           </label>
           <div className="flex items-center gap-2">
@@ -1053,9 +1086,9 @@ function AdjustQuantityModal({ item, onClose, onAdjusted }: { item: InventoryIte
               min="1"
               value={delta}
               onChange={(e) => setDelta(Math.max(1, Number(e.target.value)))}
-              className="w-20 rounded-md border border-[--color-border] bg-[--color-surface-1] px-2.5 py-1.5 text-xs tabular font-medium text-[--color-ink-900] focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-20 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-1)] px-2.5 py-1.5 text-xs tabular font-medium text-[var(--color-ink-900)] focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
-            <span className="text-xs text-[--color-ink-500]">units</span>
+            <span className="text-xs text-[var(--color-ink-500)]">units</span>
           </div>
 
           <div className="flex gap-2 pt-1">

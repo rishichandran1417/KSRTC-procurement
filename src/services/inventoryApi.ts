@@ -595,7 +595,7 @@ export function clearInventory(): InventoryItem[] {
   try {
     localStorage.removeItem(INVENTORY_STORAGE_KEY);
     localStorage.removeItem(REMOTE_INVENTORY_CACHE_KEY);
-  } catch {}
+  } catch { }
   return [];
 }
 
@@ -635,7 +635,7 @@ export async function getInventory(): Promise<InventoryItem[]> {
   }
 
   // Trigger non-blocking background revalidation if needed
-  fetchRemoteInventoryInBackground().catch(() => {});
+  fetchRemoteInventoryInBackground().catch(() => { });
 
   const result = Array.from(map.values());
   saveStoredInventory(result);
@@ -1037,7 +1037,7 @@ export async function getPriceHistory(partIdOrName: string): Promise<PriceRecord
         }
       }
     }
-  } catch {}
+  } catch { }
 
   // 2. Also check active inventory item for baseline unit cost if no PO records found
   const item = activeInventory.find(

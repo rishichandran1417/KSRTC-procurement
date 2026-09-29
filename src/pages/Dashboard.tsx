@@ -1,21 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  TrendingUp,
-  Boxes,
-  AlertTriangle,
-  ClipboardList,
-  Wallet,
-  Calculator,
-  ArrowRight,
-  ShieldAlert,
-  Package,
-  Play,
-  CheckCircle2,
+  TrendingUp, Boxes, AlertTriangle, ClipboardList, Wallet, Calculator,
+  ArrowRight, ShieldAlert, Package, Play
 } from "lucide-react";
 import { TopBar } from "../components/layout/TopBar";
 import { KpiCard } from "../components/ui/KpiCard";
-import { LoadingState, ErrorState, EmptyState } from "../components/ui/States";
+import { LoadingState, ErrorState } from "../components/ui/States";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { useFilters } from "../state/FiltersContext";
 import { useAlerts } from "../state/AlertsContext";
@@ -32,7 +23,7 @@ function formatCurrency(n: number) {
 
 export default function Dashboard() {
   const { filters } = useFilters();
-  const { openAlertModal, totalAlerts } = useAlerts();
+  const { openAlertModal } = useAlerts();
   const navigate = useNavigate();
 
   const [kpis, setKpis] = useState<DashboardKpis | null>(null);
@@ -59,23 +50,14 @@ export default function Dashboard() {
           const firstPart = invData[0].part;
           let fcData: ForecastResult | null = null;
           try {
-            fcData = await getForecast({
-              part: firstPart,
-              start_date: filters.startDate,
-              end_date: filters.endDate,
-              horizon: filters.horizon,
-            });
+            fcData = await getForecast({ part: firstPart, start_date: filters.startDate, end_date: filters.endDate, horizon: filters.horizon });
           } catch {
             fcData = null;
           }
 
           let pulpData: ProcurementResult | null = null;
           try {
-            pulpData = await runOptimization({
-              budget: 0,
-              forecast_horizon: filters.horizon,
-              service_level: 0.95,
-            });
+            pulpData = await runOptimization({ budget: 0, forecast_horizon: filters.horizon, service_level: 0.95 });
           } catch {
             pulpData = null;
           }
@@ -87,7 +69,7 @@ export default function Dashboard() {
           setPulpResult(null);
         }
       })
-      .catch(() => setError("Could not load operational dashboard metrics from the central backend."))
+      .catch(() => setError("Could not load operational dashboard data."))
       .finally(() => setLoading(false));
   };
 
@@ -111,143 +93,111 @@ export default function Dashboard() {
 
   return (
     <div>
-      <TopBar
-        title="Supply Chain Control Tower"
-        subtitle="Central operational monitoring across fleet inventory, purchase orders, demand forecasts, and procurement optimization"
-      />
+      <TopBar title="Operational Dashboard" subtitle="Real-time overview of depot inventory, demand forecast, and procurement pipeline" />
 
       <div className="p-4 sm:p-6 space-y-5">
         {loading ? (
-          <LoadingState
-            label="Aggregating operational supply chain metrics…"
-            description="Syncing inventory balances, purchase order statuses, and optimization constraints."
-          />
+          <LoadingState label="Loading operational metrics…" />
         ) : error || !kpis ? (
-          <ErrorState
-            title="Operational Control Tower Unavailable"
-            message={error ?? "Could not connect to central logistics services."}
-            onRetry={loadData}
-          />
+          <ErrorState title="Dashboard unavailable." message={error ?? undefined} onRetry={loadData} />
         ) : (
           <>
-            {/* KPI METRICS ROW */}
-            <div className="grid grid-cols-1 gap-3 sm:gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            {/* KPI ROW */}
+            <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
               <KpiCard
                 label="Forecast Demand"
                 value={kpis.forecastDemand.toLocaleString("en-IN")}
                 unit="units"
                 accent="forecast"
                 icon={TrendingUp}
-                helpText={`${filters.horizon}-month planning window`}
+                helpText={`Next ${filters.horizon} months`}
               />
               <KpiCard
-                label="Central Inventory"
+                label="Current Stock"
                 value={kpis.currentInventory.toLocaleString("en-IN")}
                 unit="units"
                 accent="neutral"
                 icon={Boxes}
-                helpText="Active depot spare stock"
+                helpText="Active central inventory"
               />
               <KpiCard
-                label="Stockout Risks"
+                label="Stockout Risk"
                 value={String(kpis.stockoutRiskCount)}
                 unit="items"
-                accent="critical"
+                accent={kpis.stockoutRiskCount > 0 ? "critical" : "healthy"}
                 icon={AlertTriangle}
-                helpText="Items below safety stock"
+                helpText={kpis.stockoutRiskCount > 0 ? "Items below safety stock" : "All levels nominal"}
                 onClick={openAlertModal}
               />
               <KpiCard
-                label="Active POs"
+                label="Open Orders"
                 value={String(kpis.openPurchaseOrders)}
-                unit="orders"
+                unit="POs"
                 accent="neutral"
                 icon={ClipboardList}
-                helpText="Orders pending delivery"
+                helpText="In-flight supplier POs"
               />
               <KpiCard
-                label="Allocated Budget"
+                label="Procurement Budget"
                 value={formatCurrency(kpis.procurementBudget)}
                 accent="optimize"
                 icon={Wallet}
-                helpText="Current procurement pool"
+                helpText="Allocated depot budget"
               />
               <KpiCard
                 label="Recommended Spend"
                 value={formatCurrency(kpis.recommendedProcurement)}
                 accent="optimize"
                 icon={Calculator}
-                helpText="PuLP optimization output"
+                helpText="PuLP model requirement"
               />
             </div>
 
             {/* OPERATIONAL PANELS GRID */}
             <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-2">
-              {/* 1. INVENTORY RISK PANEL */}
-              <div className="rounded-md border border-[--color-border] bg-[--color-surface-0] p-4 flex flex-col justify-between shadow-2xs">
+
+              {/* 1. INVENTORY RISK TABLE */}
+              <div className="rounded-md border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs flex flex-col justify-between">
                 <div>
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[--color-border] pb-3">
-                    <div className="flex items-center gap-2">
-                      <ShieldAlert className="text-rose-600 dark:text-rose-400" size={16} />
-                      <h2 className="text-xs font-bold uppercase tracking-wider text-[--color-ink-900]">
-                        Inventory Critical Stock & Reorder Triggers
+                  <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-zinc-800 px-4 py-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <ShieldAlert className="text-rose-600 dark:text-rose-400 shrink-0" size={16} />
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-100 truncate">
+                        Critical Shortages & Reorder Due
                       </h2>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {totalAlerts > 0 && (
-                        <button
-                          onClick={openAlertModal}
-                          className="flex items-center gap-1 rounded bg-rose-500/10 px-2 py-0.5 text-[11px] font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-500/20 transition-colors cursor-pointer"
-                        >
-                          <AlertTriangle size={11} /> Review Alerts ({totalAlerts})
-                        </button>
-                      )}
-                      <button
-                        onClick={() => navigate("/inventory")}
-                        className="flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
-                      >
-                        Inventory Table <ArrowRight size={12} />
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => navigate("/inventory")}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline shrink-0"
+                    >
+                      View All <ArrowRight size={12} />
+                    </button>
                   </div>
 
-                  <div className="mt-3 overflow-x-auto">
+                  <div className="overflow-x-auto">
                     {criticalInventory.length === 0 ? (
-                      <EmptyState
-                        title="All Inventory Stock Normal"
-                        message="No spare parts are currently below safety stock thresholds or in critical stockout status."
-                        icon={CheckCircle2}
-                      />
+                      <p className="py-8 text-center text-xs text-slate-500 dark:text-zinc-400">
+                        No critical stockout items detected. All inventory levels are nominal.
+                      </p>
                     ) : (
                       <table className="w-full text-xs min-w-[420px]">
                         <thead>
-                          <tr className="border-b border-[--color-border] bg-[--color-surface-1]/50 text-left text-[11px] font-semibold uppercase tracking-wider text-[--color-ink-500]">
-                            <th className="py-2 px-2.5">Part / Item</th>
-                            <th className="py-2 px-2 text-right">Current Stock</th>
-                            <th className="py-2 px-2 text-right">Safety Stock</th>
-                            <th className="py-2 px-2 text-right">Reorder Point</th>
-                            <th className="py-2 px-2 text-center">Status</th>
+                          <tr className="border-b border-slate-100 dark:border-zinc-800 bg-slate-50/75 dark:bg-zinc-850 text-left text-[11px] font-semibold text-slate-500 dark:text-zinc-400">
+                            <th className="py-2.5 px-3.5">Part / Item</th>
+                            <th className="py-2.5 px-2.5 text-right">Stock</th>
+                            <th className="py-2.5 px-2.5 text-right">Safety</th>
+                            <th className="py-2.5 px-2.5 text-right">Reorder</th>
+                            <th className="py-2.5 px-3.5 text-center">Status</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-[--color-border]">
+                        <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
                           {criticalInventory.map((item, idx) => (
-                            <tr
-                              key={`dash-crit-${item.id}-${idx}`}
-                              className="hover:bg-[--color-surface-1]/60 transition-colors"
-                            >
-                              <td className="py-2.5 px-2.5 font-medium text-[--color-ink-900] truncate max-w-[180px]">
-                                {item.part}
-                              </td>
-                              <td className="py-2.5 px-2 tabular text-right font-bold text-rose-600 dark:text-rose-400">
-                                {item.currentStock.toLocaleString("en-IN")}
-                              </td>
-                              <td className="py-2.5 px-2 tabular text-right text-[--color-ink-600]">
-                                {item.safetyStock.toLocaleString("en-IN")}
-                              </td>
-                              <td className="py-2.5 px-2 tabular text-right text-[--color-ink-600]">
-                                {item.reorderPoint.toLocaleString("en-IN")}
-                              </td>
-                              <td className="py-2.5 px-2 text-center">
+                            <tr key={`dash-crit-${item.id}-${idx}`} className="hover:bg-slate-50/60 dark:hover:bg-zinc-800/40 transition-colors">
+                              <td className="py-2.5 px-3.5 font-medium text-slate-900 dark:text-zinc-100">{item.part}</td>
+                              <td className="py-2.5 px-2.5 text-right tabular font-bold text-rose-600 dark:text-rose-400">{item.currentStock}</td>
+                              <td className="py-2.5 px-2.5 text-right tabular text-slate-500 dark:text-zinc-400">{item.safetyStock}</td>
+                              <td className="py-2.5 px-2.5 text-right tabular text-slate-500 dark:text-zinc-400">{item.reorderPoint}</td>
+                              <td className="py-2.5 px-3.5 text-center">
                                 <StatusBadge label={item.status} />
                               </td>
                             </tr>
@@ -259,61 +209,46 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* 2. RECENT PURCHASE ORDERS PANEL */}
-              <div className="rounded-md border border-[--color-border] bg-[--color-surface-0] p-4 flex flex-col justify-between shadow-2xs">
+              {/* 2. RECENT PURCHASE ORDERS TABLE */}
+              <div className="rounded-md border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs flex flex-col justify-between">
                 <div>
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[--color-border] pb-3">
-                    <div className="flex items-center gap-2">
-                      <Package className="text-blue-600 dark:text-blue-400" size={16} />
-                      <h2 className="text-xs font-bold uppercase tracking-wider text-[--color-ink-900]">
-                        Purchase Order Transactions
+                  <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-zinc-800 px-4 py-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Package className="text-blue-600 dark:text-blue-400 shrink-0" size={16} />
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-100 truncate">
+                        Recent Purchase Orders
                       </h2>
                     </div>
                     <button
                       onClick={() => navigate("/purchase-orders")}
-                      className="flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                      className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline shrink-0"
                     >
-                      All Purchase Orders <ArrowRight size={12} />
+                      View All POs <ArrowRight size={12} />
                     </button>
                   </div>
 
-                  <div className="mt-3 overflow-x-auto">
+                  <div className="overflow-x-auto">
                     {recentPos.length === 0 ? (
-                      <EmptyState
-                        title="No Purchase Orders Recorded"
-                        message="No purchase orders are currently registered in the database."
-                        action={{
-                          label: "Create Purchase Order",
-                          onClick: () => navigate("/purchase-orders/new"),
-                        }}
-                      />
+                      <p className="py-8 text-center text-xs text-slate-500 dark:text-zinc-400">
+                        No purchase orders recorded yet.
+                      </p>
                     ) : (
-                      <table className="w-full text-xs min-w-[360px]">
+                      <table className="w-full text-xs min-w-[380px]">
                         <thead>
-                          <tr className="border-b border-[--color-border] bg-[--color-surface-1]/50 text-left text-[11px] font-semibold uppercase tracking-wider text-[--color-ink-500]">
-                            <th className="py-2 px-2.5">PO Number</th>
-                            <th className="py-2 px-2">Supplier</th>
-                            <th className="py-2 px-2 text-right">Order Value</th>
-                            <th className="py-2 px-2 text-center">Status</th>
+                          <tr className="border-b border-slate-100 dark:border-zinc-800 bg-slate-50/75 dark:bg-zinc-850 text-left text-[11px] font-semibold text-slate-500 dark:text-zinc-400">
+                            <th className="py-2.5 px-3.5">PO #</th>
+                            <th className="py-2.5 px-2.5">Supplier</th>
+                            <th className="py-2.5 px-2.5 text-right">Total Amount</th>
+                            <th className="py-2.5 px-3.5 text-center">Status</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-[--color-border]">
+                        <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
                           {recentPos.map((po, idx) => (
-                            <tr
-                              key={`dash-po-${po.poNumber}-${idx}`}
-                              onClick={() => navigate("/purchase-orders")}
-                              className="hover:bg-[--color-surface-1]/60 transition-colors cursor-pointer"
-                            >
-                              <td className="py-2.5 px-2.5 font-mono font-medium text-blue-600 dark:text-blue-400 hover:underline">
-                                {po.poNumber}
-                              </td>
-                              <td className="py-2.5 px-2 text-[--color-ink-700] truncate max-w-[150px]">
-                                {po.supplier}
-                              </td>
-                              <td className="py-2.5 px-2 tabular text-right font-medium text-[--color-ink-900]">
-                                ₹{po.total.toLocaleString("en-IN")}
-                              </td>
-                              <td className="py-2.5 px-2 text-center">
+                            <tr key={`dash-po-${po.poNumber}-${idx}`} className="hover:bg-slate-50/60 dark:hover:bg-zinc-800/40 transition-colors">
+                              <td className="py-2.5 px-3.5 font-medium text-slate-900 dark:text-zinc-100">{po.poNumber}</td>
+                              <td className="py-2.5 px-2.5 text-slate-600 dark:text-zinc-300 truncate max-w-[160px]">{po.supplier}</td>
+                              <td className="py-2.5 px-2.5 text-right tabular font-semibold text-slate-900 dark:text-zinc-100">₹{po.total.toLocaleString("en-IN")}</td>
+                              <td className="py-2.5 px-3.5 text-center">
                                 <StatusBadge label={po.status} />
                               </td>
                             </tr>
@@ -325,81 +260,73 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* 3. DEMAND FORECAST OVERVIEW */}
-              <div className="rounded-md border border-[--color-border] bg-[--color-surface-0] p-4 shadow-2xs flex flex-col justify-between">
-                <div>
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[--color-border] pb-3">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="text-blue-600 dark:text-blue-400" size={16} />
-                      <div>
-                        <h2 className="text-xs font-bold uppercase tracking-wider text-[--color-ink-900]">
-                          Demand Forecasting Engine
-                        </h2>
-                      </div>
+              {/* 3. FORECAST OVERVIEW */}
+              <div className="rounded-md border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs">
+                <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-zinc-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="text-blue-600 dark:text-blue-400 shrink-0" size={16} />
+                    <div>
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-100">
+                        Demand Forecast Status
+                      </h2>
+                      <p className="text-[11px] text-slate-500 dark:text-zinc-400">External ML demand forecasting pipeline</p>
                     </div>
-                    <button
-                      onClick={() => navigate("/forecast")}
-                      className="flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
-                    >
-                      Open Forecasting <ArrowRight size={12} />
-                    </button>
                   </div>
-
-                  {latestForecast ? (
-                    <div className="mt-3.5 space-y-3">
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
-                        <div className="rounded border border-[--color-border] bg-[--color-surface-1] p-2">
-                          <p className="text-[10px] font-semibold uppercase text-[--color-ink-500]">Model</p>
-                          <p className="font-bold text-[--color-ink-900] truncate mt-0.5">{latestForecast.modelName}</p>
-                        </div>
-                        <div className="rounded border border-[--color-border] bg-[--color-surface-1] p-2">
-                          <p className="text-[10px] font-semibold uppercase text-[--color-ink-500]">MAPE Error</p>
-                          <p className="font-bold text-[--color-ink-900] mt-0.5">{latestForecast.mape}%</p>
-                        </div>
-                        <div className="rounded border border-[--color-border] bg-[--color-surface-1] p-2">
-                          <p className="text-[10px] font-semibold uppercase text-[--color-ink-500]">MAE</p>
-                          <p className="font-bold text-[--color-ink-900] mt-0.5">{latestForecast.mae}</p>
-                        </div>
-                        <div className="rounded border border-[--color-border] bg-[--color-surface-1] p-2">
-                          <p className="text-[10px] font-semibold uppercase text-[--color-ink-500]">RMSE</p>
-                          <p className="font-bold text-[--color-ink-900] mt-0.5">{latestForecast.rmse}</p>
-                        </div>
-                      </div>
-                      <p className="text-xs text-[--color-ink-600] leading-relaxed">
-                        External machine learning model predicts fleet spare requirements for the next{" "}
-                        <span className="font-semibold text-[--color-ink-900]">{latestForecast.horizon} months</span> using consumption history and confidence intervals.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="mt-3">
-                      <EmptyState
-                        title="No Forecast Generated"
-                        message="Select an inventory item in Demand Forecasting to generate ML component projections."
-                        action={{
-                          label: "Run Demand Forecast",
-                          onClick: () => navigate("/forecast"),
-                        }}
-                      />
-                    </div>
-                  )}
+                  <button
+                    onClick={() => navigate("/forecast")}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline shrink-0"
+                  >
+                    Open Forecast <ArrowRight size={12} />
+                  </button>
                 </div>
+
+                {latestForecast ? (
+                  <div className="mt-3.5 space-y-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                      <div className="rounded border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-850 p-2">
+                        <p className="text-[10px] uppercase font-semibold text-slate-400 dark:text-zinc-500">Model</p>
+                        <p className="font-semibold text-slate-900 dark:text-zinc-100 truncate mt-0.5">{latestForecast.modelName}</p>
+                      </div>
+                      <div className="rounded border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-850 p-2">
+                        <p className="text-[10px] uppercase font-semibold text-slate-400 dark:text-zinc-500">MAPE</p>
+                        <p className="font-semibold text-slate-900 dark:text-zinc-100 tabular mt-0.5">{latestForecast.mape}%</p>
+                      </div>
+                      <div className="rounded border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-850 p-2">
+                        <p className="text-[10px] uppercase font-semibold text-slate-400 dark:text-zinc-500">MAE</p>
+                        <p className="font-semibold text-slate-900 dark:text-zinc-100 tabular mt-0.5">{latestForecast.mae}</p>
+                      </div>
+                      <div className="rounded border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-850 p-2">
+                        <p className="text-[10px] uppercase font-semibold text-slate-400 dark:text-zinc-500">Horizon</p>
+                        <p className="font-semibold text-slate-900 dark:text-zinc-100 mt-0.5">{latestForecast.horizon} Mo</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-zinc-400">
+                      Demand projections computed for active fleet components across the next {latestForecast.horizon} months with standard confidence interval.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="py-8 text-center text-xs text-slate-500 dark:text-zinc-400">
+                    No active forecast generated. Open the Forecast tab to run projections.
+                  </p>
+                )}
               </div>
 
               {/* 4. PROCUREMENT OPTIMIZATION OVERVIEW */}
-              <div className="rounded-md border border-[--color-border] bg-[--color-surface-0] p-4 flex flex-col justify-between shadow-2xs">
+              <div className="rounded-md border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs flex flex-col justify-between">
                 <div>
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[--color-border] pb-3">
+                  <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-zinc-800 pb-3">
                     <div className="flex items-center gap-2">
-                      <Calculator className="text-purple-600 dark:text-purple-400" size={16} />
+                      <Calculator className="text-purple-600 dark:text-purple-400 shrink-0" size={16} />
                       <div>
-                        <h2 className="text-xs font-bold uppercase tracking-wider text-[--color-ink-900]">
-                          PuLP Optimization Engine
+                        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-100">
+                          Procurement Optimization
                         </h2>
+                        <p className="text-[11px] text-slate-500 dark:text-zinc-400">Mathematical linear optimization model</p>
                       </div>
                     </div>
                     <button
                       onClick={() => navigate("/procurement")}
-                      className="flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                      className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline shrink-0"
                     >
                       Open Optimizer <ArrowRight size={12} />
                     </button>
@@ -407,44 +334,33 @@ export default function Dashboard() {
 
                   {pulpResult ? (
                     <div className="mt-3.5 space-y-3 text-xs">
-                      <div className="flex justify-between items-center rounded border border-[--color-border] bg-[--color-surface-1] p-3">
+                      <div className="flex justify-between items-center rounded border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-850 p-3">
                         <div>
-                          <p className="text-[10px] uppercase font-semibold text-[--color-ink-500]">Recommended Spend</p>
-                          <p className="text-base font-bold tabular text-purple-700 dark:text-purple-300">
-                            ₹{pulpResult.recommended_spend.toLocaleString("en-IN")}
-                          </p>
+                          <p className="text-[10px] uppercase font-semibold text-slate-400 dark:text-zinc-500">Optimized Value</p>
+                          <p className="text-base font-bold text-slate-900 dark:text-zinc-100 tabular mt-0.5">₹{pulpResult.recommended_spend.toLocaleString("en-IN")}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-[10px] uppercase font-semibold text-[--color-ink-500]">Recommended Spares</p>
-                          <p className="text-base font-bold text-[--color-ink-900]">
-                            {pulpResult.items.length} line items
-                          </p>
+                          <p className="text-[10px] uppercase font-semibold text-slate-400 dark:text-zinc-500">Recommended Lines</p>
+                          <p className="text-base font-bold text-slate-900 dark:text-zinc-100 mt-0.5">{pulpResult.items.length} parts</p>
                         </div>
                       </div>
 
                       <button
-                        type="button"
                         onClick={handleCreatePoFromPulp}
-                        className="w-full flex items-center justify-center gap-2 rounded-md bg-blue-600 hover:bg-blue-700 active:scale-98 py-2 text-xs font-semibold text-white shadow-2xs transition-all cursor-pointer"
+                        className="w-full flex items-center justify-center gap-1.5 rounded-md bg-blue-600 hover:bg-blue-700 active:scale-95 py-2 text-xs font-semibold text-white shadow-xs transition-all cursor-pointer"
                       >
                         <Play size={12} className="fill-white" />
-                        <span>Create Purchase Order from Recommendations</span>
+                        <span>Create Purchase Order from Optimization</span>
                       </button>
                     </div>
                   ) : (
-                    <div className="mt-3">
-                      <EmptyState
-                        title="No Active Procurement Recommendations"
-                        message="Execute the PuLP mathematical solver to optimize purchase quantities within budget limits."
-                        action={{
-                          label: "Calculate Recommendations",
-                          onClick: () => navigate("/procurement"),
-                        }}
-                      />
-                    </div>
+                    <p className="py-8 text-center text-xs text-slate-500 dark:text-zinc-400">
+                      No active optimization executed. Configure budget parameters in the Optimizer tab.
+                    </p>
                   )}
                 </div>
               </div>
+
             </div>
           </>
         )}

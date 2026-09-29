@@ -46,6 +46,26 @@ export default function AiAssistant() {
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const getGreeting = () => {
+    const now = new Date();
+    const hour = now.getHours();
+    let text = "Good Evening";
+    if (hour >= 5 && hour < 12) {
+      text = "Good Morning";
+    } else if (hour >= 12 && hour < 17) {
+      text = "Good Afternoon";
+    }
+    const dateStr = now.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+    return { text, dateStr };
+  };
+
+  const greeting = getGreeting();
+
   // Load sessions from localStorage
   useEffect(() => {
     try {
@@ -175,96 +195,105 @@ export default function AiAssistant() {
   };
 
   return (
-    <div className="flex h-full flex-col relative bg-[--color-surface-1]">
+    <div className="flex h-full flex-col relative bg-[var(--color-surface-1)]">
       {/* TOP HEADER */}
-      <div className="flex items-center justify-between border-b border-[--color-border] bg-[--color-surface-0] px-4 sm:px-6 py-3 shrink-0">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={toggleMobile}
-            className="rounded-md p-1.5 text-[--color-ink-700] hover:bg-[--color-surface-2] active:scale-95 transition-transform lg:hidden shrink-0 cursor-pointer"
-            aria-label="Open navigation menu"
-          >
-            <Menu size={20} />
-          </button>
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[--color-surface-1] border border-[--color-border] shadow-2xs p-1.5">
-            <img src="/scion-logo.png" alt="SCION" className="h-6 w-6 object-contain" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm sm:text-base font-bold text-[--color-ink-900]">KSRTC SCION</h1>
-              <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                Operational
-              </span>
+      <div className="border-b border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 sm:px-6 py-3 shrink-0">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={toggleMobile}
+              className="rounded-md p-1.5 text-slate-600 hover:bg-slate-100 dark:text-zinc-300 dark:hover:bg-zinc-800 lg:hidden shrink-0 cursor-pointer"
+              aria-label="Open navigation menu"
+            >
+              <Menu size={18} />
+            </button>
+            <div className="flex h-8 w-8 items-center justify-center rounded border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 shrink-0 p-1">
+              <img src="/scion-logo.png" alt="SCION" className="h-5 w-5 object-contain" />
             </div>
-            <p className="text-[11px] text-[--color-ink-500] font-normal hidden sm:block">
-              Fleet Supply Chain & Procurement Intelligence
-            </p>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="text-sm font-bold text-slate-900 dark:text-zinc-100 truncate">KSRTC SCION Decision Support</h1>
+                <span className="inline-flex items-center gap-1 rounded bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 px-1.5 py-0.2 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+                  <span className="h-1 w-1 rounded-full bg-emerald-500"></span>
+                  Active
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-normal hidden sm:block truncate">
+                Fleet inventory, forecasting, and procurement analysis engine
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={startNewChat}
-            className="inline-flex items-center gap-1.5 rounded-md border border-[--color-border] bg-[--color-surface-0] hover:bg-[--color-surface-1] px-3 py-1.5 text-xs font-medium text-[--color-ink-800] transition-colors cursor-pointer shadow-2xs"
-            title="Start new conversation"
-          >
-            <Plus size={13} className="text-[--color-ink-600]" />
-            <span>New Chat</span>
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={startNewChat}
+              className="inline-flex items-center gap-1.5 rounded border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-750 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-zinc-200 transition-colors cursor-pointer shadow-xs"
+              title="Start new analysis session"
+            >
+              <Plus size={13} className="text-slate-500" />
+              <span>New Session</span>
+            </button>
 
-          <button
-            onClick={() => setShowHistoryDrawer(true)}
-            className="inline-flex items-center gap-1.5 rounded-md border border-[--color-border] bg-[--color-surface-0] hover:bg-[--color-surface-1] px-3 py-1.5 text-xs font-medium text-[--color-ink-800] transition-colors cursor-pointer shadow-2xs"
-            title="View conversation history"
-          >
-            <History size={13} className="text-[--color-ink-600]" />
-            <span className="hidden sm:inline">History</span>
-            {sessions.length > 0 && (
-              <span className="ml-0.5 rounded-full bg-[--color-surface-2] px-1.5 py-0.2 text-[10px] font-bold text-[--color-ink-700]">
-                {sessions.length}
-              </span>
-            )}
-          </button>
+            <button
+              onClick={() => setShowHistoryDrawer(true)}
+              className="inline-flex items-center gap-1.5 rounded border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-750 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-zinc-200 transition-colors cursor-pointer shadow-xs"
+              title="View session history"
+            >
+              <History size={13} className="text-slate-500" />
+              <span className="hidden sm:inline">History</span>
+              {sessions.length > 0 && (
+                <span className="rounded bg-slate-100 dark:bg-zinc-700 px-1.5 py-0.2 text-[10px] font-bold text-slate-600 dark:text-zinc-300">
+                  {sessions.length}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* CHAT MESSAGES STREAM */}
       <div className="flex-1 overflow-y-auto">
         {messages.length === 0 ? (
-          /* CLEAN PROFESSIONAL HUMAN-DESIGNED WORKSPACE */
-          <div className="flex h-full flex-col items-center justify-center px-4 text-center pb-12 max-w-xl mx-auto">
-            <div className="h-12 w-12 rounded-xl border border-[--color-border] bg-[--color-surface-0] flex items-center justify-center mb-3 shadow-2xs p-2">
-              <img src="/scion-logo.png" alt="KSRTC SCION" className="h-8 w-8 object-contain" />
+          /* COMPACT ENTERPRISE DECISION CONSOLE STARTING STATE */
+          <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
+            {/* OPERATIONAL BANNER */}
+            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] p-4 sm:p-5 text-xs shadow-2xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--color-border)] pb-3 mb-3">
+                <div>
+                  <h2 className="font-bold text-base text-[var(--color-ink-900)] tracking-tight">
+                    {greeting.text}! How can I assist you today?
+                  </h2>
+                  <p className="text-xs text-[var(--color-ink-500)] mt-0.5 font-medium">
+                    {greeting.dateStr}
+                  </p>
+                </div>
+              </div>
+              <p className="text-[var(--color-ink-700)] leading-relaxed">
+                Ask about current spare parts inventory, stockout risks, demand forecasts, supplier benchmarks, or recommended purchase order quantities.
+              </p>
             </div>
-            <h2 className="text-lg sm:text-xl font-bold text-[--color-ink-900]">
-              KSRTC Fleet & Supply Chain Assistant
-            </h2>
-            <p className="text-xs text-[--color-ink-500] mt-1.5 max-w-md leading-relaxed">
-              Directly query Central Depot inventory, evaluate supplier pricing benchmarks, review pending purchase orders, or run procurement analysis.
-            </p>
           </div>
         ) : (
           /* CONVERSATION COLUMN */
-          <div className="max-w-3xl mx-auto w-full px-4 pt-6 pb-8 space-y-7">
+          <div className="max-w-3xl mx-auto w-full px-4 pt-5 pb-6 space-y-5">
             {messages.map((m) => (
               <ChatGptMessageRow key={m.id} message={m} onNavigate={(path) => navigate(path)} />
             ))}
 
             {sending && (
-              <div className="flex gap-3 sm:gap-4 items-start">
-                <div className="h-8 w-8 rounded-lg bg-[--color-surface-1] border border-[--color-border] flex items-center justify-center shrink-0 shadow-2xs p-1">
-                  <img src="/scion-logo.png" alt="SCION" className="h-5 w-5 object-contain" />
+              <div className="flex gap-3 items-start">
+                <div className="h-7 w-7 rounded border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 flex items-center justify-center shrink-0 p-1">
+                  <img src="/scion-logo.png" alt="SCION" className="h-4 w-4 object-contain" />
                 </div>
-                <div className="flex-1 pt-1">
-                  <ScionLoader text="Formulating KSRTC fleet intelligence response…" />
+                <div className="flex-1 pt-0.5">
+                  <ScionLoader text="Computing procurement decision model and evaluating inventory positions…" />
                 </div>
               </div>
             )}
 
             {error && (
-              <div className="max-w-xl mx-auto rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 p-3.5 text-xs text-rose-700 dark:text-rose-300 flex items-center justify-between shadow-2xs">
+              <div className="rounded-md bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 p-3 text-xs text-rose-700 dark:text-rose-300 flex items-center justify-between">
                 <span>{error}</span>
                 <button
                   onClick={() => send(messages[messages.length - 1]?.text || "")}
@@ -281,9 +310,9 @@ export default function AiAssistant() {
       </div>
 
       {/* BOTTOM INPUT CONTAINER */}
-      <div className="bg-[--color-surface-0] border-t border-[--color-border] px-4 py-3 shrink-0">
+      <div className="bg-white dark:bg-zinc-900 border-t border-slate-200 dark:border-zinc-800 px-4 py-3 shrink-0">
         <div className="max-w-3xl mx-auto">
-          <div className="relative rounded-lg border border-[--color-border] bg-[--color-surface-1] p-1.5 pl-3.5 flex items-center gap-2 shadow-2xs focus-within:border-blue-500 focus-within:bg-[--color-surface-0] focus-within:ring-1 focus-within:ring-blue-500 transition-all">
+          <div className="relative rounded-md border border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 p-1.5 pl-3 flex items-center gap-2 shadow-xs focus-within:border-blue-600 focus-within:bg-white dark:focus-within:bg-zinc-900 focus-within:ring-1 focus-within:ring-blue-600 transition-colors">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -293,22 +322,22 @@ export default function AiAssistant() {
                   send(input);
                 }
               }}
-              placeholder="Search spare parts, vendor rates, stock levels, or purchase orders…"
-              className="flex-1 bg-transparent text-xs sm:text-sm text-[--color-ink-900] placeholder:text-[--color-ink-400] outline-none"
+              placeholder="Query spare parts stock, supplier benchmarks, budget allocations, or purchase orders…"
+              className="flex-1 bg-transparent text-xs sm:text-sm text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 outline-none"
             />
             <button
               onClick={() => send(input)}
               disabled={!input.trim() || sending}
-              className="px-3.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed"
-              title="Send query"
+              className="px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Submit query"
             >
-              <SendHorizontal size={14} />
-              <span className="hidden sm:inline">Send</span>
+              <SendHorizontal size={13} />
+              <span className="hidden sm:inline">Query</span>
             </button>
           </div>
-          <div className="flex items-center justify-between text-[11px] text-[--color-ink-400] px-1 mt-1.5">
-            <span>KSRTC Central Stores & Workshop Intelligence</span>
-            <span className="hidden sm:inline">Press Enter ↵ to send</span>
+          <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-zinc-500 px-1 mt-1.5">
+            <span>KSRTC Central Stores & Workshop Decision System</span>
+            <span className="hidden sm:inline">Press Enter ↵ to submit</span>
           </div>
         </div>
       </div>
@@ -320,14 +349,14 @@ export default function AiAssistant() {
           onClick={() => setShowHistoryDrawer(false)}
         >
           <div
-            className="h-full w-full max-w-xs border-l border-[--color-border] bg-[--color-surface-0] text-[--color-ink-900] p-5 space-y-4 shadow-2xl overflow-y-auto"
+            className="h-full w-full max-w-xs border-l border-[var(--color-border)] bg-[var(--color-surface-0)] text-[var(--color-ink-900)] p-5 space-y-4 shadow-2xl overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-[--color-border] pb-3">
-              <h2 className="text-sm font-bold text-[--color-ink-900]">Conversation History</h2>
+            <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
+              <h2 className="text-sm font-bold text-[var(--color-ink-900)]">Conversation History</h2>
               <button
                 onClick={() => setShowHistoryDrawer(false)}
-                className="rounded-md p-1.5 text-[--color-ink-400] hover:bg-[--color-surface-2] hover:text-[--color-ink-700] transition-colors cursor-pointer"
+                className="rounded-md p-1.5 text-[var(--color-ink-400)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink-700)] transition-colors cursor-pointer"
               >
                 <X size={16} />
               </button>
@@ -345,7 +374,7 @@ export default function AiAssistant() {
 
             <div className="space-y-1 pt-2">
               {sessions.length === 0 ? (
-                <p className="text-xs text-[--color-ink-400] text-center py-8">
+                <p className="text-xs text-[var(--color-ink-400)] text-center py-8">
                   No conversation history yet.
                 </p>
               ) : (
@@ -359,14 +388,14 @@ export default function AiAssistant() {
                     className={`group flex items-center justify-between rounded-lg px-3 py-2 text-xs transition-colors cursor-pointer ${
                       s.id === activeSessionId
                         ? "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-medium border border-blue-200 dark:border-blue-800/50"
-                        : "text-[--color-ink-600] hover:bg-[--color-surface-1] hover:text-[--color-ink-900]"
+                        : "text-[var(--color-ink-600)] hover:bg-[var(--color-surface-1)] hover:text-[var(--color-ink-900)]"
                     }`}
                   >
                     <p className="truncate flex-1 pr-2">{s.title}</p>
                     <button
                       onClick={(e) => deleteSession(s.id, e)}
                       title="Delete conversation"
-                      className="text-[--color-ink-400] hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity p-1 cursor-pointer"
+                      className="text-[var(--color-ink-400)] hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity p-1 cursor-pointer"
                     >
                       <Trash2 size={13} />
                     </button>
@@ -376,7 +405,7 @@ export default function AiAssistant() {
             </div>
 
             {sessions.length > 0 && (
-              <div className="pt-4 border-t border-[--color-border]">
+              <div className="pt-4 border-t border-[var(--color-border)]">
                 <button
                   onClick={clearAllHistory}
                   className="w-full text-center text-xs font-medium text-rose-500 hover:underline py-1 cursor-pointer"
@@ -418,15 +447,15 @@ function ChatGptMessageRow({
   return (
     <div className="flex gap-3 sm:gap-4 items-start group">
       {/* ASSISTANT AVATAR */}
-      <div className="h-8 w-8 rounded-lg bg-[--color-surface-1] border border-[--color-border] flex items-center justify-center shrink-0 mt-0.5 shadow-2xs p-1">
+      <div className="h-8 w-8 rounded-lg bg-[var(--color-surface-1)] border border-[var(--color-border)] flex items-center justify-center shrink-0 mt-0.5 shadow-2xs p-1">
         <img src="/scion-logo.png" alt="SCION" className="h-5 w-5 object-contain" />
       </div>
 
       {/* ASSISTANT CONTENT */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-xs font-bold text-[--color-ink-900]">KSRTC SCION</span>
-          <span className="text-[10px] font-medium text-[--color-ink-500] bg-[--color-surface-1] border border-[--color-border] px-1.5 py-0.5 rounded">
+          <span className="text-xs font-bold text-[var(--color-ink-900)]">KSRTC SCION</span>
+          <span className="text-[10px] font-medium text-[var(--color-ink-500)] bg-[var(--color-surface-1)] border border-[var(--color-border)] px-1.5 py-0.5 rounded">
             Fleet Intelligence
           </span>
         </div>
@@ -789,13 +818,13 @@ function RichMarkdown({
       const actionText = actionMatch[1];
       const actionUrl = actionMatch[2];
       elements.push(
-        <div key={`action-${elements.length}`} className="my-3.5">
+        <div key={`action-${elements.length}`} className="my-3">
           <button
             onClick={() => onNavigate(actionUrl)}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm px-4 py-2.5 shadow-md shadow-emerald-500/20 active:scale-98 transition-all cursor-pointer ring-2 ring-emerald-500/20"
+            className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-semibold text-xs px-3.5 py-1.5 shadow-2xs transition-all cursor-pointer"
           >
             <span>{actionText}</span>
-            <ArrowUpRight size={16} />
+            <ArrowUpRight size={13} />
           </button>
         </div>
       );
@@ -813,12 +842,12 @@ function RichMarkdown({
       elements.push(
         <div
           key={`quote-${elements.length}`}
-          className={`my-3.5 rounded-xl border p-3.5 text-xs sm:text-[13px] leading-relaxed ${
+          className={`my-3 rounded-md border p-3 text-xs leading-relaxed ${
             isUrgent
-              ? "bg-rose-50/80 dark:bg-rose-950/30 border-rose-300 dark:border-rose-900/60 text-rose-900 dark:text-rose-200"
+              ? "bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/60 text-rose-900 dark:text-rose-200"
               : isWarning
-              ? "bg-amber-50/80 dark:bg-amber-950/30 border-amber-300 dark:border-amber-900/60 text-amber-900 dark:text-amber-200"
-              : "bg-slate-50 dark:bg-zinc-800/60 border-slate-200 dark:border-zinc-700 text-slate-800 dark:text-zinc-200"
+              ? "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/60 text-amber-900 dark:text-amber-200"
+              : "bg-[var(--color-surface-1)] border-[var(--color-border)] text-[var(--color-ink-800)]"
           }`}
         >
           {renderInline(quoteContent, onNavigate)}
@@ -834,7 +863,7 @@ function RichMarkdown({
       elements.push(
         <h5
           key={`h5-${elements.length}`}
-          className="text-xs sm:text-[13px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mt-4 mb-2"
+          className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-zinc-300 mt-3.5 mb-1.5"
         >
           {renderInline(trimmed.slice(5), onNavigate)}
         </h5>
@@ -848,7 +877,7 @@ function RichMarkdown({
       elements.push(
         <h4
           key={`h4-${elements.length}`}
-          className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mt-5 mb-2"
+          className="text-xs sm:text-sm font-bold text-slate-900 dark:text-zinc-100 mt-4 mb-2"
         >
           {renderInline(trimmed.slice(4), onNavigate)}
         </h4>
@@ -862,7 +891,7 @@ function RichMarkdown({
       elements.push(
         <h3
           key={`h3-${elements.length}`}
-          className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100 mt-6 mb-2.5"
+          className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mt-5 mb-2"
         >
           {renderInline(trimmed.slice(3), onNavigate)}
         </h3>
@@ -876,7 +905,7 @@ function RichMarkdown({
       elements.push(
         <h2
           key={`h2-${elements.length}`}
-          className="text-lg sm:text-xl font-bold text-slate-900 dark:text-zinc-100 mt-6 mb-3"
+          className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100 mt-5 mb-2.5"
         >
           {renderInline(trimmed.slice(2), onNavigate)}
         </h2>
@@ -888,7 +917,7 @@ function RichMarkdown({
     // Horizontal rule
     if (trimmed === "---" || trimmed === "***") {
       flushList();
-      elements.push(<hr key={`hr-${elements.length}`} className="my-4 border-t border-slate-200 dark:border-zinc-800" />);
+      elements.push(<hr key={`hr-${elements.length}`} className="my-3.5 border-t border-[var(--color-border)]" />);
       i++;
       continue;
     }
@@ -931,7 +960,7 @@ function RichMarkdown({
     // Regular paragraphs
     flushList();
     elements.push(
-      <p key={`p-${elements.length}`} className="mb-3 leading-relaxed text-slate-800 dark:text-zinc-200">
+      <p key={`p-${elements.length}`} className="mb-2.5 leading-relaxed text-[var(--color-ink-800)]">
         {renderInline(trimmed, onNavigate)}
       </p>
     );
@@ -948,26 +977,26 @@ function RichMarkdown({
 
 function ProcurementTable({ result }: { result: ProcurementResult }) {
   return (
-    <div className="my-4 rounded-xl border border-slate-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 shadow-2xs">
+    <div className="my-3 rounded-lg border border-[var(--color-border)] overflow-hidden bg-[var(--color-surface-0)]">
       <div className="overflow-x-auto">
         <table className="w-full text-xs min-w-[340px]">
           <thead>
-            <tr className="border-b border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-left uppercase text-[11px] text-slate-500 dark:text-zinc-400">
-              <th className="py-2.5 px-3.5 font-semibold">Part</th>
-              <th className="py-2.5 px-3.5 font-semibold">Qty</th>
-              <th className="py-2.5 px-3.5 font-semibold">Total Cost</th>
-              <th className="py-2.5 px-3.5 font-semibold">Priority</th>
+            <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-1)] text-left uppercase text-[10px] font-semibold text-[var(--color-ink-500)]">
+              <th className="py-2 px-3">Part</th>
+              <th className="py-2 px-3 text-right">Qty</th>
+              <th className="py-2 px-3 text-right">Total Cost</th>
+              <th className="py-2 px-3 text-center">Priority</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
+          <tbody className="divide-y divide-[var(--color-border)]">
             {result.items.map((i) => (
-              <tr key={i.part} className="hover:bg-slate-50 dark:hover:bg-zinc-800/40">
-                <td className="py-2.5 px-3.5 font-medium text-slate-900 dark:text-zinc-100">{i.part}</td>
-                <td className="py-2.5 px-3.5 tabular text-slate-600 dark:text-zinc-300">{i.quantity}</td>
-                <td className="py-2.5 px-3.5 tabular font-semibold text-slate-900 dark:text-zinc-100">
+              <tr key={i.part} className="hover:bg-[var(--color-surface-1)] transition-colors">
+                <td className="py-2 px-3 font-medium text-[var(--color-ink-900)]">{i.part}</td>
+                <td className="py-2 px-3 text-right tabular text-[var(--color-ink-700)]">{i.quantity}</td>
+                <td className="py-2 px-3 text-right tabular font-semibold text-[var(--color-ink-900)]">
                   ₹{i.total_cost.toLocaleString("en-IN")}
                 </td>
-                <td className="py-2.5 px-3.5">
+                <td className="py-2 px-3 text-center">
                   <StatusBadge label={i.priority} />
                 </td>
               </tr>
@@ -981,24 +1010,24 @@ function ProcurementTable({ result }: { result: ProcurementResult }) {
 
 function InventoryTable({ items }: { items: InventoryItem[] }) {
   return (
-    <div className="my-4 rounded-xl border border-slate-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 shadow-2xs">
+    <div className="my-3 rounded-lg border border-[var(--color-border)] overflow-hidden bg-[var(--color-surface-0)]">
       <div className="overflow-x-auto">
         <table className="w-full text-xs min-w-[320px]">
           <thead>
-            <tr className="border-b border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-left uppercase text-[11px] text-slate-500 dark:text-zinc-400">
-              <th className="py-2.5 px-3.5 font-semibold">Part</th>
-              <th className="py-2.5 px-3.5 font-semibold">Stock</th>
-              <th className="py-2.5 px-3.5 font-semibold">Supply Days</th>
-              <th className="py-2.5 px-3.5 font-semibold">Status</th>
+            <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-1)] text-left uppercase text-[10px] font-semibold text-[var(--color-ink-500)]">
+              <th className="py-2 px-3">Part</th>
+              <th className="py-2 px-3 text-right">Stock</th>
+              <th className="py-2 px-3 text-right">Supply Days</th>
+              <th className="py-2 px-3 text-center">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
+          <tbody className="divide-y divide-[var(--color-border)]">
             {items.map((i) => (
-              <tr key={i.id} className="hover:bg-slate-50 dark:hover:bg-zinc-800/40">
-                <td className="py-2.5 px-3.5 font-medium text-slate-900 dark:text-zinc-100">{i.part}</td>
-                <td className="py-2.5 px-3.5 tabular font-bold text-rose-600 dark:text-rose-400">{i.currentStock}</td>
-                <td className="py-2.5 px-3.5 tabular text-slate-600 dark:text-zinc-300">{i.daysOfSupply}d</td>
-                <td className="py-2.5 px-3.5">
+              <tr key={i.id} className="hover:bg-[var(--color-surface-1)] transition-colors">
+                <td className="py-2 px-3 font-medium text-[var(--color-ink-900)]">{i.part}</td>
+                <td className="py-2 px-3 text-right tabular font-bold text-rose-600 dark:text-rose-400">{i.currentStock}</td>
+                <td className="py-2 px-3 text-right tabular text-[var(--color-ink-700)]">{i.daysOfSupply}d</td>
+                <td className="py-2 px-3 text-center">
                   <StatusBadge label={i.status} />
                 </td>
               </tr>
@@ -1012,26 +1041,26 @@ function InventoryTable({ items }: { items: InventoryItem[] }) {
 
 function PoTable({ orders }: { orders: PurchaseOrder[] }) {
   return (
-    <div className="my-4 rounded-xl border border-slate-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 shadow-2xs">
+    <div className="my-3 rounded-lg border border-[var(--color-border)] overflow-hidden bg-[var(--color-surface-0)]">
       <div className="overflow-x-auto">
         <table className="w-full text-xs min-w-[320px]">
           <thead>
-            <tr className="border-b border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-left uppercase text-[11px] text-slate-500 dark:text-zinc-400">
-              <th className="py-2.5 px-3.5 font-semibold">PO #</th>
-              <th className="py-2.5 px-3.5 font-semibold">Supplier</th>
-              <th className="py-2.5 px-3.5 font-semibold">Total</th>
-              <th className="py-2.5 px-3.5 font-semibold">Status</th>
+            <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-1)] text-left uppercase text-[10px] font-semibold text-[var(--color-ink-500)]">
+              <th className="py-2 px-3">PO #</th>
+              <th className="py-2 px-3">Supplier</th>
+              <th className="py-2 px-3 text-right">Total</th>
+              <th className="py-2 px-3 text-center">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
+          <tbody className="divide-y divide-[var(--color-border)]">
             {orders.map((po) => (
-              <tr key={po.poNumber} className="hover:bg-slate-50 dark:hover:bg-zinc-800/40">
-                <td className="py-2.5 px-3.5 font-medium text-slate-900 dark:text-zinc-100">{po.poNumber}</td>
-                <td className="py-2.5 px-3.5 text-slate-600 dark:text-zinc-300">{po.supplier}</td>
-                <td className="py-2.5 px-3.5 tabular font-semibold text-slate-900 dark:text-zinc-100">
+              <tr key={po.poNumber} className="hover:bg-[var(--color-surface-1)] transition-colors">
+                <td className="py-2 px-3 font-medium text-[var(--color-ink-900)]">{po.poNumber}</td>
+                <td className="py-2 px-3 text-[var(--color-ink-700)] truncate max-w-[160px]">{po.supplier}</td>
+                <td className="py-2 px-3 text-right tabular font-semibold text-[var(--color-ink-900)]">
                   ₹{po.total.toLocaleString("en-IN")}
                 </td>
-                <td className="py-2.5 px-3.5">
+                <td className="py-2 px-3 text-center">
                   <StatusBadge label={po.status} />
                 </td>
               </tr>
@@ -1045,22 +1074,22 @@ function PoTable({ orders }: { orders: PurchaseOrder[] }) {
 
 function PriceTable({ prices }: { prices: PriceRecord[] }) {
   return (
-    <div className="my-4 rounded-xl border border-slate-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 shadow-2xs">
+    <div className="my-3 rounded-lg border border-[var(--color-border)] overflow-hidden bg-[var(--color-surface-0)]">
       <div className="overflow-x-auto">
         <table className="w-full text-xs min-w-[280px]">
           <thead>
-            <tr className="border-b border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-left uppercase text-[11px] text-slate-500 dark:text-zinc-400">
-              <th className="py-2.5 px-3.5 font-semibold">Date</th>
-              <th className="py-2.5 px-3.5 font-semibold">Supplier</th>
-              <th className="py-2.5 px-3.5 font-semibold">Unit Price</th>
+            <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-1)] text-left uppercase text-[10px] font-semibold text-[var(--color-ink-500)]">
+              <th className="py-2 px-3">Date</th>
+              <th className="py-2 px-3">Supplier</th>
+              <th className="py-2 px-3 text-right">Unit Price</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
+          <tbody className="divide-y divide-[var(--color-border)]">
             {prices.map((p, i) => (
-              <tr key={i} className="hover:bg-slate-50 dark:hover:bg-zinc-800/40">
-                <td className="py-2.5 px-3.5 text-slate-600 dark:text-zinc-300">{p.date}</td>
-                <td className="py-2.5 px-3.5 text-slate-600 dark:text-zinc-300">{p.supplier}</td>
-                <td className="py-2.5 px-3.5 tabular font-semibold text-slate-900 dark:text-zinc-100">₹{p.unitPrice}</td>
+              <tr key={i} className="hover:bg-[var(--color-surface-1)] transition-colors">
+                <td className="py-2 px-3 text-[var(--color-ink-600)]">{p.date}</td>
+                <td className="py-2 px-3 text-[var(--color-ink-700)] truncate max-w-[160px]">{p.supplier}</td>
+                <td className="py-2 px-3 text-right tabular font-semibold text-[var(--color-ink-900)]">₹{p.unitPrice}</td>
               </tr>
             ))}
           </tbody>

@@ -1,4 +1,4 @@
-import { Menu, ShieldCheck } from "lucide-react";
+import { Menu, ShieldCheck, AlertTriangle } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { useSidebar } from "../../state/SidebarContext";
 import { useAlerts } from "../../state/AlertsContext";
@@ -24,26 +24,26 @@ export function TopBar({
     showAlerts !== undefined
       ? showAlerts
       : location.pathname === "/dashboard" ||
-        location.pathname === "/" ||
-        location.pathname === "/inventory";
+      location.pathname === "/" ||
+      location.pathname === "/inventory";
 
   return (
     <>
-      <div className="border-b border-[--color-border] bg-[--color-surface-0] px-3.5 py-2.5 sm:px-6 sm:py-3.5">
+      <div className="border-b border-[var(--color-border)] bg-[var(--color-surface-0)] px-3.5 py-2.5 sm:px-6 sm:py-3.5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
           {/* LEFT: Title & Hamburger & Mobile Alert */}
           <div className="flex items-center justify-between sm:justify-start min-w-0 w-full sm:w-auto">
             <div className="flex items-center min-w-0">
               <button
                 onClick={toggleMobile}
-                className="mr-2 sm:mr-2.5 rounded-md p-1.5 text-[--color-ink-700] hover:bg-[--color-surface-2] active:scale-95 transition-transform lg:hidden shrink-0 cursor-pointer"
+                className="mr-2 sm:mr-2.5 rounded-md p-1.5 text-[var(--color-ink-700)] hover:bg-[var(--color-surface-2)] active:scale-95 transition-transform lg:hidden shrink-0 cursor-pointer"
                 aria-label="Open navigation menu"
               >
                 <Menu size={20} />
               </button>
               <div className="min-w-0">
-                <h1 className="text-sm sm:text-lg font-bold text-[--color-ink-900] truncate">{title}</h1>
-                {subtitle ? <p className="text-[11px] sm:text-xs text-[--color-ink-500] truncate sm:whitespace-normal">{subtitle}</p> : null}
+                <h1 className="text-sm sm:text-lg font-bold text-[var(--color-ink-900)] tracking-tight truncate">{title}</h1>
+                {subtitle ? <p className="text-[11px] sm:text-xs text-[var(--color-ink-500)] truncate sm:whitespace-normal">{subtitle}</p> : null}
               </div>
             </div>
 
@@ -53,16 +53,16 @@ export function TopBar({
                 {totalAlerts > 0 ? (
                   <button
                     onClick={openAlertModal}
-                    className="flex items-center gap-1.5 rounded-lg border border-amber-500/25 bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-300 cursor-pointer"
+                    className="flex items-center gap-1.5 rounded-md border border-red-200 bg-[#F5F6F8] px-2 py-1 text-xs font-semibold text-red-900 dark:border-red-900/60 dark:bg-zinc-800 dark:text-red-200 cursor-pointer shadow-xs active:scale-95 transition-transform"
                     title={`${totalAlerts} items below safety thresholds.`}
                   >
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                    <span className="text-[11px] font-bold">{totalAlerts}</span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-600" />
+                    <span className="text-[11px] font-mono font-bold">{totalAlerts}</span>
                   </button>
                 ) : (
                   <button
                     onClick={openAlertModal}
-                    className="flex items-center gap-1 rounded-lg border border-[--color-border] bg-[--color-surface-1] p-1.5 text-xs text-[--color-healthy-600] cursor-pointer"
+                    className="flex items-center gap-1 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-1)] p-1.5 text-xs text-[var(--color-healthy-600)] cursor-pointer"
                     title="All inventory stock levels are healthy"
                   >
                     <ShieldCheck size={14} />
@@ -83,23 +83,23 @@ export function TopBar({
                   {totalAlerts > 0 ? (
                     <button
                       onClick={openAlertModal}
-                      className="flex items-center gap-2 rounded-md border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-xs font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-500/15 transition-colors cursor-pointer"
+                      className="group flex items-center gap-2 rounded-md border border-red-200 bg-[#F5F6F8] px-2.5 py-1 text-xs font-medium text-red-900 shadow-2xs hover:bg-slate-200/60 dark:border-red-900/60 dark:bg-zinc-800 dark:text-red-200 dark:hover:bg-zinc-700 transition-all cursor-pointer active:scale-98"
                       title={`${totalAlerts} items below safety thresholds. Click to review.`}
                     >
-                      <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                      <span className="hidden md:inline">Stock Alerts</span>
-                      <span className="flex h-4 min-w-4 items-center justify-center rounded bg-rose-500/20 px-1 text-[10px] font-bold text-rose-800 dark:text-rose-200">
+                      <AlertTriangle size={13} className="text-red-600 dark:text-red-400 shrink-0" />
+                      <span className="tracking-tight text-[11px] font-semibold">Low Stock</span>
+                      <span className="inline-flex h-4 min-w-4 items-center justify-center rounded bg-red-600 px-1 text-[10px] font-mono font-bold text-white shadow-2xs">
                         {totalAlerts}
                       </span>
                     </button>
                   ) : (
                     <button
                       onClick={openAlertModal}
-                      className="flex items-center gap-1.5 rounded-md border border-[--color-border] bg-[--color-surface-1] px-2.5 py-1 text-xs font-medium text-[--color-healthy-600] hover:bg-[--color-surface-2] transition-colors cursor-pointer"
-                      title="All central depot inventory levels are above safety stock"
+                      className="flex items-center gap-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-1)] px-2.5 py-1 text-xs font-medium text-[var(--color-healthy-600)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
+                      title="All inventory stock levels are healthy"
                     >
                       <ShieldCheck size={14} />
-                      <span className="hidden md:inline">Stock Normal</span>
+                      <span className="hidden md:inline text-[11px] font-semibold tracking-tight">Stock Healthy</span>
                     </button>
                   )}
                 </div>

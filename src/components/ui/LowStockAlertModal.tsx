@@ -109,9 +109,13 @@ export function LowStockAlertModal() {
             <p className="text-[10px] sm:text-[11px] uppercase tracking-wide font-semibold text-rose-600 dark:text-rose-400 truncate">Critical</p>
             <p className="text-base sm:text-lg font-bold text-rose-600 dark:text-rose-400 mt-0.5">{criticalItems.length}</p>
           </div>
-          <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/60 dark:bg-amber-950/20 p-2.5 sm:p-3 shadow-2xs">
-            <p className="text-[10px] sm:text-[11px] uppercase tracking-wide font-semibold text-amber-600 dark:text-amber-400 truncate">Reorder</p>
-            <p className="text-base sm:text-lg font-bold text-amber-600 dark:text-amber-400 mt-0.5">{warningItems.length}</p>
+          <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-white dark:bg-white p-2.5 sm:p-3 shadow-2xs">
+            <p className="text-[10px] sm:text-[11px] uppercase tracking-wide font-semibold text-amber-600 dark:text-amber-400 truncate">
+              REORDER
+            </p>
+            <p className="text-base sm:text-lg font-bold text-amber-600 dark:text-amber-400 mt-0.5">
+              {warningItems.length}
+            </p>
           </div>
         </div>
 

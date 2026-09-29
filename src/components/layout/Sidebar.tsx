@@ -1,17 +1,7 @@
 import { NavLink } from "react-router-dom";
 import {
-  LayoutDashboard,
-  TrendingUp,
-  Calculator,
-  Boxes,
-  ClipboardList,
-  Truck,
-  BarChart3,
-  Bot,
-  Settings as SettingsIcon,
-  X,
-  PanelLeftClose,
-  PanelLeftOpen,
+  LayoutDashboard, TrendingUp, Calculator, Boxes, ClipboardList,
+  Truck, BarChart3, Settings as SettingsIcon, X, PanelLeftClose, PanelLeftOpen
 } from "lucide-react";
 import { useSidebar } from "../../state/SidebarContext";
 
@@ -20,35 +10,35 @@ interface NavItem {
   label: string;
   icon?: any;
   imgSrc?: string;
-  badge?: string;
 }
 
 const NAV_GROUPS: { label: string | null; items: NavItem[] }[] = [
   {
     label: null,
-    items: [{ to: "/dashboard", label: "Control Tower", icon: LayoutDashboard }],
+    items: [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard }],
   },
   {
-    label: "Supply & Inventory",
+    label: "Planning",
     items: [
-      { to: "/inventory", label: "Central Inventory", icon: Boxes },
+      { to: "/forecast", label: "Forecasting", icon: TrendingUp },
+      { to: "/procurement", label: "Procurement Optimization", icon: Calculator },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { to: "/inventory", label: "Inventory", icon: Boxes },
       { to: "/purchase-orders", label: "Purchase Orders", icon: ClipboardList },
-      { to: "/suppliers", label: "Supplier Directory", icon: Truck },
+      { to: "/suppliers", label: "Suppliers", icon: Truck },
     ],
   },
   {
-    label: "Planning & Models",
-    items: [
-      { to: "/forecast", label: "Demand Forecasting", icon: TrendingUp },
-      { to: "/procurement", label: "PuLP Optimizer", icon: Calculator },
-      { to: "/analytics", label: "Vendor Analytics", icon: BarChart3 },
-    ],
+    label: "Analytics",
+    items: [{ to: "/analytics", label: "Vendor Performance", icon: BarChart3 }],
   },
   {
-    label: "Decision Support",
-    items: [
-      { to: "/ai-assistant", label: "SCION Assistant", icon: Bot, imgSrc: "/scion-logo.png" },
-    ],
+    label: "AI Intelligence",
+    items: [{ to: "/ai-assistant", label: "KSRTC SCION", imgSrc: "/scion-logo.png" }],
   },
 ];
 
@@ -66,57 +56,44 @@ export function Sidebar() {
         />
       )}
 
-      {/* Enterprise Sidebar */}
+      {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r border-[--color-border] bg-[--color-surface-0] transition-all duration-200 ease-in-out lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 transition-all duration-200 ease-in-out lg:static lg:translate-x-0 ${
           isMobileOpen ? "w-64 translate-x-0 shadow-xl" : "-translate-x-full"
-        } ${isCollapsed ? "lg:w-16" : "lg:w-60"}`}
+        } ${isCollapsed ? "lg:w-16" : "lg:w-64"}`}
       >
-        {/* Enterprise Brand Header */}
-        <div
-          className={`flex items-center border-b border-[--color-border] py-3 transition-all ${
-            isCollapsed ? "lg:px-2.5 lg:justify-center px-4 justify-between" : "px-4 justify-between"
-          }`}
-        >
-          <div className="flex items-center gap-2.5 min-w-0">
+        <div className={`flex items-center border-b border-slate-200 dark:border-zinc-800 py-3.5 transition-all ${
+          isCollapsed ? "lg:px-3 lg:justify-center px-5 justify-between" : "px-5 justify-between"
+        }`}>
+          <div className="flex items-center gap-3 min-w-0">
             <img
               src="/ksrtc-app-icon.png"
-              alt="KSRTC"
-              className="h-7 w-7 rounded border border-[--color-border] object-cover shrink-0"
-              title="KSRTC Central Logistics & Procurement"
+              alt="KSRTC Logo"
+              className="h-7 w-7 rounded border border-slate-200 dark:border-zinc-700 object-cover shrink-0"
+              title="KSRTC Supply Chain"
             />
-            <div className={`${isCollapsed ? "lg:hidden" : "block"} min-w-0`}>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
-                  KSRTC
-                </span>
-                <span className="text-[9px] font-medium px-1 rounded bg-[--color-surface-2] text-[--color-ink-500]">
-                  ERP
-                </span>
-              </div>
-              <p className="text-xs font-semibold text-[--color-ink-900] truncate">
-                Central Procurement
-              </p>
+            <div className={`${isCollapsed ? "lg:hidden" : "block"} min-w-0 truncate`}>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-zinc-500">KSRTC</p>
+              <p className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate">Supply Chain</p>
             </div>
           </div>
           <button
             onClick={closeMobile}
-            className="rounded p-1 text-[--color-ink-400] hover:bg-[--color-surface-1] hover:text-[--color-ink-700] lg:hidden cursor-pointer"
-            aria-label="Close navigation"
+            className="rounded p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800 lg:hidden cursor-pointer"
+            aria-label="Close sidebar"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* Navigation Items */}
         <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-3">
           {NAV_GROUPS.map((group, gi) => (
             <div key={gi}>
               {group.label ? (
                 isCollapsed ? (
-                  <div className="hidden lg:block my-2 border-t border-[--color-border]" />
+                  <div className="hidden lg:block my-2 border-t border-slate-200 dark:border-zinc-800" />
                 ) : (
-                  <p className="mb-1 px-2.5 text-[10px] font-semibold uppercase tracking-wider text-[--color-ink-400]">
+                  <p className="mb-1 px-2.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
                     {group.label}
                   </p>
                 )
@@ -129,27 +106,23 @@ export function Sidebar() {
                       onClick={closeMobile}
                       title={isCollapsed ? item.label : undefined}
                       className={({ isActive }) =>
-                        `flex items-center rounded-sm text-xs transition-colors cursor-pointer ${
+                        `flex items-center rounded text-xs transition-colors cursor-pointer ${
                           isCollapsed
                             ? "lg:justify-center lg:px-2 lg:py-2 px-2.5 py-1.5 gap-2.5"
                             : "px-2.5 py-1.5 gap-2.5"
                         } ${
                           isActive
-                            ? "border-l-2 border-blue-600 bg-blue-50/70 dark:bg-blue-950/40 font-semibold text-blue-700 dark:text-blue-300"
-                            : "text-[--color-ink-700] hover:bg-[--color-surface-1] hover:text-[--color-ink-900] border-l-2 border-transparent"
+                            ? "bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-50 font-semibold border-l-2 border-l-blue-600"
+                            : "text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-zinc-200 font-medium"
                         }`
                       }
                     >
                       {item.imgSrc ? (
-                        <img
-                          src={item.imgSrc}
-                          alt={item.label}
-                          className="h-4 w-4 object-contain shrink-0"
-                        />
+                        <img src={item.imgSrc} alt={item.label} className="h-4 w-4 object-contain shrink-0" />
                       ) : (
                         <item.icon size={15} className="shrink-0" />
                       )}
-                      <span className={`${isCollapsed ? "lg:hidden" : "inline"} truncate flex-1`}>
+                      <span className={`${isCollapsed ? "lg:hidden" : "inline"} truncate`}>
                         {item.label}
                       </span>
                     </NavLink>
@@ -160,34 +133,31 @@ export function Sidebar() {
           ))}
         </nav>
 
-        {/* Footer / Settings & Collapse */}
-        <div className="border-t border-[--color-border] p-2 space-y-1 bg-[--color-surface-0]">
+        <div className="border-t border-slate-200 dark:border-zinc-800 p-2 space-y-0.5">
           <NavLink
             to="/settings/integrations"
             onClick={closeMobile}
-            title={isCollapsed ? "System Integrations" : undefined}
+            title={isCollapsed ? "Settings" : undefined}
             className={({ isActive }) =>
-              `flex items-center rounded-sm text-xs transition-colors cursor-pointer ${
+              `flex items-center rounded text-xs transition-colors cursor-pointer ${
                 isCollapsed
                   ? "lg:justify-center lg:px-2 lg:py-2 px-2.5 py-1.5 gap-2.5"
                   : "px-2.5 py-1.5 gap-2.5"
               } ${
                 isActive
-                  ? "border-l-2 border-blue-600 bg-blue-50/70 dark:bg-blue-950/40 font-semibold text-blue-700 dark:text-blue-300"
-                  : "text-[--color-ink-700] hover:bg-[--color-surface-1] hover:text-[--color-ink-900] border-l-2 border-transparent"
+                  ? "bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-50 font-semibold border-l-2 border-l-blue-600"
+                  : "text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-zinc-200 font-medium"
               }`
             }
           >
             <SettingsIcon size={15} className="shrink-0" />
-            <span className={`${isCollapsed ? "lg:hidden" : "inline"} truncate`}>
-              Integrations & API
-            </span>
+            <span className={`${isCollapsed ? "lg:hidden" : "inline"} truncate`}>Settings</span>
           </NavLink>
 
           {/* Desktop Collapse / Expand Toggle */}
           <button
             onClick={toggleCollapsed}
-            className={`hidden lg:flex items-center rounded-sm py-1.5 text-xs text-[--color-ink-400] hover:text-[--color-ink-800] hover:bg-[--color-surface-1] transition-colors cursor-pointer w-full ${
+            className={`hidden lg:flex items-center rounded py-1.5 text-xs text-slate-500 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors cursor-pointer w-full ${
               isCollapsed ? "justify-center px-2" : "justify-start px-2.5 gap-2"
             }`}
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -198,7 +168,7 @@ export function Sidebar() {
             ) : (
               <>
                 <PanelLeftClose size={15} />
-                <span className="text-[11px] font-medium">Collapse menu</span>
+                <span className="text-[11px] font-medium">Collapse</span>
               </>
             )}
           </button>

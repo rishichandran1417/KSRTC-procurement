@@ -2,13 +2,13 @@ import type { LucideIcon } from "lucide-react";
 
 type Accent = "forecast" | "optimize" | "healthy" | "warning" | "critical" | "neutral";
 
-const ACCENT_BAR: Record<Accent, string> = {
+const ACCENT_DOT: Record<Accent, string> = {
   forecast: "bg-blue-600",
   optimize: "bg-purple-600",
   healthy: "bg-emerald-600",
   warning: "bg-amber-500",
   critical: "bg-rose-600",
-  neutral: "bg-[--color-border-strong]",
+  neutral: "bg-slate-400 dark:bg-zinc-500",
 };
 
 export function KpiCard({
@@ -28,30 +28,30 @@ export function KpiCard({
   helpText?: string;
   onClick?: () => void;
 }) {
+  const dot = ACCENT_DOT[accent] || ACCENT_DOT.neutral;
+
   return (
     <div
       onClick={onClick}
-      className={`relative overflow-hidden rounded-md border border-[--color-border] bg-[--color-surface-0] p-3.5 sm:p-4 shadow-2xs transition-all ${
-        onClick
-          ? "cursor-pointer hover:border-blue-500/60 hover:bg-[--color-surface-1]/50 active:scale-[0.99]"
-          : ""
+      className={`border-r last:border-r-0 border-slate-200 dark:border-zinc-800 px-4 py-2.5 min-w-0 ${
+        onClick ? "cursor-pointer hover:bg-slate-50 dark:hover:bg-zinc-800/50" : ""
       }`}
     >
-      <div className={`absolute inset-x-0 top-0 h-[2px] ${ACCENT_BAR[accent]}`} />
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[--color-ink-500] truncate">
+      <div className="flex items-center gap-1.5 mb-0.5">
+        {accent !== "neutral" && <span className={`h-1.5 w-1.5 rounded-full ${dot} shrink-0`} />}
+        <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">
           {label}
-        </p>
-        {Icon ? <Icon size={15} className="text-[--color-ink-400] shrink-0" /> : null}
+        </span>
+        {Icon ? <Icon size={11} className="text-slate-400 dark:text-zinc-500 shrink-0 ml-auto" /> : null}
       </div>
-      <p className="tabular mt-2 text-xl sm:text-2xl font-bold text-[--color-ink-900] tracking-tight">
-        {value}
-        {unit ? (
-          <span className="ml-1 text-xs font-normal text-[--color-ink-500]">{unit}</span>
-        ) : null}
-      </p>
+      <div className="flex items-baseline gap-1">
+        <span className="text-base font-bold tracking-tight text-slate-900 dark:text-zinc-100 tabular-nums">
+          {value}
+        </span>
+        {unit ? <span className="text-[11px] text-slate-500 dark:text-zinc-400">{unit}</span> : null}
+      </div>
       {helpText ? (
-        <p className="mt-1 text-[11px] text-[--color-ink-500] truncate">{helpText}</p>
+        <p className="text-[10px] text-slate-400 dark:text-zinc-500 truncate mt-0.5">{helpText}</p>
       ) : null}
     </div>
   );

@@ -1,39 +1,46 @@
-type Tone = "healthy" | "warning" | "critical" | "neutral" | "info" | "submitted" | "approved";
+export type Tone = "healthy" | "warning" | "critical" | "neutral" | "info" | "submitted";
 
-const STATUS_STYLES: Record<Tone, { badge: string; dot: string }> = {
+interface StatusConfig {
+  dotClass: string;
+  badgeClass: string;
+  textClass: string;
+}
+
+const STATUS_CONFIGS: Record<Tone, StatusConfig> = {
   submitted: {
-    badge: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/25",
-    dot: "bg-blue-500",
-  },
-  approved: {
-    badge: "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/25",
-    dot: "bg-sky-500",
+    dotClass: "bg-blue-600 dark:bg-blue-400",
+    badgeClass: "border-blue-200/90 bg-blue-50/80 dark:border-blue-900/60 dark:bg-blue-950/40",
+    textClass: "text-blue-900 dark:text-blue-200",
   },
   healthy: {
-    badge: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25",
-    dot: "bg-emerald-500",
+    dotClass: "bg-emerald-600 dark:bg-emerald-400",
+    badgeClass: "border-emerald-200/90 bg-emerald-50/80 dark:border-emerald-900/60 dark:bg-emerald-950/40",
+    textClass: "text-emerald-900 dark:text-emerald-200",
   },
   warning: {
-    badge: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25",
-    dot: "bg-amber-500",
+    dotClass: "bg-amber-500 dark:bg-amber-400",
+    badgeClass: "border-amber-200/90 bg-amber-50/80 dark:border-amber-900/60 dark:bg-amber-950/40",
+    textClass: "text-amber-900 dark:text-amber-200",
   },
   critical: {
-    badge: "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/25",
-    dot: "bg-rose-500",
+    dotClass: "bg-rose-600 dark:bg-rose-400",
+    badgeClass: "border-rose-200/90 bg-rose-50/80 dark:border-rose-900/60 dark:bg-rose-950/40",
+    textClass: "text-rose-900 dark:text-rose-200",
   },
   neutral: {
-    badge: "bg-zinc-500/10 text-zinc-700 dark:text-zinc-300 border-zinc-500/25",
-    dot: "bg-zinc-400",
+    dotClass: "bg-slate-400 dark:bg-zinc-500",
+    badgeClass: "border-slate-200/90 bg-slate-50/80 dark:border-zinc-800 dark:bg-zinc-800/60",
+    textClass: "text-slate-800 dark:text-zinc-200",
   },
   info: {
-    badge: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/25",
-    dot: "bg-blue-500",
+    dotClass: "bg-sky-600 dark:bg-sky-400",
+    badgeClass: "border-sky-200/90 bg-sky-50/80 dark:border-sky-900/60 dark:bg-sky-950/40",
+    textClass: "text-sky-900 dark:text-sky-200",
   },
 };
 
 export function toneForStatus(status: string): Tone {
   const s = status.toLowerCase();
-  if (s === "approved") return "approved";
   if (s === "submitted" || s === "ordered") return "submitted";
   if (["healthy", "received", "closed", "connected", "low"].includes(s)) return "healthy";
   if (["warning", "medium", "partially received"].includes(s)) return "warning";
@@ -44,21 +51,21 @@ export function toneForStatus(status: string): Tone {
 export function StatusBadge({
   label,
   tone,
-  showDot = true,
+  className = "",
 }: {
   label: string;
   tone?: Tone;
-  showDot?: boolean;
+  className?: string;
 }) {
   const resolved = tone ?? toneForStatus(label);
-  const config = STATUS_STYLES[resolved] || STATUS_STYLES.neutral;
+  const cfg = STATUS_CONFIGS[resolved] || STATUS_CONFIGS.neutral;
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-[11px] font-medium border shrink-0 ${config.badge}`}
+      className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium tracking-tight shadow-[0_1px_2px_rgba(0,0,0,0.03)] ${cfg.badgeClass} ${cfg.textClass} ${className}`}
     >
-      {showDot && <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${config.dot}`} />}
-      <span>{label}</span>
+      <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${cfg.dotClass}`} />
+      <span className="truncate">{label}</span>
     </span>
   );
 }
