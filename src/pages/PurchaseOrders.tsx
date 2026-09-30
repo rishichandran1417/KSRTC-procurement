@@ -73,6 +73,7 @@ export default function PurchaseOrders() {
     getInventory().then(setInventoryCatalog).catch(() => {});
   }, []);
 
+  const [successToast, setSuccessToast] = useState<string | null>(null);
   const [editingDeliveryPo, setEditingDeliveryPo] = useState<string | null>(null);
 
   const handleQuickDeliveryChange = async (po: PurchaseOrder, newDate: string) => {
