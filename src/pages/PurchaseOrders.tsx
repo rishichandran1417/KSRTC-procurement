@@ -765,10 +765,10 @@ export default function PurchaseOrders() {
         ) : (
           <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] overflow-hidden shadow-2xs">
             <div className="overflow-x-auto custom-scrollbar">
-              <table className="w-full text-xs min-w-[880px] align-middle">
+              <table className="w-full text-xs min-w-[780px] align-middle">
                 <thead>
                   <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-1)]/60 text-left text-xs font-medium text-[var(--color-ink-500)] whitespace-nowrap">
-                    {renderSortHeader("PO Number", "poNumber", "px-4")}
+                    {renderSortHeader("PO Number", "poNumber", "px-3.5")}
                     {renderSortHeader("Supplier", "supplier", "px-3")}
                     {renderSortHeader("PO Date", "poDate", "px-3")}
                     {renderSortHeader("Expected Delivery", "expectedDelivery", "px-3")}
@@ -785,18 +785,22 @@ export default function PurchaseOrders() {
                         po.isNew ? "bg-blue-500/5 dark:bg-blue-500/10" : ""
                       }`}
                     >
-                      <td className="px-4 py-2.5 font-medium text-[var(--color-ink-900)] whitespace-nowrap">
-                        <div className="flex items-center gap-2">
+                      <td className="px-3.5 py-2.5 font-medium text-[var(--color-ink-900)] whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
                           <span className="font-mono text-xs">{po.poNumber}</span>
                           {po.isNew && (
-                            <span className="inline-flex items-center rounded bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:text-blue-300 border border-blue-500/20">
+                            <span className="inline-flex items-center rounded bg-blue-500/10 px-1 py-0.2 text-[9px] font-semibold text-blue-700 dark:text-blue-300 border border-blue-500/20">
                               NEW
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 text-[var(--color-ink-700)] whitespace-nowrap max-w-[200px] truncate" title={po.supplier}>{po.supplier}</td>
-                      <td className="px-3 py-2.5 text-[var(--color-ink-600)] whitespace-nowrap font-mono text-xs">{po.poDate}</td>
+                      <td className="px-3 py-2.5 text-[var(--color-ink-700)] whitespace-nowrap max-w-[180px] truncate" title={po.supplier}>
+                        {po.supplier}
+                      </td>
+                      <td className="px-3 py-2.5 text-[var(--color-ink-600)] whitespace-nowrap font-mono text-xs">
+                        {po.poDate}
+                      </td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         {editingDeliveryPo === po.poNumber ? (
                           <div className="flex items-center gap-1">
@@ -804,7 +808,7 @@ export default function PurchaseOrders() {
                               type="date"
                               defaultValue={po.expectedDelivery}
                               onChange={(e) => handleQuickDeliveryChange(po, e.target.value)}
-                              className="rounded border border-blue-500 bg-[var(--color-surface-0)] px-2 py-0.5 text-xs text-[var(--color-ink-900)] font-mono focus:outline-none shadow-2xs"
+                              className="rounded border border-blue-500 bg-[var(--color-surface-0)] px-1.5 py-0.5 text-xs text-[var(--color-ink-900)] font-mono focus:outline-none shadow-2xs"
                               autoFocus
                               onBlur={() => setEditingDeliveryPo(null)}
                             />
@@ -819,12 +823,12 @@ export default function PurchaseOrders() {
                         ) : (
                           <button
                             onClick={() => setEditingDeliveryPo(po.poNumber)}
-                            className="group inline-flex items-center gap-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-1)] hover:bg-blue-50/80 dark:hover:bg-blue-950/40 hover:border-blue-300 dark:hover:border-blue-700/60 px-2 py-1 text-xs text-[var(--color-ink-800)] hover:text-blue-700 dark:hover:text-blue-300 transition-all cursor-pointer shadow-2xs whitespace-nowrap"
+                            className="group inline-flex items-center gap-1 rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] hover:bg-blue-50/80 dark:hover:bg-blue-950/40 hover:border-blue-300 dark:hover:border-blue-700/60 px-2 py-0.5 text-xs text-[var(--color-ink-800)] hover:text-blue-700 dark:hover:text-blue-300 transition-all cursor-pointer shadow-2xs whitespace-nowrap"
                             title="Click to edit expected delivery date"
                           >
-                            <Calendar size={12} className="text-blue-600 dark:text-blue-400 shrink-0" />
+                            <Calendar size={11} className="text-blue-600 dark:text-blue-400 shrink-0" />
                             <span className="font-mono text-xs">{po.expectedDelivery || "Set Date"}</span>
-                            <Pencil size={11} className="text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 opacity-60 group-hover:opacity-100 transition-opacity shrink-0 ml-0.5" />
+                            <Pencil size={10} className="text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 opacity-60 group-hover:opacity-100 transition-opacity shrink-0 ml-0.5" />
                           </button>
                         )}
                       </td>
@@ -832,52 +836,35 @@ export default function PurchaseOrders() {
                         ₹{po.total.toLocaleString("en-IN")}
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
-                        <select
-                          value={po.status}
-                          onChange={(e) => handleStatusChange(po.poNumber, e.target.value as PoStatus)}
-                          className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface-0)] px-2 py-1 text-xs font-semibold text-[var(--color-ink-900)] hover:border-blue-500 cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-2xs transition-colors"
-                          title="KSRTC Officer Status Change: Click to update order status"
-                        >
-                          <option value="Submitted">Submitted</option>
-                          <option value="Approved">Approved</option>
-                          <option value="Ordered">Ordered</option>
-                          <option value="Partially Received">Partially Received</option>
-                          <option value="Received">Received</option>
-                          <option value="Delayed">Delayed</option>
-                          <option value="Closed">Closed</option>
-                          <option value="Cancelled">Cancelled</option>
-                        </select>
+                        <StatusBadge label={po.status} />
                       </td>
                       <td className="px-3 py-2.5 text-right pr-4 whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1.5">
+                        <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => setViewing(po)}
                             title="View PO Details"
-                            className="inline-flex items-center gap-1 rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] px-2 py-1 text-xs font-medium text-[var(--color-ink-700)] hover:text-[var(--color-ink-900)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer shadow-2xs"
+                            className="inline-flex items-center justify-center rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-1.5 text-[var(--color-ink-600)] hover:text-[var(--color-ink-900)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
                             aria-label="View Details"
                           >
-                            <Eye size={13} className="text-blue-600 dark:text-blue-400 shrink-0" />
-                            <span>View</span>
+                            <Eye size={13} />
                           </button>
 
                           <button
                             onClick={() => openEditModal(po)}
                             title="Edit PO Details"
-                            className="inline-flex items-center gap-1 rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] px-2 py-1 text-xs font-medium text-[var(--color-ink-700)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer shadow-2xs"
+                            className="inline-flex items-center justify-center rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-1.5 text-[var(--color-ink-600)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
                             aria-label="Edit Order Details"
                           >
-                            <Pencil size={13} className="text-slate-500 shrink-0" />
-                            <span>Edit</span>
+                            <Pencil size={13} />
                           </button>
 
                           <button
                             onClick={() => setPdfPo(po)}
                             title="View & Print Official PDF"
-                            className="inline-flex items-center gap-1 rounded border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/40 px-2 py-1 text-xs font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors cursor-pointer shadow-2xs"
+                            className="inline-flex items-center justify-center rounded border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/40 p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors cursor-pointer"
                             aria-label="View PDF"
                           >
-                            <FileText size={13} className="text-blue-600 dark:text-blue-400 shrink-0" />
-                            <span>PDF</span>
+                            <FileText size={13} />
                           </button>
 
                           {["Ordered", "Approved", "Partially Received"].includes(po.status) && (
@@ -895,11 +882,10 @@ export default function PurchaseOrders() {
                             <button
                               onClick={() => handleStatusChange(po.poNumber, "Cancelled")}
                               title="Cancel Purchase Order"
-                              className="inline-flex items-center gap-1 rounded border border-rose-500/20 bg-rose-500/10 px-2 py-1 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-colors cursor-pointer shadow-2xs"
+                              className="inline-flex items-center justify-center rounded border border-rose-500/20 bg-rose-500/10 p-1.5 text-rose-500 hover:bg-rose-500/20 transition-colors cursor-pointer"
                               aria-label="Cancel Order"
                             >
-                              <XCircle size={13} className="shrink-0" />
-                              <span>Cancel</span>
+                              <XCircle size={13} />
                             </button>
                           )}
                         </div>
