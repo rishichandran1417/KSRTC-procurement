@@ -11,31 +11,16 @@ const DUMMY_PO_NUMBERS = ["PO-2026-1087", "PO-2026-0891", "PO-2026-0885", "PO-20
 export function loadCreatedOrders(): PurchaseOrder[] {
   try {
     const raw = localStorage.getItem(LOCAL_CREATED_POS_KEY);
-    if (!raw) {
-      // One-time migration from legacy key if any
-      const legacyRaw = localStorage.getItem("ksrtc_purchase_orders_clean_v1");
-      if (legacyRaw) {
-        try {
-          const parsed: PurchaseOrder[] = JSON.parse(legacyRaw);
-          // Look for any order with PO-2026- or custom non-remote pattern
-          const migrated = parsed.filter(
-            (p) =>
-              p.poNumber &&
-              !DUMMY_PO_NUMBERS.includes(p.poNumber) &&
-              (p.poNumber.startsWith("PO-") || p.status === "Submitted" || p.isNew)
-          );
-          if (migrated.length > 0) {
-            localStorage.setItem(LOCAL_CREATED_POS_KEY, JSON.stringify(migrated));
-            localStorage.removeItem("ksrtc_purchase_orders_clean_v1");
-            return migrated;
-          }
-        } catch {
-          // ignore migration error
-        }
+    if (!raw) return [];
+    const parsed: PurchaseOrder[] = JSON.parse(raw);
+    return parsed.map((p) => {
+      let num = p.poNumber || "";
+      if (num.startsWith("PO-")) {
+        const digits = num.replace(/\D/g, "");
+        num = `KSRTC/PO/2026/${digits.padStart(5, "0")}`;
       }
-      return [];
-    }
-    return JSON.parse(raw);
+      return { ...p, poNumber: num };
+    });
   } catch {
     return [];
   }

@@ -757,9 +757,9 @@ export default function PurchaseOrders() {
         ) : (
           <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] overflow-hidden shadow-2xs">
             <div className="overflow-x-auto custom-scrollbar">
-              <table className="w-full text-xs min-w-[680px]">
+              <table className="w-full text-xs min-w-[880px] align-middle">
                 <thead>
-                  <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-1)]/60 text-left text-xs font-medium text-[var(--color-ink-500)]">
+                  <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-1)]/60 text-left text-xs font-medium text-[var(--color-ink-500)] whitespace-nowrap">
                     {renderSortHeader("PO Number", "poNumber", "px-4")}
                     {renderSortHeader("Supplier", "supplier", "px-3")}
                     {renderSortHeader("PO Date", "poDate", "px-3")}
@@ -777,7 +777,7 @@ export default function PurchaseOrders() {
                         po.isNew ? "bg-blue-500/5 dark:bg-blue-500/10" : ""
                       }`}
                     >
-                      <td className="px-4 py-2.5 font-medium text-[var(--color-ink-900)]">
+                      <td className="px-4 py-2.5 font-medium text-[var(--color-ink-900)] whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-xs">{po.poNumber}</span>
                           {po.isNew && (
@@ -787,9 +787,9 @@ export default function PurchaseOrders() {
                           )}
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 text-[var(--color-ink-700)]">{po.supplier}</td>
-                      <td className="px-3 py-2.5 text-[var(--color-ink-600)]">{po.poDate}</td>
-                      <td className="px-3 py-2.5">
+                      <td className="px-3 py-2.5 text-[var(--color-ink-700)] whitespace-nowrap max-w-[200px] truncate" title={po.supplier}>{po.supplier}</td>
+                      <td className="px-3 py-2.5 text-[var(--color-ink-600)] whitespace-nowrap font-mono text-xs">{po.poDate}</td>
+                      <td className="px-3 py-2.5 whitespace-nowrap">
                         {editingDeliveryPo === po.poNumber ? (
                           <div className="flex items-center gap-1">
                             <input
@@ -811,7 +811,7 @@ export default function PurchaseOrders() {
                         ) : (
                           <button
                             onClick={() => setEditingDeliveryPo(po.poNumber)}
-                            className="group inline-flex items-center gap-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-1)] hover:bg-blue-50/80 dark:hover:bg-blue-950/40 hover:border-blue-300 dark:hover:border-blue-700/60 px-2 py-1 text-xs text-[var(--color-ink-800)] hover:text-blue-700 dark:hover:text-blue-300 transition-all cursor-pointer shadow-2xs"
+                            className="group inline-flex items-center gap-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-1)] hover:bg-blue-50/80 dark:hover:bg-blue-950/40 hover:border-blue-300 dark:hover:border-blue-700/60 px-2 py-1 text-xs text-[var(--color-ink-800)] hover:text-blue-700 dark:hover:text-blue-300 transition-all cursor-pointer shadow-2xs whitespace-nowrap"
                             title="Click to edit expected delivery date"
                           >
                             <Calendar size={12} className="text-blue-600 dark:text-blue-400 shrink-0" />
@@ -820,13 +820,13 @@ export default function PurchaseOrders() {
                           </button>
                         )}
                       </td>
-                      <td className="tabular px-3 py-2.5 font-semibold text-[var(--color-ink-900)]">
+                      <td className="tabular px-3 py-2.5 font-semibold text-[var(--color-ink-900)] whitespace-nowrap">
                         ₹{po.total.toLocaleString("en-IN")}
                       </td>
-                      <td className="px-3 py-2.5">
+                      <td className="px-3 py-2.5 whitespace-nowrap">
                         <StatusBadge label={po.status} />
                       </td>
-                      <td className="px-3 py-2.5 text-right pr-4">
+                      <td className="px-3 py-2.5 text-right pr-4 whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => setViewing(po)}
