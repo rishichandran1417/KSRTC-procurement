@@ -4,7 +4,7 @@ import {
   Eye, PackageCheck, XCircle, Plus, X, FileText, Pencil, Trash2,
   Search, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight,
   ChevronsLeft, ChevronsRight, MapPin, Filter, RotateCcw,
-  Truck, ClipboardPaste
+  Truck, ClipboardPaste, Calendar
 } from "lucide-react";
 import { TopBar } from "../components/layout/TopBar";
 import { LoadingState, ErrorState } from "../components/ui/States";
@@ -73,7 +73,27 @@ export default function PurchaseOrders() {
     getInventory().then(setInventoryCatalog).catch(() => {});
   }, []);
 
-  const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [editingDeliveryPo, setEditingDeliveryPo] = useState<string | null>(null);
+
+  const handleQuickDeliveryChange = async (po: PurchaseOrder, newDate: string) => {
+    if (!newDate || newDate === po.expectedDelivery) {
+      setEditingDeliveryPo(null);
+      return;
+    }
+    const updatedPo = { ...po, expectedDelivery: newDate };
+    setOrders((prev) => prev.map((o) => (o.poNumber === po.poNumber ? updatedPo : o)));
+    if (viewing && viewing.poNumber === po.poNumber) {
+      setViewing(updatedPo);
+    }
+    setEditingDeliveryPo(null);
+    try {
+      await updatePurchaseOrder(updatedPo);
+      setSuccessToast(`PO #${po.poNumber} expected delivery date updated to ${newDate}!`);
+      setTimeout(() => setSuccessToast(null), 4000);
+    } catch (err) {
+      console.error("Failed to update delivery date", err);
+    }
+  };
 
   const handleStatusChange = (poNumber: string, nextStatus: PoStatus) => {
     updatePoStatus(poNumber, nextStatus).then((updated) => {
@@ -768,7 +788,37 @@ export default function PurchaseOrders() {
                       </td>
                       <td className="px-3 py-2.5 text-[var(--color-ink-700)]">{po.supplier}</td>
                       <td className="px-3 py-2.5 text-[var(--color-ink-600)]">{po.poDate}</td>
-                      <td className="px-3 py-2.5 text-[var(--color-ink-600)]">{po.expectedDelivery}</td>
+                      <td className="px-3 py-2.5">
+                        {editingDeliveryPo === po.poNumber ? (
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="date"
+                              defaultValue={po.expectedDelivery}
+                              onChange={(e) => handleQuickDeliveryChange(po, e.target.value)}
+                              className="rounded border border-blue-500 bg-[var(--color-surface-0)] px-2 py-0.5 text-xs text-[var(--color-ink-900)] font-mono focus:outline-none shadow-2xs"
+                              autoFocus
+                              onBlur={() => setEditingDeliveryPo(null)}
+                            />
+                            <button
+                              onClick={() => setEditingDeliveryPo(null)}
+                              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 cursor-pointer"
+                              title="Cancel"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setEditingDeliveryPo(po.poNumber)}
+                            className="group inline-flex items-center gap-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-1)] hover:bg-blue-50/80 dark:hover:bg-blue-950/40 hover:border-blue-300 dark:hover:border-blue-700/60 px-2 py-1 text-xs text-[var(--color-ink-800)] hover:text-blue-700 dark:hover:text-blue-300 transition-all cursor-pointer shadow-2xs"
+                            title="Click to edit expected delivery date"
+                          >
+                            <Calendar size={12} className="text-blue-600 dark:text-blue-400 shrink-0" />
+                            <span className="font-mono text-xs">{po.expectedDelivery || "Set Date"}</span>
+                            <Pencil size={11} className="text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 opacity-60 group-hover:opacity-100 transition-opacity shrink-0 ml-0.5" />
+                          </button>
+                        )}
+                      </td>
                       <td className="tabular px-3 py-2.5 font-semibold text-[var(--color-ink-900)]">
                         ₹{po.total.toLocaleString("en-IN")}
                       </td>
@@ -973,9 +1023,22 @@ export default function PurchaseOrders() {
                 <span className="text-[var(--color-ink-500)] block mb-0.5 font-normal">PO Date</span>
                 <span className="font-medium text-[var(--color-ink-900)]">{viewing.poDate}</span>
               </div>
-              <div className="rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-2.5">
-                <span className="text-[var(--color-ink-500)] block mb-0.5 font-normal">Expected Delivery</span>
-                <span className="font-medium text-[var(--color-ink-900)]">{viewing.expectedDelivery}</span>
+              <div className="rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-2.5 flex items-center justify-between">
+                <div>
+                  <span className="text-[var(--color-ink-500)] block mb-0.5 font-normal">Expected Delivery</span>
+                  <span className="font-mono font-medium text-[var(--color-ink-900)]">{viewing.expectedDelivery}</span>
+                </div>
+                <button
+                  onClick={() => {
+                    const currentPo = viewing;
+                    setViewing(null);
+                    openEditModal(currentPo);
+                  }}
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 px-2 py-1 rounded border border-blue-200 dark:border-blue-900/60 transition-colors cursor-pointer"
+                >
+                  <Pencil size={11} />
+                  <span>Edit Date</span>
+                </button>
               </div>
             </div>
 
