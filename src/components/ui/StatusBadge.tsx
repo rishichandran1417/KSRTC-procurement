@@ -42,8 +42,8 @@ const STATUS_CONFIGS: Record<Tone, StatusConfig> = {
 export function toneForStatus(status: string): Tone {
   const s = status.toLowerCase();
   if (s === "submitted" || s === "ordered") return "submitted";
-  if (["healthy", "received", "closed", "connected", "low"].includes(s)) return "healthy";
-  if (["warning", "medium", "partially received"].includes(s)) return "warning";
+  if (["healthy", "received", "closed", "connected", "low", "approved"].includes(s)) return "healthy";
+  if (["warning", "medium", "partially received", "delayed"].includes(s)) return "warning";
   if (["critical", "high", "cancelled"].includes(s)) return "critical";
   return "neutral";
 }

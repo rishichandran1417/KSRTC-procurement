@@ -1196,12 +1196,17 @@ export function SupplyScheduleBoard({
                 <select
                   value={rescheduleStatus}
                   onChange={(e) => setRescheduleStatus(e.target.value as PoStatus)}
-                  className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs text-[var(--color-ink-900)] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                  className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs font-semibold text-[var(--color-ink-900)] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                 >
-                  <option value="Ordered">Ordered (Active dispatch in transit)</option>
-                  <option value="Approved">Approved (Awaiting release by vendor)</option>
-                  <option value="Partially Received">Partially Received (Partial shipment arrived)</option>
                   <option value="Submitted">Submitted (Under processing)</option>
+                  <option value="Approved">Approved (Awaiting release by vendor)</option>
+                  <option value="Ordered">Ordered (Active dispatch in transit)</option>
+                  <option value="Partially Received">Partially Received (Partial shipment arrived)</option>
+                  <option value="Received">Received (Delivered & Verified)</option>
+                  <option value="Delayed">Delayed (Shipment Delay)</option>
+                  <option value="Closed">Closed (Completed)</option>
+                  <option value="Cancelled">Cancelled</option>
+                  <option value="Draft">Draft</option>
                 </select>
               </div>
             </div>

@@ -146,6 +146,7 @@ export type PoStatus =
   | "Ordered"
   | "Partially Received"
   | "Received"
+  | "Delayed"
   | "Closed"
   | "Cancelled";
 

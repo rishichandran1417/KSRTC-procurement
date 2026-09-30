@@ -195,8 +195,11 @@ export default function PurchaseOrders() {
       }
       if (editStatus === "Received" || editStatus === "Partially Received") {
         const units = updated.lines?.reduce((s, l) => s + (Number(l.receivedQuantity ?? (editStatus === "Received" ? l.quantity : 0)) || 0), 0) || 0;
-        setSuccessToast(`PO #${updated.poNumber} status updated: ${units} units tracked in inventory stock!`);
+        setSuccessToast(`[KSRTC Officer Authorized] PO #${updated.poNumber} status set to '${editStatus}': ${units} units tracked in central inventory!`);
         setTimeout(() => setSuccessToast(null), 5000);
+      } else {
+        setSuccessToast(`[KSRTC Officer Authorized] PO #${updated.poNumber} status updated to '${editStatus}'!`);
+        setTimeout(() => setSuccessToast(null), 4000);
       }
       setEditingPo(null);
     } catch (e) {
@@ -1223,7 +1226,9 @@ export default function PurchaseOrders() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[var(--color-ink-700)] mb-1">Status</label>
+                  <label className="block text-xs font-semibold text-[var(--color-ink-700)] mb-1">
+                    PO Status (Officer Authority)
+                  </label>
                   <select
                     value={editStatus}
                     onChange={(e) => {
@@ -1235,12 +1240,17 @@ export default function PurchaseOrders() {
                         );
                       }
                     }}
-                    className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs font-medium text-[var(--color-ink-900)] focus:border-blue-500 focus:outline-none cursor-pointer"
+                    className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs font-semibold text-[var(--color-ink-900)] focus:border-blue-500 focus:outline-none cursor-pointer"
                   >
-                    <option value="Ordered">Ordered / Pending</option>
-                    <option value="Partially Received">Partially Received (Partial Delivery)</option>
+                    <option value="Submitted">Submitted (Awaiting Approval)</option>
+                    <option value="Approved">Approved (KSRTC Officer Verified)</option>
+                    <option value="Ordered">Ordered (Dispatched to Vendor)</option>
+                    <option value="Partially Received">Partially Received (Partial Delivery Arrived)</option>
                     <option value="Received">Received (Full Delivery - Auto-updates Stock)</option>
-                    <option value="Cancelled">Cancelled</option>
+                    <option value="Delayed">Delayed (Shipment Delay)</option>
+                    <option value="Closed">Closed (Completed & Archived)</option>
+                    <option value="Cancelled">Cancelled (Order Voided)</option>
+                    <option value="Draft">Draft (Pending Creation)</option>
                   </select>
                 </div>
               </div>
