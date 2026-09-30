@@ -4,7 +4,7 @@ import {
   Eye, PackageCheck, XCircle, Plus, X, FileText, Pencil, Trash2,
   Search, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight,
   ChevronsLeft, ChevronsRight, MapPin, Filter, RotateCcw,
-  Truck, ClipboardPaste, Calendar
+  Truck, ClipboardPaste, Calendar, ShieldCheck
 } from "lucide-react";
 import { TopBar } from "../components/layout/TopBar";
 import { LoadingState, ErrorState } from "../components/ui/States";
@@ -102,8 +102,11 @@ export default function PurchaseOrders() {
       if (viewing && viewing.poNumber === poNumber) setViewing(updated);
       if (nextStatus === "Received") {
         const units = updated.lines?.reduce((s, l) => s + (Number(l.quantity) || 0), 0) || 0;
-        setSuccessToast(`PO #${poNumber} received: ${units} units successfully added to inventory stock!`);
+        setSuccessToast(`[KSRTC Depot Officer Approved] PO #${poNumber} received: ${units} units added to central inventory stock!`);
         setTimeout(() => setSuccessToast(null), 5000);
+      } else {
+        setSuccessToast(`[KSRTC Depot Officer Authorized] PO #${poNumber} status updated to ${nextStatus}.`);
+        setTimeout(() => setSuccessToast(null), 4000);
       }
     });
   };
@@ -409,6 +412,11 @@ export default function PurchaseOrders() {
         }
         actions={
           <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full sm:w-auto">
+            {/* KSRTC Depot Officer Role Badge */}
+            <div className="hidden lg:flex items-center gap-1.5 rounded-md border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/80 dark:bg-emerald-950/40 px-2.5 py-1 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+              <ShieldCheck size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>KSRTC Officer Authorized</span>
+            </div>
             {/* View Switcher: Orders List vs Supply Scheduling / Rescheduling */}
             <div className="flex items-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] p-0.5">
               <button
