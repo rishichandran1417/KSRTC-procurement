@@ -1242,15 +1242,15 @@ export default function PurchaseOrders() {
                     }}
                     className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs font-semibold text-[var(--color-ink-900)] focus:border-blue-500 focus:outline-none cursor-pointer"
                   >
-                    <option value="Submitted">Submitted (Awaiting Approval)</option>
-                    <option value="Approved">Approved (KSRTC Officer Verified)</option>
-                    <option value="Ordered">Ordered (Dispatched to Vendor)</option>
-                    <option value="Partially Received">Partially Received (Partial Delivery Arrived)</option>
-                    <option value="Received">Received (Full Delivery - Auto-updates Stock)</option>
-                    <option value="Delayed">Delayed (Shipment Delay)</option>
-                    <option value="Closed">Closed (Completed & Archived)</option>
-                    <option value="Cancelled">Cancelled (Order Voided)</option>
-                    <option value="Draft">Draft (Pending Creation)</option>
+                    <option value="Submitted">Submitted</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Ordered">Ordered</option>
+                    <option value="Partially Received">Partially Received</option>
+                    <option value="Received">Received</option>
+                    <option value="Delayed">Delayed</option>
+                    <option value="Closed">Closed</option>
+                    <option value="Cancelled">Cancelled</option>
+                    <option value="Draft">Draft</option>
                   </select>
                 </div>
               </div>
