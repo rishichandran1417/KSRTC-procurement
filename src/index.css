@@ -108,7 +108,7 @@
 }
 
 html {
-  font-size: 108%;
+  font-size: 115.5%;
 }
 
 html, body, #root { height: 100%; }
@@ -117,7 +117,7 @@ body {
   background: var(--color-surface-1);
   color: var(--color-ink-900);
   font-family: var(--font-sans);
-  font-size: 0.9375rem;
+  font-size: 0.965rem;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
