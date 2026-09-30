@@ -853,37 +853,40 @@ export default function PurchaseOrders() {
                           <button
                             onClick={() => setViewing(po)}
                             title="View PO Details"
-                            className="inline-flex items-center justify-center rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-1.5 text-[var(--color-ink-600)] hover:text-[var(--color-ink-900)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] px-2 py-1 text-xs font-medium text-[var(--color-ink-700)] hover:text-[var(--color-ink-900)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer shadow-2xs"
                             aria-label="View Details"
                           >
-                            <Eye size={13} />
+                            <Eye size={13} className="text-blue-600 dark:text-blue-400 shrink-0" />
+                            <span>View</span>
                           </button>
 
                           <button
                             onClick={() => openEditModal(po)}
                             title="Edit PO Details"
-                            className="inline-flex items-center justify-center rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-1.5 text-[var(--color-ink-600)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] px-2 py-1 text-xs font-medium text-[var(--color-ink-700)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer shadow-2xs"
                             aria-label="Edit Order Details"
                           >
-                            <Pencil size={13} />
+                            <Pencil size={13} className="text-slate-500 shrink-0" />
+                            <span>Edit</span>
                           </button>
 
                           <button
                             onClick={() => setPdfPo(po)}
                             title="View & Print Official PDF"
-                            className="inline-flex items-center justify-center rounded border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/40 p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 rounded border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/40 px-2 py-1 text-xs font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors cursor-pointer shadow-2xs"
                             aria-label="View PDF"
                           >
-                            <FileText size={13} />
+                            <FileText size={13} className="text-blue-600 dark:text-blue-400 shrink-0" />
+                            <span>PDF</span>
                           </button>
 
                           {["Ordered", "Approved", "Partially Received"].includes(po.status) && (
                             <button
                               onClick={() => handleStatusChange(po.poNumber, "Received")}
                               title="Click to receive shipment and update inventory stock"
-                              className="inline-flex items-center gap-1 rounded border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors cursor-pointer"
+                              className="inline-flex items-center gap-1 rounded border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 transition-colors cursor-pointer shadow-2xs"
                             >
-                              <PackageCheck size={13} />
+                              <PackageCheck size={13} className="shrink-0" />
                               <span>Receive</span>
                             </button>
                           )}
@@ -892,10 +895,11 @@ export default function PurchaseOrders() {
                             <button
                               onClick={() => handleStatusChange(po.poNumber, "Cancelled")}
                               title="Cancel Purchase Order"
-                              className="inline-flex items-center justify-center rounded border border-rose-500/20 bg-rose-500/10 p-1.5 text-rose-500 hover:bg-rose-500/20 transition-colors cursor-pointer"
+                              className="inline-flex items-center gap-1 rounded border border-rose-500/20 bg-rose-500/10 px-2 py-1 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-colors cursor-pointer shadow-2xs"
                               aria-label="Cancel Order"
                             >
-                              <XCircle size={13} />
+                              <XCircle size={13} className="shrink-0" />
+                              <span>Cancel</span>
                             </button>
                           )}
                         </div>
