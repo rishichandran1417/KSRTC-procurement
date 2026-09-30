@@ -832,7 +832,21 @@ export default function PurchaseOrders() {
                         ₹{po.total.toLocaleString("en-IN")}
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
-                        <StatusBadge label={po.status} />
+                        <select
+                          value={po.status}
+                          onChange={(e) => handleStatusChange(po.poNumber, e.target.value as PoStatus)}
+                          className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface-0)] px-2 py-1 text-xs font-semibold text-[var(--color-ink-900)] hover:border-blue-500 cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-2xs transition-colors"
+                          title="KSRTC Officer Status Change: Click to update order status"
+                        >
+                          <option value="Submitted">Submitted</option>
+                          <option value="Approved">Approved</option>
+                          <option value="Ordered">Ordered</option>
+                          <option value="Partially Received">Partially Received</option>
+                          <option value="Received">Received</option>
+                          <option value="Delayed">Delayed</option>
+                          <option value="Closed">Closed</option>
+                          <option value="Cancelled">Cancelled</option>
+                        </select>
                       </td>
                       <td className="px-3 py-2.5 text-right pr-4 whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
