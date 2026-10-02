@@ -153,10 +153,11 @@ export type PoStatus =
 export interface PurchaseOrderLine {
   part: string;
   category?: string;
-  quantity: number;
+  quantity: number; // Ordered Quantity
   unitPrice: number;
   totalCost: number;
-  receivedQuantity?: number;
+  receivedQuantity?: number; // Previously Accepted Quantity
+  rejectedQuantity?: number; // Previously Rejected Quantity
 }
 
 export interface PurchaseOrder {
@@ -174,7 +175,92 @@ export interface PurchaseOrder {
   createdAt?: number;
   isNew?: boolean;
   inventoryReceived?: boolean;
+  hasRejections?: boolean;
+  totalRejectedUnits?: number;
+  isRescheduled?: boolean;
+  rescheduleCount?: number;
 }
+
+// ---------- Goods Receipts ----------
+
+export type RejectionReason =
+  | "Damaged"
+  | "Wrong Specification"
+  | "Wrong Item"
+  | "Quantity Discrepancy"
+  | "Quality Failure"
+  | "Other";
+
+export interface GoodsReceiptItem {
+  part: string;
+  category?: string;
+  orderedQuantity: number;
+  previouslyReceived: number;
+  pendingQuantity: number;
+  acceptedQuantity: number; // Receive Now
+  rejectedQuantity: number;
+  rejectionReason?: RejectionReason | string;
+  customRejectionReason?: string;
+  remarks?: string;
+}
+
+export interface GoodsReceipt {
+  id: string;
+  receiptNumber: string;
+  poNumber: string;
+  receiptDate: string;
+  receivedBy: string;
+  remarks?: string;
+  items: GoodsReceiptItem[];
+  createdAt: string;
+}
+
+// ---------- Delivery Rescheduling ----------
+
+export interface PoDeliveryReschedule {
+  id: string;
+  poNumber: string;
+  previousDate: string;
+  newDate: string;
+  reason: string;
+  changedBy: string;
+  changedAt: string;
+  remarks?: string;
+}
+
+// ---------- Audit Trail ----------
+
+export type PoAuditAction =
+  | "PO Created"
+  | "PO Submitted"
+  | "PO Approved"
+  | "PO Ordered"
+  | "PO Submitted/Ordered"
+  | "PO Edited"
+  | "Delivery Date Changed"
+  | "Goods Receipt Created"
+  | "Goods Received"
+  | "Partial Receipt"
+  | "Full Receipt"
+  | "Rejected Quantity Recorded"
+  | "PO Status Updated"
+  | "PO Received"
+  | "PO Cancelled"
+  | "PO Closed";
+
+export interface PoAuditLog {
+  id: string;
+  poNumber: string;
+  action: PoAuditAction;
+  performedBy: string;
+  timestamp: string;
+  previousValue?: string;
+  newValue?: string;
+  reason?: string;
+  remarks?: string;
+  details?: string;
+}
+
 
 // ---------- Suppliers ----------
 

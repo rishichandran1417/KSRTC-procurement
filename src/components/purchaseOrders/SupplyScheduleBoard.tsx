@@ -15,6 +15,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { StatusBadge } from "../ui/StatusBadge";
+import { reschedulePoDelivery } from "../../services/purchaseOrderApi";
 import type { PurchaseOrder, PoStatus } from "../../types";
 
 interface SupplyScheduleBoardProps {
@@ -391,17 +392,14 @@ export function SupplyScheduleBoard({
     if (!reschedulingPo || !newDeliveryDate) return;
     setIsSavingReschedule(true);
     try {
-      const noteAddition = rescheduleReason.trim()
-        ? `\n[Rescheduled to ${newDeliveryDate}: ${rescheduleReason.trim()}]`
-        : `\n[Rescheduled expected delivery to ${newDeliveryDate}]`;
-
-      const updated: PurchaseOrder = {
-        ...reschedulingPo,
-        expectedDelivery: newDeliveryDate,
-        status: rescheduleStatus,
-        notes: ((reschedulingPo.notes || "") + noteAddition).trim(),
-      };
-      await onUpdateOrder(updated);
+      const res = await reschedulePoDelivery({
+        poNumber: reschedulingPo.poNumber,
+        newDate: newDeliveryDate,
+        reason: rescheduleReason.trim() || "Delivery Date Adjustment",
+        remarks: `Rescheduled from Supply Schedule Board`,
+        changedBy: "KSRTC Procurement Officer",
+      });
+      await onUpdateOrder(res.updatedPo);
       setReschedulingPo(null);
     } catch (err) {
       console.error("Failed to reschedule PO delivery:", err);
@@ -733,7 +731,17 @@ export function SupplyScheduleBoard({
 
                               <div className="flex items-center justify-between pt-0.5">
                                 <span className="text-[var(--color-ink-500)]">Scheduled:</span>
-                                <span className="font-semibold text-[var(--color-ink-800)]">{po.expectedDelivery || "TBD"}</span>
+                                <div className="flex items-center gap-1">
+                                  <span className="font-semibold text-[var(--color-ink-800)]">{po.expectedDelivery || "TBD"}</span>
+                                  {po.isRescheduled && (
+                                    <span
+                                      className="text-[9px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 px-1 py-0.2 rounded border border-amber-300 dark:border-amber-900/60"
+                                      title={`Rescheduled ${po.rescheduleCount || 1} time(s)`}
+                                    >
+                                      🕒 {(po.rescheduleCount || 1) > 1 ? `${po.rescheduleCount}x` : "Rescheduled"}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
 
                               <div className="flex items-center justify-between">

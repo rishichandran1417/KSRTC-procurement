@@ -3,16 +3,29 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Eye, PackageCheck, XCircle, Plus, X, FileText, Pencil, Trash2,
   Search, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight,
-  ChevronsLeft, ChevronsRight, MapPin, Filter, RotateCcw,
-  Truck, ClipboardPaste, Calendar, ShieldCheck
+  ChevronsLeft, ChevronsRight, Filter, RotateCcw,
+  Truck, ClipboardPaste, Calendar
 } from "lucide-react";
 import { TopBar } from "../components/layout/TopBar";
 import { LoadingState, ErrorState } from "../components/ui/States";
 import { StatusBadge } from "../components/ui/StatusBadge";
-import { getPurchaseOrders, updatePoStatus, updatePurchaseOrder } from "../services/purchaseOrderApi";
+import {
+  getPurchaseOrders,
+  updatePoStatus,
+  updatePurchaseOrder,
+  submitPurchaseOrder,
+  approvePurchaseOrder,
+  orderPurchaseOrder,
+  cancelPurchaseOrder,
+  closePurchaseOrder,
+} from "../services/purchaseOrderApi";
 import { getInventory } from "../services/inventoryApi";
 import { PurchaseOrderPdfModal } from "../components/ui/PurchaseOrderPdfModal";
 import { SupplyScheduleBoard } from "../components/purchaseOrders/SupplyScheduleBoard";
+import { ReceiveGoodsModal } from "../components/purchaseOrders/ReceiveGoodsModal";
+import { RescheduleDeliveryModal } from "../components/purchaseOrders/RescheduleDeliveryModal";
+import { PoDetailModal } from "../components/purchaseOrders/PoDetailModal";
+import { CancelPoModal } from "../components/purchaseOrders/CancelPoModal";
 import type { PurchaseOrder, PoStatus, InventoryItem } from "../types";
 
 export default function PurchaseOrders() {
@@ -29,6 +42,55 @@ export default function PurchaseOrders() {
   const [error, setError] = useState<string | null>(null);
   const [viewing, setViewing] = useState<PurchaseOrder | null>(null);
   const [pdfPo, setPdfPo] = useState<PurchaseOrder | null>(null);
+  const [receiveModalPo, setReceiveModalPo] = useState<PurchaseOrder | null>(null);
+  const [rescheduleModalPo, setRescheduleModalPo] = useState<PurchaseOrder | null>(null);
+  const [cancelModalPo, setCancelModalPo] = useState<PurchaseOrder | null>(null);
+
+  const handleSubmitPoAction = async (po: PurchaseOrder) => {
+    try {
+      const updated = await submitPurchaseOrder(po.poNumber);
+      setOrders((prev) => prev.map((o) => (o.poNumber === po.poNumber ? updated : o)));
+      if (viewing?.poNumber === po.poNumber) setViewing(updated);
+    } catch (err: any) {
+      alert(err?.message || "Failed to submit PO");
+    }
+  };
+
+  const handleApprovePoAction = async (po: PurchaseOrder) => {
+    try {
+      const updated = await approvePurchaseOrder(po.poNumber);
+      setOrders((prev) => prev.map((o) => (o.poNumber === po.poNumber ? updated : o)));
+      if (viewing?.poNumber === po.poNumber) setViewing(updated);
+    } catch (err: any) {
+      alert(err?.message || "Failed to approve PO");
+    }
+  };
+
+  const handleOrderPoAction = async (po: PurchaseOrder) => {
+    try {
+      const updated = await orderPurchaseOrder(po.poNumber);
+      setOrders((prev) => prev.map((o) => (o.poNumber === po.poNumber ? updated : o)));
+      if (viewing?.poNumber === po.poNumber) setViewing(updated);
+    } catch (err: any) {
+      alert(err?.message || "Failed to place order");
+    }
+  };
+
+  const handleClosePoAction = async (po: PurchaseOrder) => {
+    try {
+      const updated = await closePurchaseOrder(po.poNumber);
+      setOrders((prev) => prev.map((o) => (o.poNumber === po.poNumber ? updated : o)));
+      if (viewing?.poNumber === po.poNumber) setViewing(updated);
+    } catch (err: any) {
+      alert(err?.message || "Failed to close PO");
+    }
+  };
+
+  const handleConfirmCancelPo = async (poNumber: string, reason: string) => {
+    const updated = await cancelPurchaseOrder(poNumber, reason);
+    setOrders((prev) => prev.map((o) => (o.poNumber === poNumber ? updated : o)));
+    if (viewing?.poNumber === poNumber) setViewing(updated);
+  };
 
   // Search, filter, sort and pagination states
   const [search, setSearch] = useState("");
@@ -74,27 +136,6 @@ export default function PurchaseOrders() {
   }, []);
 
   const [successToast, setSuccessToast] = useState<string | null>(null);
-  const [editingDeliveryPo, setEditingDeliveryPo] = useState<string | null>(null);
-
-  const handleQuickDeliveryChange = async (po: PurchaseOrder, newDate: string) => {
-    if (!newDate || newDate === po.expectedDelivery) {
-      setEditingDeliveryPo(null);
-      return;
-    }
-    const updatedPo = { ...po, expectedDelivery: newDate };
-    setOrders((prev) => prev.map((o) => (o.poNumber === po.poNumber ? updatedPo : o)));
-    if (viewing && viewing.poNumber === po.poNumber) {
-      setViewing(updatedPo);
-    }
-    setEditingDeliveryPo(null);
-    try {
-      await updatePurchaseOrder(updatedPo);
-      setSuccessToast(`PO #${po.poNumber} expected delivery date updated to ${newDate}!`);
-      setTimeout(() => setSuccessToast(null), 4000);
-    } catch (err) {
-      console.error("Failed to update delivery date", err);
-    }
-  };
 
   const handleStatusChange = (poNumber: string, nextStatus: PoStatus) => {
     updatePoStatus(poNumber, nextStatus).then((updated) => {
@@ -102,10 +143,10 @@ export default function PurchaseOrders() {
       if (viewing && viewing.poNumber === poNumber) setViewing(updated);
       if (nextStatus === "Received") {
         const units = updated.lines?.reduce((s, l) => s + (Number(l.quantity) || 0), 0) || 0;
-        setSuccessToast(`[KSRTC Depot Officer Approved] PO #${poNumber} received: ${units} units added to central inventory stock!`);
+        setSuccessToast(`PO #${poNumber} received: ${units} units added to central inventory stock!`);
         setTimeout(() => setSuccessToast(null), 5000);
       } else {
-        setSuccessToast(`[KSRTC Depot Officer Authorized] PO #${poNumber} status updated to ${nextStatus}.`);
+        setSuccessToast(`PO #${poNumber} status updated to ${nextStatus}.`);
         setTimeout(() => setSuccessToast(null), 4000);
       }
     });
@@ -195,10 +236,10 @@ export default function PurchaseOrders() {
       }
       if (editStatus === "Received" || editStatus === "Partially Received") {
         const units = updated.lines?.reduce((s, l) => s + (Number(l.receivedQuantity ?? (editStatus === "Received" ? l.quantity : 0)) || 0), 0) || 0;
-        setSuccessToast(`[KSRTC Officer Authorized] PO #${updated.poNumber} status set to '${editStatus}': ${units} units tracked in central inventory!`);
+        setSuccessToast(`PO #${updated.poNumber} status set to '${editStatus}': ${units} units tracked in central inventory!`);
         setTimeout(() => setSuccessToast(null), 5000);
       } else {
-        setSuccessToast(`[KSRTC Officer Authorized] PO #${updated.poNumber} status updated to '${editStatus}'!`);
+        setSuccessToast(`PO #${updated.poNumber} status updated to '${editStatus}'!`);
         setTimeout(() => setSuccessToast(null), 4000);
       }
       setEditingPo(null);
@@ -415,11 +456,6 @@ export default function PurchaseOrders() {
         }
         actions={
           <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full sm:w-auto">
-            {/* KSRTC Depot Officer Role Badge */}
-            <div className="hidden lg:flex items-center gap-1.5 rounded-md border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/80 dark:bg-emerald-950/40 px-2.5 py-1 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
-              <ShieldCheck size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <span>KSRTC Officer Authorized</span>
-            </div>
             {/* View Switcher: Orders List vs Supply Scheduling / Rescheduling */}
             <div className="flex items-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-1)] p-0.5">
               <button
@@ -781,120 +817,187 @@ export default function PurchaseOrders() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--color-border)]">
-                  {paginatedOrders.map((po, idx) => (
-                    <tr
-                      key={`po-list-${po.poNumber}-${idx}`}
-                      className={`hover:bg-[var(--color-surface-1)] transition-colors ${
-                        po.isNew ? "bg-blue-500/5 dark:bg-blue-500/10" : ""
-                      }`}
-                    >
-                      <td className="px-3.5 py-2.5 font-medium text-[var(--color-ink-900)] whitespace-nowrap">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono text-xs">{po.poNumber}</span>
-                          {po.isNew && (
-                            <span className="inline-flex items-center rounded bg-blue-500/10 px-1 py-0.2 text-[9px] font-semibold text-blue-700 dark:text-blue-300 border border-blue-500/20">
-                              NEW
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2.5 text-[var(--color-ink-700)] whitespace-nowrap max-w-[180px] truncate" title={po.supplier}>
-                        {po.supplier}
-                      </td>
-                      <td className="px-3 py-2.5 text-[var(--color-ink-600)] whitespace-nowrap font-mono text-xs">
-                        {po.poDate}
-                      </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap">
-                        {editingDeliveryPo === po.poNumber ? (
-                          <div className="flex items-center gap-1">
-                            <input
-                              type="date"
-                              defaultValue={po.expectedDelivery}
-                              onChange={(e) => handleQuickDeliveryChange(po, e.target.value)}
-                              className="rounded border border-blue-500 bg-[var(--color-surface-0)] px-1.5 py-0.5 text-xs text-[var(--color-ink-900)] font-mono focus:outline-none shadow-2xs"
-                              autoFocus
-                              onBlur={() => setEditingDeliveryPo(null)}
-                            />
-                            <button
-                              onClick={() => setEditingDeliveryPo(null)}
-                              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 cursor-pointer"
-                              title="Cancel"
-                            >
-                              <X size={12} />
-                            </button>
+                  {paginatedOrders.map((po, idx) => {
+                    const totalOrd = po.lines?.reduce((s, l) => s + (Number(l.quantity) || 0), 0) || 0;
+                    const totalRec = po.lines?.reduce((s, l) => s + (Number(l.receivedQuantity) || 0), 0) || 0;
+                    const totalRej = po.lines?.reduce((s, l) => s + (Number(l.rejectedQuantity) || 0), 0) || 0;
+                    const rowPending = Math.max(0, totalOrd - totalRec - totalRej);
+
+                    let isRowOverdue = false;
+                    let overdueDaysNum = 0;
+                    if (po.expectedDelivery && rowPending > 0) {
+                      const delTime = new Date(po.expectedDelivery).getTime();
+                      const todayTime = new Date().setHours(0, 0, 0, 0);
+                      if (todayTime > delTime) {
+                        isRowOverdue = true;
+                        overdueDaysNum = Math.ceil((todayTime - delTime) / 86400000);
+                      }
+                    }
+
+                    return (
+                      <tr
+                        key={`po-list-${po.poNumber}-${idx}`}
+                        className={`hover:bg-[var(--color-surface-1)] transition-colors ${
+                          po.isNew ? "bg-blue-500/5 dark:bg-blue-500/10" : ""
+                        }`}
+                      >
+                        <td className="px-3.5 py-2.5 font-medium text-[var(--color-ink-900)] whitespace-nowrap">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-xs">{po.poNumber}</span>
+                            {po.isNew && (
+                              <span className="inline-flex items-center rounded bg-blue-500/10 px-1 py-0.2 text-[9px] font-semibold text-blue-700 dark:text-blue-300 border border-blue-500/20">
+                                NEW
+                              </span>
+                            )}
                           </div>
-                        ) : (
-                          <button
-                            onClick={() => setEditingDeliveryPo(po.poNumber)}
-                            className="group inline-flex items-center gap-1 rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] hover:bg-blue-50/80 dark:hover:bg-blue-950/40 hover:border-blue-300 dark:hover:border-blue-700/60 px-2 py-0.5 text-xs text-[var(--color-ink-800)] hover:text-blue-700 dark:hover:text-blue-300 transition-all cursor-pointer shadow-2xs whitespace-nowrap"
-                            title="Click to edit expected delivery date"
-                          >
-                            <Calendar size={11} className="text-blue-600 dark:text-blue-400 shrink-0" />
-                            <span className="font-mono text-xs">{po.expectedDelivery || "Set Date"}</span>
-                            <Pencil size={10} className="text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 opacity-60 group-hover:opacity-100 transition-opacity shrink-0 ml-0.5" />
-                          </button>
-                        )}
-                      </td>
-                      <td className="tabular px-3 py-2.5 font-semibold text-[var(--color-ink-900)] whitespace-nowrap">
-                        ₹{po.total.toLocaleString("en-IN")}
-                      </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap">
-                        <StatusBadge label={po.status} />
-                      </td>
-                      <td className="px-3 py-2.5 text-right pr-4 whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1">
-                          <button
-                            onClick={() => setViewing(po)}
-                            title="View PO Details"
-                            className="inline-flex items-center justify-center rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-1.5 text-[var(--color-ink-600)] hover:text-[var(--color-ink-900)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
-                            aria-label="View Details"
-                          >
-                            <Eye size={13} />
-                          </button>
-
-                          <button
-                            onClick={() => openEditModal(po)}
-                            title="Edit PO Details"
-                            className="inline-flex items-center justify-center rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-1.5 text-[var(--color-ink-600)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
-                            aria-label="Edit Order Details"
-                          >
-                            <Pencil size={13} />
-                          </button>
-
-                          <button
-                            onClick={() => setPdfPo(po)}
-                            title="View & Print Official PDF"
-                            className="inline-flex items-center justify-center rounded border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/40 p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors cursor-pointer"
-                            aria-label="View PDF"
-                          >
-                            <FileText size={13} />
-                          </button>
-
-                          {["Ordered", "Approved", "Partially Received"].includes(po.status) && (
+                        </td>
+                        <td className="px-3 py-2.5 text-[var(--color-ink-700)] whitespace-nowrap max-w-[180px] truncate" title={po.supplier}>
+                          {po.supplier}
+                        </td>
+                        <td className="px-3 py-2.5 text-[var(--color-ink-600)] whitespace-nowrap font-mono text-xs">
+                          {po.poDate}
+                        </td>
+                        <td className="px-3 py-2.5 whitespace-nowrap">
+                          <div className="flex flex-col gap-0.5">
                             <button
-                              onClick={() => handleStatusChange(po.poNumber, "Received")}
-                              title="Click to receive shipment and update inventory stock"
-                              className="inline-flex items-center gap-1 rounded border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 transition-colors cursor-pointer shadow-2xs"
+                              onClick={() => setRescheduleModalPo(po)}
+                              className="group inline-flex items-center gap-1.5 font-mono text-xs text-[var(--color-ink-700)] hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
+                              title="Click to view delivery history or reschedule delivery date"
                             >
-                              <PackageCheck size={13} className="shrink-0" />
-                              <span>Receive</span>
+                              <Calendar size={11} className="text-blue-500 shrink-0 opacity-70 group-hover:opacity-100" />
+                              <span>{po.expectedDelivery || "Set Date"}</span>
+                              <Pencil size={10} className="text-[var(--color-ink-400)] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                             </button>
-                          )}
 
-                          {!["Received", "Closed", "Cancelled"].includes(po.status) && (
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {po.isRescheduled && (
+                                <span
+                                  className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 rounded border border-amber-300 dark:border-amber-900/60 shadow-2xs"
+                                  title={`Rescheduled ${po.rescheduleCount || 1} time${(po.rescheduleCount || 1) > 1 ? "s" : ""}. Latest expected delivery date: ${po.expectedDelivery}`}
+                                >
+                                  🕒 {(po.rescheduleCount || 1) > 1 ? `Rescheduled (${po.rescheduleCount}x)` : "Rescheduled"}
+                                </span>
+                              )}
+                              {isRowOverdue && (
+                                <span className="text-[10px] font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 px-1 py-0.2 rounded border border-rose-300 dark:border-rose-900/60">
+                                  🔴 {overdueDaysNum}d overdue
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="tabular px-3 py-2.5 font-semibold text-[var(--color-ink-900)] whitespace-nowrap">
+                          ₹{po.total.toLocaleString("en-IN")}
+                        </td>
+                        <td className="px-3 py-2.5 whitespace-nowrap">
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <StatusBadge label={po.status} />
+                            {(po.hasRejections || (po.totalRejectedUnits && po.totalRejectedUnits > 0) || totalRej > 0) && (
+                              <span
+                                className="inline-flex items-center gap-1 rounded bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-900/60 text-[10px] font-semibold px-1.5 py-0.5"
+                                title={`${po.totalRejectedUnits || totalRej} units rejected`}
+                              >
+                                ⚠️ Discrepancy
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2.5 text-right pr-4 whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1">
                             <button
-                              onClick={() => handleStatusChange(po.poNumber, "Cancelled")}
-                              title="Cancel Purchase Order"
-                              className="inline-flex items-center justify-center rounded border border-rose-500/20 bg-rose-500/10 p-1.5 text-rose-500 hover:bg-rose-500/20 transition-colors cursor-pointer"
-                              aria-label="Cancel Order"
+                              onClick={() => setViewing(po)}
+                              title="View PO Details, Receipts, Delivery & Audit History"
+                              className="inline-flex items-center justify-center rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-1.5 text-[var(--color-ink-600)] hover:text-[var(--color-ink-900)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
+                              aria-label="View Details"
                             >
-                              <XCircle size={13} />
+                              <Eye size={13} />
                             </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+
+                            <button
+                              onClick={() => openEditModal(po)}
+                              title="Edit PO Details"
+                              className="inline-flex items-center justify-center rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-1.5 text-[var(--color-ink-600)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
+                              aria-label="Edit Order Details"
+                            >
+                              <Pencil size={13} />
+                            </button>
+
+                            <button
+                              onClick={() => setPdfPo(po)}
+                              title="View & Print Official PDF"
+                              className="inline-flex items-center justify-center rounded border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/40 p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors cursor-pointer"
+                              aria-label="View PDF"
+                            >
+                              <FileText size={13} />
+                            </button>
+
+                            {/* Workflow status actions */}
+                            {po.status === "Draft" && (
+                              <button
+                                onClick={() => handleSubmitPoAction(po)}
+                                title="Submit PO for authorization"
+                                className="inline-flex items-center gap-1 rounded bg-blue-600 hover:bg-blue-700 px-2 py-1 text-xs font-semibold text-white transition-colors cursor-pointer shadow-2xs"
+                              >
+                                <span>Submit</span>
+                              </button>
+                            )}
+
+                            {po.status === "Submitted" && (
+                              <button
+                                onClick={() => handleApprovePoAction(po)}
+                                title="Approve & authorize PO"
+                                className="inline-flex items-center gap-1 rounded bg-emerald-600 hover:bg-emerald-700 px-2 py-1 text-xs font-semibold text-white transition-colors cursor-pointer shadow-2xs"
+                              >
+                                <span>Approve</span>
+                              </button>
+                            )}
+
+                            {po.status === "Approved" && (
+                              <button
+                                onClick={() => handleOrderPoAction(po)}
+                                title="Place order with supplier"
+                                className="inline-flex items-center gap-1 rounded bg-blue-600 hover:bg-blue-700 px-2 py-1 text-xs font-semibold text-white transition-colors cursor-pointer shadow-2xs"
+                              >
+                                <span>Place Order</span>
+                              </button>
+                            )}
+
+                            {["Ordered", "Partially Received"].includes(po.status) && rowPending > 0 && (
+                              <button
+                                onClick={() => setReceiveModalPo(po)}
+                                title="Click to open Goods Receipt modal and process received/rejected shipment"
+                                className="inline-flex items-center gap-1 rounded border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 transition-colors cursor-pointer shadow-2xs"
+                              >
+                                <PackageCheck size={13} className="shrink-0" />
+                                <span>Receive</span>
+                              </button>
+                            )}
+
+                            {po.status === "Received" && (
+                              <button
+                                onClick={() => handleClosePoAction(po)}
+                                title="Close Purchase Order"
+                                className="inline-flex items-center gap-1 rounded bg-slate-700 hover:bg-slate-800 dark:bg-zinc-700 dark:hover:bg-zinc-600 px-2 py-1 text-xs font-semibold text-white transition-colors cursor-pointer shadow-2xs"
+                              >
+                                <span>Close PO</span>
+                              </button>
+                            )}
+
+                            {!["Received", "Closed", "Cancelled"].includes(po.status) && (
+                              <button
+                                onClick={() => setCancelModalPo(po)}
+                                title="Cancel Purchase Order"
+                                className="inline-flex items-center justify-center rounded border border-rose-500/20 bg-rose-500/10 p-1.5 text-rose-500 hover:bg-rose-500/20 transition-colors cursor-pointer"
+                                aria-label="Cancel Order"
+                              >
+                                <XCircle size={13} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -995,179 +1098,59 @@ export default function PurchaseOrders() {
     )}
   </div>
 
-      {/* PO DETAIL VIEW MODAL */}
-      {viewing ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4"
-          onClick={() => setViewing(null)}
-        >
-          <div
-            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-0)] p-5 shadow-xl text-xs space-y-4 text-[var(--color-ink-900)]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="flex justify-between items-start border-b border-[var(--color-border)] pb-3">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-900/60">
-                    {viewing.poNumber}
-                  </span>
-                  <StatusBadge label={viewing.status} />
-                </div>
-                <h3 className="text-base font-medium text-[var(--color-ink-900)] leading-tight">
-                  {viewing.supplier}
-                </h3>
-                {viewing.supplierAddress && (
-                  <p className="text-xs text-[var(--color-ink-500)] flex items-center gap-1 mt-0.5">
-                    <MapPin size={11} className="text-blue-500 shrink-0" />
-                    <span>{viewing.supplierAddress}</span>
-                  </p>
-                )}
-              </div>
-              <button
-                onClick={() => setViewing(null)}
-                className="rounded p-1 text-[var(--color-ink-400)] hover:text-[var(--color-ink-700)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
-                title="Close"
-              >
-                <X size={16} />
-              </button>
-            </div>
+      {/* PO DETAIL VIEW MODAL (WITH TABS FOR GOODS RECEIPTS, DELIVERY HISTORY, AUDIT TRAIL) */}
+      {viewing && (
+        <PoDetailModal
+          po={viewing}
+          onClose={() => setViewing(null)}
+          onEditOrder={openEditModal}
+          onOpenReceive={(p) => setReceiveModalPo(p)}
+          onOpenReschedule={(p) => setRescheduleModalPo(p)}
+          onPrintPdf={(p) => setPdfPo(p)}
+          onSubmitPo={handleSubmitPoAction}
+          onApprovePo={handleApprovePoAction}
+          onOrderPo={handleOrderPoAction}
+          onClosePo={handleClosePoAction}
+          onCancelPo={(p) => setCancelModalPo(p)}
+        />
+      )}
 
-            {/* Metadata Badges */}
-            <div className="grid grid-cols-2 gap-2.5 text-xs">
-              <div className="rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-2.5">
-                <span className="text-[var(--color-ink-500)] block mb-0.5 font-normal">PO Date</span>
-                <span className="font-medium text-[var(--color-ink-900)]">{viewing.poDate}</span>
-              </div>
-              <div className="rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-2.5 flex items-center justify-between">
-                <div>
-                  <span className="text-[var(--color-ink-500)] block mb-0.5 font-normal">Expected Delivery</span>
-                  <span className="font-mono font-medium text-[var(--color-ink-900)]">{viewing.expectedDelivery}</span>
-                </div>
-                <button
-                  onClick={() => {
-                    const currentPo = viewing;
-                    setViewing(null);
-                    openEditModal(currentPo);
-                  }}
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 px-2 py-1 rounded border border-blue-200 dark:border-blue-900/60 transition-colors cursor-pointer"
-                >
-                  <Pencil size={11} />
-                  <span>Edit Date</span>
-                </button>
-              </div>
-            </div>
+      {/* CANCEL PO MODAL */}
+      {cancelModalPo && (
+        <CancelPoModal
+          po={cancelModalPo}
+          onClose={() => setCancelModalPo(null)}
+          onConfirmCancel={handleConfirmCancelPo}
+        />
+      )}
 
-            {viewing.notes ? (
-              <div className="rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-2.5 text-xs text-[var(--color-ink-700)]">
-                <span className="font-medium text-[var(--color-ink-900)] block mb-0.5">Order Notes:</span>
-                {viewing.notes}
-              </div>
-            ) : null}
+      {/* RECEIVE GOODS MODAL */}
+      {receiveModalPo && (
+        <ReceiveGoodsModal
+          po={receiveModalPo}
+          onClose={() => setReceiveModalPo(null)}
+          onSuccess={(updatedPo, msg) => {
+            setOrders((prev) => prev.map((o) => (o.poNumber === updatedPo.poNumber ? updatedPo : o)));
+            if (viewing && viewing.poNumber === updatedPo.poNumber) setViewing(updatedPo);
+            setSuccessToast(msg);
+            setTimeout(() => setSuccessToast(null), 5000);
+          }}
+        />
+      )}
 
-            {/* Line Items */}
-            <div>
-              <p className="text-xs font-medium text-[var(--color-ink-500)] mb-2">
-                Order Line Items ({viewing.lines?.length || 0})
-              </p>
-              <div className="space-y-1.5 border border-[var(--color-border)] rounded-md p-2.5 bg-[var(--color-surface-1)]">
-                {viewing.lines && viewing.lines.length > 0 ? (
-                  viewing.lines.map((l, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between border-b border-[var(--color-border)] last:border-0 pb-1.5 last:pb-0 text-xs"
-                    >
-                      <div className="min-w-0 pr-2">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <p className="font-medium text-[var(--color-ink-900)] truncate">{l.part}</p>
-                          {l.category && (
-                            <span className="rounded bg-[var(--color-surface-2)] px-1.5 py-0.2 text-[10px] font-medium text-[var(--color-ink-600)] border border-[var(--color-border)]">
-                              {l.category}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[var(--color-ink-500)] mt-0.5">
-                          {l.quantity} units × ₹{l.unitPrice.toLocaleString("en-IN")}
-                        </p>
-                      </div>
-                      <span className="tabular font-medium text-[var(--color-ink-900)] shrink-0">
-                        ₹{l.totalCost.toLocaleString("en-IN")}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-xs text-[var(--color-ink-400)]">No itemized lines recorded.</p>
-                )}
-              </div>
-            </div>
-
-            {/* Total Order Value */}
-            <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-3 text-xs">
-              <span className="font-normal text-[var(--color-ink-600)]">Total Order Value</span>
-              <span className="tabular text-sm font-semibold text-blue-600 dark:text-blue-400">
-                ₹{viewing.total.toLocaleString("en-IN")}
-              </span>
-            </div>
-
-            {/* Modal Actions */}
-            <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-[var(--color-border)]">
-              <button
-                type="button"
-                onClick={() => {
-                  const poToEdit = viewing;
-                  setViewing(null);
-                  openEditModal(poToEdit);
-                }}
-                className="inline-flex items-center gap-1.5 rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-1.5 text-xs font-medium text-[var(--color-ink-700)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink-900)] transition-colors cursor-pointer"
-              >
-                <Pencil size={13} />
-                <span>Edit Order</span>
-              </button>
-
-              <button
-                onClick={() => setPdfPo(viewing)}
-                className="inline-flex items-center gap-1.5 rounded border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-xs font-medium text-slate-800 dark:text-zinc-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
-              >
-                <FileText size={13} className="text-blue-600 dark:text-blue-400" />
-                <span>Print PDF</span>
-              </button>
-
-              {viewing.status === "Submitted" && (
-                <button
-                  onClick={() => {
-                    handleStatusChange(viewing.poNumber, "Approved");
-                    setViewing(null);
-                  }}
-                  className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-2xs hover:bg-blue-700 transition-colors cursor-pointer"
-                >
-                  Approve PO
-                </button>
-              )}
-
-              {["Ordered", "Approved", "Partially Received"].includes(viewing.status) && (
-                <button
-                  onClick={() => {
-                    handleStatusChange(viewing.poNumber, "Received");
-                    setViewing(null);
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white shadow-2xs hover:bg-emerald-700 transition-colors cursor-pointer"
-                >
-                  <PackageCheck size={14} />
-                  <span>Receive PO</span>
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={() => setViewing(null)}
-                className="rounded border border-[var(--color-border)] bg-[var(--color-surface-2)] px-3 py-1.5 text-xs font-normal text-[var(--color-ink-700)] hover:bg-[var(--color-surface-1)] hover:text-[var(--color-ink-900)] transition-colors cursor-pointer"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {/* RESCHEDULE DELIVERY MODAL */}
+      {rescheduleModalPo && (
+        <RescheduleDeliveryModal
+          po={rescheduleModalPo}
+          onClose={() => setRescheduleModalPo(null)}
+          onSuccess={(updatedPo, msg) => {
+            setOrders((prev) => prev.map((o) => (o.poNumber === updatedPo.poNumber ? updatedPo : o)));
+            if (viewing && viewing.poNumber === updatedPo.poNumber) setViewing(updatedPo);
+            setSuccessToast(msg);
+            setTimeout(() => setSuccessToast(null), 5000);
+          }}
+        />
+      )}
 
       {/* EDIT PO MODAL */}
       {editingPo ? (
@@ -1227,31 +1210,21 @@ export default function PurchaseOrders() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-[var(--color-ink-700)] mb-1">
-                    PO Status (Officer Authority)
+                    PO Status (System Managed)
                   </label>
-                  <select
-                    value={editStatus}
-                    onChange={(e) => {
-                      const newStatus = e.target.value as PoStatus;
-                      setEditStatus(newStatus);
-                      if (newStatus === "Received") {
-                        setEditLines((prev) =>
-                          prev.map((l) => ({ ...l, receivedQuantity: Number(l.quantity) || 1 }))
-                        );
-                      }
-                    }}
-                    className="w-full rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] px-3 py-2 text-xs font-semibold text-[var(--color-ink-900)] focus:border-blue-500 focus:outline-none cursor-pointer"
-                  >
-                    <option value="Submitted">Submitted</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Ordered">Ordered</option>
-                    <option value="Partially Received">Partially Received</option>
-                    <option value="Received">Received</option>
-                    <option value="Delayed">Delayed</option>
-                    <option value="Closed">Closed</option>
-                    <option value="Cancelled">Cancelled</option>
-                    <option value="Draft">Draft</option>
-                  </select>
+                  <div className="flex items-center gap-2 rounded border border-[var(--color-border)] bg-[var(--color-surface-2)] px-3 py-2">
+                    <StatusBadge label={editStatus} />
+                    <span className="text-xs text-[var(--color-ink-600)] italic">
+                      {editStatus === "Draft" && "(Draft PO - Editable before submission)"}
+                      {editStatus === "Submitted" && "(Submitted for approval)"}
+                      {editStatus === "Approved" && "(Approved - Ready to issue order)"}
+                      {editStatus === "Ordered" && "(Order placed with supplier)"}
+                      {editStatus === "Partially Received" && "(System-managed based on receiving)"}
+                      {editStatus === "Received" && "(Fully received & physically accounted)"}
+                      {editStatus === "Closed" && "(Closed & Read-Only)"}
+                      {editStatus === "Cancelled" && "(Cancelled & Read-Only)"}
+                    </span>
+                  </div>
                 </div>
               </div>
 
