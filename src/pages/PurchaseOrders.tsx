@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Eye, PackageCheck, XCircle, Plus, X, FileText, Pencil, Trash2,
@@ -26,7 +26,213 @@ import { ReceiveGoodsModal } from "../components/purchaseOrders/ReceiveGoodsModa
 import { RescheduleDeliveryModal } from "../components/purchaseOrders/RescheduleDeliveryModal";
 import { PoDetailModal } from "../components/purchaseOrders/PoDetailModal";
 import { CancelPoModal } from "../components/purchaseOrders/CancelPoModal";
-import type { PurchaseOrder, PoStatus, InventoryItem } from "../types";
+import type { PurchaseOrder, PoStatus, InventoryItem, PurchaseOrderLine } from "../types";
+interface PoTableRowProps {
+  po: PurchaseOrder;
+  onView: (po: PurchaseOrder) => void;
+  onEdit: (po: PurchaseOrder) => void;
+  onPdf: (po: PurchaseOrder) => void;
+  onReschedule: (po: PurchaseOrder) => void;
+  onSubmitAction: (po: PurchaseOrder) => void;
+  onApproveAction: (po: PurchaseOrder) => void;
+  onOrderAction: (po: PurchaseOrder) => void;
+  onReceiveAction: (po: PurchaseOrder) => void;
+  onCloseAction: (po: PurchaseOrder) => void;
+  onCancelAction: (po: PurchaseOrder) => void;
+}
+
+const PoTableRow = React.memo(function PoTableRow({
+  po,
+  onView,
+  onEdit,
+  onPdf,
+  onReschedule,
+  onSubmitAction,
+  onApproveAction,
+  onOrderAction,
+  onReceiveAction,
+  onCloseAction,
+  onCancelAction,
+}: PoTableRowProps) {
+  const totalOrd = useMemo(() => po.lines?.reduce((s: number, l: PurchaseOrderLine) => s + (Number(l.quantity) || 0), 0) || 0, [po.lines]);
+  const totalRec = useMemo(() => po.lines?.reduce((s: number, l: PurchaseOrderLine) => s + (Number(l.receivedQuantity) || 0), 0) || 0, [po.lines]);
+  const totalRej = useMemo(() => po.lines?.reduce((s: number, l: PurchaseOrderLine) => s + (Number(l.rejectedQuantity) || 0), 0) || 0, [po.lines]);
+  const rowPending = Math.max(0, totalOrd - totalRec - totalRej);
+
+  let isRowOverdue = false;
+  let overdueDaysNum = 0;
+  if (po.expectedDelivery && rowPending > 0) {
+    const delTime = new Date(po.expectedDelivery).getTime();
+    const todayTime = new Date().setHours(0, 0, 0, 0);
+    if (todayTime > delTime) {
+      isRowOverdue = true;
+      overdueDaysNum = Math.ceil((todayTime - delTime) / 86400000);
+    }
+  }
+
+  return (
+    <tr
+      className={`hover:bg-[var(--color-surface-1)] transition-colors ${
+        po.isNew ? "bg-blue-500/5 dark:bg-blue-500/10" : ""
+      }`}
+    >
+      <td className="px-3.5 py-2.5 font-medium text-[var(--color-ink-900)] whitespace-nowrap">
+        <div className="flex items-center gap-1.5">
+          <span className="font-mono text-xs">{po.poNumber}</span>
+          {po.isNew && (
+            <span className="inline-flex items-center rounded bg-blue-500/10 px-1 py-0.2 text-[9px] font-semibold text-blue-700 dark:text-blue-300 border border-blue-500/20">
+              NEW
+            </span>
+          )}
+        </div>
+      </td>
+      <td className="px-3 py-2.5 text-[var(--color-ink-700)] whitespace-nowrap max-w-[180px] truncate" title={po.supplier}>
+        {po.supplier}
+      </td>
+      <td className="px-3 py-2.5 text-[var(--color-ink-600)] whitespace-nowrap font-mono text-xs">
+        {po.poDate}
+      </td>
+      <td className="px-3 py-2.5 whitespace-nowrap">
+        <div className="flex flex-col gap-0.5">
+          <button
+            onClick={() => onReschedule(po)}
+            className="group inline-flex items-center gap-1.5 font-mono text-xs text-[var(--color-ink-700)] hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
+            title="Click to view delivery history or reschedule delivery date"
+          >
+            <Calendar size={11} className="text-blue-500 shrink-0 opacity-70 group-hover:opacity-100" />
+            <span>{po.expectedDelivery || "Set Date"}</span>
+            <Pencil size={10} className="text-[var(--color-ink-400)] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+          </button>
+
+          <div className="flex items-center gap-1 flex-wrap">
+            {po.isRescheduled && (
+              <span
+                className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 rounded border border-amber-300 dark:border-amber-900/60 shadow-2xs"
+                title={`Rescheduled ${po.rescheduleCount || 1} time${(po.rescheduleCount || 1) > 1 ? "s" : ""}. Latest expected delivery date: ${po.expectedDelivery}`}
+              >
+                🕒 {(po.rescheduleCount || 1) > 1 ? `Rescheduled (${po.rescheduleCount}x)` : "Rescheduled"}
+              </span>
+            )}
+            {isRowOverdue && (
+              <span className="text-[10px] font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 px-1 py-0.2 rounded border border-rose-300 dark:border-rose-900/60">
+                🔴 {overdueDaysNum}d overdue
+              </span>
+            )}
+          </div>
+        </div>
+      </td>
+      <td className="tabular px-3 py-2.5 font-semibold text-[var(--color-ink-900)] whitespace-nowrap">
+        ₹{po.total.toLocaleString("en-IN")}
+      </td>
+      <td className="px-3 py-2.5 whitespace-nowrap">
+        <div className="flex items-center gap-1 flex-wrap">
+          <StatusBadge label={po.status} />
+          {(po.hasRejections || (po.totalRejectedUnits && po.totalRejectedUnits > 0) || totalRej > 0) && (
+            <span
+              className="inline-flex items-center gap-1 rounded bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-900/60 text-[10px] font-semibold px-1.5 py-0.5"
+              title={`${po.totalRejectedUnits || totalRej} units rejected`}
+            >
+              ⚠️ Discrepancy
+            </span>
+          )}
+        </div>
+      </td>
+      <td className="px-3 py-2.5 text-right pr-4 whitespace-nowrap">
+        <div className="flex items-center justify-end gap-1">
+          <button
+            onClick={() => onView(po)}
+            title="View PO Details, Receipts, Delivery & Audit History"
+            className="inline-flex items-center justify-center rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-1.5 text-[var(--color-ink-600)] hover:text-[var(--color-ink-900)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
+            aria-label="View Details"
+          >
+            <Eye size={13} />
+          </button>
+
+          <button
+            onClick={() => onEdit(po)}
+            title="Edit PO Details"
+            className="inline-flex items-center justify-center rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-1.5 text-[var(--color-ink-600)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
+            aria-label="Edit Order Details"
+          >
+            <Pencil size={13} />
+          </button>
+
+          <button
+            onClick={() => onPdf(po)}
+            title="View & Print Official PDF"
+            className="inline-flex items-center justify-center rounded border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/40 p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors cursor-pointer"
+            aria-label="View PDF"
+          >
+            <FileText size={13} />
+          </button>
+
+          {/* Workflow status actions */}
+          {po.status === "Draft" && (
+            <button
+              onClick={() => onSubmitAction(po)}
+              title="Submit PO for authorization"
+              className="inline-flex items-center gap-1 rounded bg-blue-600 hover:bg-blue-700 px-2 py-1 text-xs font-semibold text-white transition-colors cursor-pointer shadow-2xs"
+            >
+              <span>Submit</span>
+            </button>
+          )}
+
+          {po.status === "Submitted" && (
+            <button
+              onClick={() => onApproveAction(po)}
+              title="Approve & authorize PO"
+              className="inline-flex items-center gap-1 rounded bg-emerald-600 hover:bg-emerald-700 px-2 py-1 text-xs font-semibold text-white transition-colors cursor-pointer shadow-2xs"
+            >
+              <span>Approve</span>
+            </button>
+          )}
+
+          {po.status === "Approved" && (
+            <button
+              onClick={() => onOrderAction(po)}
+              title="Place order with supplier"
+              className="inline-flex items-center gap-1 rounded bg-blue-600 hover:bg-blue-700 px-2 py-1 text-xs font-semibold text-white transition-colors cursor-pointer shadow-2xs"
+            >
+              <span>Place Order</span>
+            </button>
+          )}
+
+          {["Ordered", "Partially Received"].includes(po.status) && rowPending > 0 && (
+            <button
+              onClick={() => onReceiveAction(po)}
+              title="Click to open Goods Receipt modal and process received/rejected shipment"
+              className="inline-flex items-center gap-1 rounded border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 transition-colors cursor-pointer shadow-2xs"
+            >
+              <PackageCheck size={13} className="shrink-0" />
+              <span>Receive</span>
+            </button>
+          )}
+
+          {po.status === "Received" && (
+            <button
+              onClick={() => onCloseAction(po)}
+              title="Close Purchase Order"
+              className="inline-flex items-center gap-1 rounded bg-slate-700 hover:bg-slate-800 dark:bg-zinc-700 dark:hover:bg-zinc-600 px-2 py-1 text-xs font-semibold text-white transition-colors cursor-pointer shadow-2xs"
+            >
+              <span>Close PO</span>
+            </button>
+          )}
+
+          {!["Received", "Closed", "Cancelled"].includes(po.status) && (
+            <button
+              onClick={() => onCancelAction(po)}
+              title="Cancel Purchase Order"
+              className="inline-flex items-center justify-center rounded border border-rose-500/20 bg-rose-500/10 p-1.5 text-rose-500 hover:bg-rose-500/20 transition-colors cursor-pointer"
+              aria-label="Cancel Order"
+            >
+              <XCircle size={13} />
+            </button>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+});
 
 export default function PurchaseOrders() {
   const navigate = useNavigate();
@@ -46,7 +252,7 @@ export default function PurchaseOrders() {
   const [rescheduleModalPo, setRescheduleModalPo] = useState<PurchaseOrder | null>(null);
   const [cancelModalPo, setCancelModalPo] = useState<PurchaseOrder | null>(null);
 
-  const handleSubmitPoAction = async (po: PurchaseOrder) => {
+  const handleSubmitPoAction = useCallback(async (po: PurchaseOrder) => {
     try {
       const updated = await submitPurchaseOrder(po.poNumber);
       setOrders((prev) => prev.map((o) => (o.poNumber === po.poNumber ? updated : o)));
@@ -54,9 +260,9 @@ export default function PurchaseOrders() {
     } catch (err: any) {
       alert(err?.message || "Failed to submit PO");
     }
-  };
+  }, [viewing]);
 
-  const handleApprovePoAction = async (po: PurchaseOrder) => {
+  const handleApprovePoAction = useCallback(async (po: PurchaseOrder) => {
     try {
       const updated = await approvePurchaseOrder(po.poNumber);
       setOrders((prev) => prev.map((o) => (o.poNumber === po.poNumber ? updated : o)));
@@ -64,9 +270,9 @@ export default function PurchaseOrders() {
     } catch (err: any) {
       alert(err?.message || "Failed to approve PO");
     }
-  };
+  }, [viewing]);
 
-  const handleOrderPoAction = async (po: PurchaseOrder) => {
+  const handleOrderPoAction = useCallback(async (po: PurchaseOrder) => {
     try {
       const updated = await orderPurchaseOrder(po.poNumber);
       setOrders((prev) => prev.map((o) => (o.poNumber === po.poNumber ? updated : o)));
@@ -74,9 +280,9 @@ export default function PurchaseOrders() {
     } catch (err: any) {
       alert(err?.message || "Failed to place order");
     }
-  };
+  }, [viewing]);
 
-  const handleClosePoAction = async (po: PurchaseOrder) => {
+  const handleClosePoAction = useCallback(async (po: PurchaseOrder) => {
     try {
       const updated = await closePurchaseOrder(po.poNumber);
       setOrders((prev) => prev.map((o) => (o.poNumber === po.poNumber ? updated : o)));
@@ -84,16 +290,17 @@ export default function PurchaseOrders() {
     } catch (err: any) {
       alert(err?.message || "Failed to close PO");
     }
-  };
+  }, [viewing]);
 
-  const handleConfirmCancelPo = async (poNumber: string, reason: string) => {
+  const handleConfirmCancelPo = useCallback(async (poNumber: string, reason: string) => {
     const updated = await cancelPurchaseOrder(poNumber, reason);
     setOrders((prev) => prev.map((o) => (o.poNumber === poNumber ? updated : o)));
     if (viewing?.poNumber === poNumber) setViewing(updated);
-  };
+  }, [viewing]);
 
   // Search, filter, sort and pagination states
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [supplierFilter, setSupplierFilter] = useState("All");
   const [dateFilter, setDateFilter] = useState("All");
@@ -102,6 +309,14 @@ export default function PurchaseOrders() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+
+  // Debounce search input (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   // Edit PO state
   const [editingPo, setEditingPo] = useState<PurchaseOrder | null>(null);
@@ -121,19 +336,19 @@ export default function PurchaseOrders() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [inventoryCatalog, setInventoryCatalog] = useState<InventoryItem[]>([]);
 
-  const load = () => {
+  const load = useCallback(() => {
     setLoading(true);
     setError(null);
     getPurchaseOrders()
       .then(setOrders)
       .catch(() => setError("Could not load purchase orders from the database."))
       .finally(() => setLoading(false));
-  };
+  }, []);
 
   useEffect(() => {
     load();
-    getInventory().then(setInventoryCatalog).catch(() => {});
-  }, []);
+    // Note: Inventory catalog is now fetched lazily only when editing a PO to prevent unnecessary initial table download
+  }, [load]);
 
   const [successToast, setSuccessToast] = useState<string | null>(null);
 
@@ -152,7 +367,10 @@ export default function PurchaseOrders() {
     });
   };
 
-  const openEditModal = (po: PurchaseOrder) => {
+  const openEditModal = useCallback((po: PurchaseOrder) => {
+    if (inventoryCatalog.length === 0) {
+      getInventory().then(setInventoryCatalog).catch(() => {});
+    }
     setEditingPo(po);
     setEditSupplier(po.supplier || "");
     setEditSupplierAddress(po.supplierAddress || "");
@@ -176,7 +394,7 @@ export default function PurchaseOrders() {
           }))
         : [{ part: "Spare Part", category: "", quantity: 1, unitPrice: 0, totalCost: 0, receivedQuantity: 0 }]
     );
-  };
+  }, [inventoryCatalog.length]);
 
   const handleLineChange = (
     index: number,
@@ -317,9 +535,9 @@ export default function PurchaseOrders() {
         if (amountFilter === "above500k" && total <= 500000) return false;
       }
 
-      // Text search
-      if (search.trim()) {
-        const q = search.toLowerCase();
+      // Text search (debounced)
+      if (debouncedSearch.trim()) {
+        const q = debouncedSearch.toLowerCase();
         const matchNumber = (po.poNumber || "").toLowerCase().includes(q);
         const matchSupplier = (po.supplier || "").toLowerCase().includes(q);
         const matchNotes = (po.notes || "").toLowerCase().includes(q);
@@ -375,7 +593,7 @@ export default function PurchaseOrders() {
       }
       return sortDirection === "asc" ? cmp : -cmp;
     });
-  }, [orders, search, statusFilter, supplierFilter, dateFilter, amountFilter, sortField, sortDirection]);
+  }, [orders, debouncedSearch, statusFilter, supplierFilter, dateFilter, amountFilter, sortField, sortDirection]);
 
   const isFiltered = Boolean(
     search.trim() ||
@@ -817,187 +1035,22 @@ export default function PurchaseOrders() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--color-border)]">
-                  {paginatedOrders.map((po, idx) => {
-                    const totalOrd = po.lines?.reduce((s, l) => s + (Number(l.quantity) || 0), 0) || 0;
-                    const totalRec = po.lines?.reduce((s, l) => s + (Number(l.receivedQuantity) || 0), 0) || 0;
-                    const totalRej = po.lines?.reduce((s, l) => s + (Number(l.rejectedQuantity) || 0), 0) || 0;
-                    const rowPending = Math.max(0, totalOrd - totalRec - totalRej);
-
-                    let isRowOverdue = false;
-                    let overdueDaysNum = 0;
-                    if (po.expectedDelivery && rowPending > 0) {
-                      const delTime = new Date(po.expectedDelivery).getTime();
-                      const todayTime = new Date().setHours(0, 0, 0, 0);
-                      if (todayTime > delTime) {
-                        isRowOverdue = true;
-                        overdueDaysNum = Math.ceil((todayTime - delTime) / 86400000);
-                      }
-                    }
-
-                    return (
-                      <tr
-                        key={`po-list-${po.poNumber}-${idx}`}
-                        className={`hover:bg-[var(--color-surface-1)] transition-colors ${
-                          po.isNew ? "bg-blue-500/5 dark:bg-blue-500/10" : ""
-                        }`}
-                      >
-                        <td className="px-3.5 py-2.5 font-medium text-[var(--color-ink-900)] whitespace-nowrap">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-mono text-xs">{po.poNumber}</span>
-                            {po.isNew && (
-                              <span className="inline-flex items-center rounded bg-blue-500/10 px-1 py-0.2 text-[9px] font-semibold text-blue-700 dark:text-blue-300 border border-blue-500/20">
-                                NEW
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-3 py-2.5 text-[var(--color-ink-700)] whitespace-nowrap max-w-[180px] truncate" title={po.supplier}>
-                          {po.supplier}
-                        </td>
-                        <td className="px-3 py-2.5 text-[var(--color-ink-600)] whitespace-nowrap font-mono text-xs">
-                          {po.poDate}
-                        </td>
-                        <td className="px-3 py-2.5 whitespace-nowrap">
-                          <div className="flex flex-col gap-0.5">
-                            <button
-                              onClick={() => setRescheduleModalPo(po)}
-                              className="group inline-flex items-center gap-1.5 font-mono text-xs text-[var(--color-ink-700)] hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
-                              title="Click to view delivery history or reschedule delivery date"
-                            >
-                              <Calendar size={11} className="text-blue-500 shrink-0 opacity-70 group-hover:opacity-100" />
-                              <span>{po.expectedDelivery || "Set Date"}</span>
-                              <Pencil size={10} className="text-[var(--color-ink-400)] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-                            </button>
-
-                            <div className="flex items-center gap-1 flex-wrap">
-                              {po.isRescheduled && (
-                                <span
-                                  className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 rounded border border-amber-300 dark:border-amber-900/60 shadow-2xs"
-                                  title={`Rescheduled ${po.rescheduleCount || 1} time${(po.rescheduleCount || 1) > 1 ? "s" : ""}. Latest expected delivery date: ${po.expectedDelivery}`}
-                                >
-                                  🕒 {(po.rescheduleCount || 1) > 1 ? `Rescheduled (${po.rescheduleCount}x)` : "Rescheduled"}
-                                </span>
-                              )}
-                              {isRowOverdue && (
-                                <span className="text-[10px] font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 px-1 py-0.2 rounded border border-rose-300 dark:border-rose-900/60">
-                                  🔴 {overdueDaysNum}d overdue
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="tabular px-3 py-2.5 font-semibold text-[var(--color-ink-900)] whitespace-nowrap">
-                          ₹{po.total.toLocaleString("en-IN")}
-                        </td>
-                        <td className="px-3 py-2.5 whitespace-nowrap">
-                          <div className="flex items-center gap-1 flex-wrap">
-                            <StatusBadge label={po.status} />
-                            {(po.hasRejections || (po.totalRejectedUnits && po.totalRejectedUnits > 0) || totalRej > 0) && (
-                              <span
-                                className="inline-flex items-center gap-1 rounded bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-900/60 text-[10px] font-semibold px-1.5 py-0.5"
-                                title={`${po.totalRejectedUnits || totalRej} units rejected`}
-                              >
-                                ⚠️ Discrepancy
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-3 py-2.5 text-right pr-4 whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1">
-                            <button
-                              onClick={() => setViewing(po)}
-                              title="View PO Details, Receipts, Delivery & Audit History"
-                              className="inline-flex items-center justify-center rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-1.5 text-[var(--color-ink-600)] hover:text-[var(--color-ink-900)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
-                              aria-label="View Details"
-                            >
-                              <Eye size={13} />
-                            </button>
-
-                            <button
-                              onClick={() => openEditModal(po)}
-                              title="Edit PO Details"
-                              className="inline-flex items-center justify-center rounded border border-[var(--color-border)] bg-[var(--color-surface-1)] p-1.5 text-[var(--color-ink-600)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
-                              aria-label="Edit Order Details"
-                            >
-                              <Pencil size={13} />
-                            </button>
-
-                            <button
-                              onClick={() => setPdfPo(po)}
-                              title="View & Print Official PDF"
-                              className="inline-flex items-center justify-center rounded border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/40 p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors cursor-pointer"
-                              aria-label="View PDF"
-                            >
-                              <FileText size={13} />
-                            </button>
-
-                            {/* Workflow status actions */}
-                            {po.status === "Draft" && (
-                              <button
-                                onClick={() => handleSubmitPoAction(po)}
-                                title="Submit PO for authorization"
-                                className="inline-flex items-center gap-1 rounded bg-blue-600 hover:bg-blue-700 px-2 py-1 text-xs font-semibold text-white transition-colors cursor-pointer shadow-2xs"
-                              >
-                                <span>Submit</span>
-                              </button>
-                            )}
-
-                            {po.status === "Submitted" && (
-                              <button
-                                onClick={() => handleApprovePoAction(po)}
-                                title="Approve & authorize PO"
-                                className="inline-flex items-center gap-1 rounded bg-emerald-600 hover:bg-emerald-700 px-2 py-1 text-xs font-semibold text-white transition-colors cursor-pointer shadow-2xs"
-                              >
-                                <span>Approve</span>
-                              </button>
-                            )}
-
-                            {po.status === "Approved" && (
-                              <button
-                                onClick={() => handleOrderPoAction(po)}
-                                title="Place order with supplier"
-                                className="inline-flex items-center gap-1 rounded bg-blue-600 hover:bg-blue-700 px-2 py-1 text-xs font-semibold text-white transition-colors cursor-pointer shadow-2xs"
-                              >
-                                <span>Place Order</span>
-                              </button>
-                            )}
-
-                            {["Ordered", "Partially Received"].includes(po.status) && rowPending > 0 && (
-                              <button
-                                onClick={() => setReceiveModalPo(po)}
-                                title="Click to open Goods Receipt modal and process received/rejected shipment"
-                                className="inline-flex items-center gap-1 rounded border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 transition-colors cursor-pointer shadow-2xs"
-                              >
-                                <PackageCheck size={13} className="shrink-0" />
-                                <span>Receive</span>
-                              </button>
-                            )}
-
-                            {po.status === "Received" && (
-                              <button
-                                onClick={() => handleClosePoAction(po)}
-                                title="Close Purchase Order"
-                                className="inline-flex items-center gap-1 rounded bg-slate-700 hover:bg-slate-800 dark:bg-zinc-700 dark:hover:bg-zinc-600 px-2 py-1 text-xs font-semibold text-white transition-colors cursor-pointer shadow-2xs"
-                              >
-                                <span>Close PO</span>
-                              </button>
-                            )}
-
-                            {!["Received", "Closed", "Cancelled"].includes(po.status) && (
-                              <button
-                                onClick={() => setCancelModalPo(po)}
-                                title="Cancel Purchase Order"
-                                className="inline-flex items-center justify-center rounded border border-rose-500/20 bg-rose-500/10 p-1.5 text-rose-500 hover:bg-rose-500/20 transition-colors cursor-pointer"
-                                aria-label="Cancel Order"
-                              >
-                                <XCircle size={13} />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {paginatedOrders.map((po, idx) => (
+                    <PoTableRow
+                      key={`po-list-${po.poNumber}-${idx}`}
+                      po={po}
+                      onView={(p) => setViewing(p)}
+                      onEdit={openEditModal}
+                      onPdf={(p) => setPdfPo(p)}
+                      onReschedule={(p) => setRescheduleModalPo(p)}
+                      onSubmitAction={handleSubmitPoAction}
+                      onApproveAction={handleApprovePoAction}
+                      onOrderAction={handleOrderPoAction}
+                      onReceiveAction={(p) => setReceiveModalPo(p)}
+                      onCloseAction={handleClosePoAction}
+                      onCancelAction={(p) => setCancelModalPo(p)}
+                    />
+                  ))}
                 </tbody>
               </table>
             </div>

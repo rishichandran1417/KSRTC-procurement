@@ -557,7 +557,7 @@ interface FormLineItem {
               </button>
             </div>
 
-            <div ref={tableContainerRef} className="rounded-lg border border-[var(--color-border)] overflow-x-auto">
+            <div ref={tableContainerRef} className="rounded-lg border border-[var(--color-border)] overflow-x-auto min-h-[260px] pb-32">
               <table className="w-full text-sm min-w-[700px]">
                 <thead>
                   <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-1)] text-left text-xs uppercase tracking-wider text-[var(--color-ink-500)]">

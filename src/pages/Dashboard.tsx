@@ -37,10 +37,9 @@ export default function Dashboard() {
   const loadData = () => {
     setLoading(true);
     setError(null);
-    getInventory()
-      .then(async (invData) => {
-        const poData = await getPurchaseOrders();
-        const kpiData = await getDashboardKpis(filters);
+    Promise.all([getInventory(), getPurchaseOrders()])
+      .then(async ([invData, poData]) => {
+        const kpiData = await getDashboardKpis(filters, invData, poData);
 
         setKpis(kpiData);
         setCriticalInventory(invData.filter((i) => i.status !== "Healthy").slice(0, 5));

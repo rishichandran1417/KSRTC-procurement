@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
 
 interface SidebarContextValue {
   isMobileOpen: boolean;
@@ -21,7 +21,7 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
     }
   });
 
-  const toggleCollapsed = () => {
+  const toggleCollapsed = useCallback(() => {
     setIsCollapsed((prev) => {
       const next = !prev;
       try {
@@ -31,7 +31,11 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
       }
       return next;
     });
-  };
+  }, []);
+
+  const openMobile = useCallback(() => setIsMobileOpen(true), []);
+  const closeMobile = useCallback(() => setIsMobileOpen(false), []);
+  const toggleMobile = useCallback(() => setIsMobileOpen((prev) => !prev), []);
 
   // Close mobile sidebar on Escape key
   useEffect(() => {
@@ -56,20 +60,19 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
     };
   }, [isMobileOpen]);
 
-  return (
-    <SidebarContext.Provider
-      value={{
-        isMobileOpen,
-        openMobile: () => setIsMobileOpen(true),
-        closeMobile: () => setIsMobileOpen(false),
-        toggleMobile: () => setIsMobileOpen((prev) => !prev),
-        isCollapsed,
-        toggleCollapsed,
-      }}
-    >
-      {children}
-    </SidebarContext.Provider>
+  const value = useMemo(
+    () => ({
+      isMobileOpen,
+      openMobile,
+      closeMobile,
+      toggleMobile,
+      isCollapsed,
+      toggleCollapsed,
+    }),
+    [isMobileOpen, openMobile, closeMobile, toggleMobile, isCollapsed, toggleCollapsed]
   );
+
+  return <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>;
 }
 
 export function useSidebar() {

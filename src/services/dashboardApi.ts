@@ -1,11 +1,15 @@
 import { simulateLatency } from "./apiClient";
 import { getInventory } from "./inventoryApi";
 import { getPurchaseOrders } from "./purchaseOrderApi";
-import type { DashboardKpis, GlobalFilters } from "../types";
+import type { DashboardKpis, GlobalFilters, InventoryItem, PurchaseOrder } from "../types";
 
-export async function getDashboardKpis(_filters: GlobalFilters): Promise<DashboardKpis> {
-  const inventory = await getInventory();
-  const orders = await getPurchaseOrders();
+export async function getDashboardKpis(
+  _filters: GlobalFilters,
+  preFetchedInv?: InventoryItem[],
+  preFetchedOrders?: PurchaseOrder[]
+): Promise<DashboardKpis> {
+  const inventory = preFetchedInv ?? (await getInventory());
+  const orders = preFetchedOrders ?? (await getPurchaseOrders());
 
   const forecastDemand = inventory.reduce((sum, i) => sum + i.forecastDemand, 0);
   const currentInventory = inventory.reduce((sum, i) => sum + i.currentStock, 0);

@@ -72,12 +72,23 @@ const DEFAULT_SEED_POS: PurchaseOrder[] = [
 // LOCAL STORAGE HELPERS
 // ---------------------------------------------------------------------------
 
+// In-memory caches to prevent expensive repeated localStorage parsing
+let cachedCreatedOrders: PurchaseOrder[] | null = null;
+let cachedUpdatedOrders: Record<string, PurchaseOrder> | null = null;
+let cachedGoodsReceipts: GoodsReceipt[] | null = null;
+let cachedDeliveryReschedules: PoDeliveryReschedule[] | null = null;
+let cachedAuditLogs: PoAuditLog[] | null = null;
+
 export function loadCreatedOrders(): PurchaseOrder[] {
+  if (cachedCreatedOrders) return cachedCreatedOrders;
   try {
     const raw = localStorage.getItem(LOCAL_CREATED_POS_KEY);
-    if (!raw) return [];
+    if (!raw) {
+      cachedCreatedOrders = [];
+      return [];
+    }
     const parsed: PurchaseOrder[] = JSON.parse(raw);
-    return parsed.map((p) => {
+    cachedCreatedOrders = parsed.map((p) => {
       let num = p.poNumber || "";
       if (num.startsWith("PO-")) {
         const digits = num.replace(/\D/g, "");
@@ -85,12 +96,15 @@ export function loadCreatedOrders(): PurchaseOrder[] {
       }
       return { ...p, poNumber: num };
     });
+    return cachedCreatedOrders;
   } catch {
+    cachedCreatedOrders = [];
     return [];
   }
 }
 
 export function saveCreatedOrders(orders: PurchaseOrder[]): void {
+  cachedCreatedOrders = orders;
   try {
     localStorage.setItem(LOCAL_CREATED_POS_KEY, JSON.stringify(orders));
   } catch (err) {
@@ -99,16 +113,23 @@ export function saveCreatedOrders(orders: PurchaseOrder[]): void {
 }
 
 export function loadUpdatedOrders(): Record<string, PurchaseOrder> {
+  if (cachedUpdatedOrders) return cachedUpdatedOrders;
   try {
     const raw = localStorage.getItem(LOCAL_UPDATED_POS_KEY);
-    if (!raw) return {};
-    return JSON.parse(raw);
+    if (!raw) {
+      cachedUpdatedOrders = {};
+      return {};
+    }
+    cachedUpdatedOrders = JSON.parse(raw) || {};
+    return cachedUpdatedOrders || {};
   } catch {
+    cachedUpdatedOrders = {};
     return {};
   }
 }
 
 export function saveUpdatedOrders(updates: Record<string, PurchaseOrder>): void {
+  cachedUpdatedOrders = updates;
   try {
     localStorage.setItem(LOCAL_UPDATED_POS_KEY, JSON.stringify(updates));
   } catch (err) {
@@ -118,16 +139,23 @@ export function saveUpdatedOrders(updates: Record<string, PurchaseOrder>): void 
 
 // Goods Receipts Storage
 export function loadGoodsReceipts(): GoodsReceipt[] {
+  if (cachedGoodsReceipts) return cachedGoodsReceipts;
   try {
     const raw = localStorage.getItem(LOCAL_GOODS_RECEIPTS_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw);
+    if (!raw) {
+      cachedGoodsReceipts = [];
+      return [];
+    }
+    cachedGoodsReceipts = JSON.parse(raw) || [];
+    return cachedGoodsReceipts || [];
   } catch {
+    cachedGoodsReceipts = [];
     return [];
   }
 }
 
 export function saveGoodsReceipts(receipts: GoodsReceipt[]): void {
+  cachedGoodsReceipts = receipts;
   try {
     localStorage.setItem(LOCAL_GOODS_RECEIPTS_KEY, JSON.stringify(receipts));
   } catch (err) {
@@ -143,16 +171,23 @@ export function getGoodsReceipts(poNumber?: string): GoodsReceipt[] {
 
 // Delivery Reschedules Storage
 export function loadDeliveryReschedules(): PoDeliveryReschedule[] {
+  if (cachedDeliveryReschedules) return cachedDeliveryReschedules;
   try {
     const raw = localStorage.getItem(LOCAL_DELIVERY_RESCHEDULES_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw);
+    if (!raw) {
+      cachedDeliveryReschedules = [];
+      return [];
+    }
+    cachedDeliveryReschedules = JSON.parse(raw) || [];
+    return cachedDeliveryReschedules || [];
   } catch {
+    cachedDeliveryReschedules = [];
     return [];
   }
 }
 
 export function saveDeliveryReschedules(items: PoDeliveryReschedule[]): void {
+  cachedDeliveryReschedules = items;
   try {
     localStorage.setItem(LOCAL_DELIVERY_RESCHEDULES_KEY, JSON.stringify(items));
   } catch (err) {
@@ -168,16 +203,23 @@ export function getDeliveryReschedules(poNumber?: string): PoDeliveryReschedule[
 
 // Audit Logs Storage
 export function loadAuditLogs(): PoAuditLog[] {
+  if (cachedAuditLogs) return cachedAuditLogs;
   try {
     const raw = localStorage.getItem(LOCAL_AUDIT_LOGS_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw);
+    if (!raw) {
+      cachedAuditLogs = [];
+      return [];
+    }
+    cachedAuditLogs = JSON.parse(raw) || [];
+    return cachedAuditLogs || [];
   } catch {
+    cachedAuditLogs = [];
     return [];
   }
 }
 
 export function saveAuditLogs(logs: PoAuditLog[]): void {
+  cachedAuditLogs = logs;
   try {
     localStorage.setItem(LOCAL_AUDIT_LOGS_KEY, JSON.stringify(logs));
   } catch (err) {
@@ -223,7 +265,6 @@ export function ensureAuditLogsForPo(po: PurchaseOrder): PoAuditLog[] {
   const hasRejections = po.hasRejections || totalRejected > 0;
 
   const baseDate = po.poDate || "2026-09-28";
-  const deliveryDate = po.expectedDelivery || "2026-10-05";
 
   const newLogsToAdd: PoAuditLog[] = [];
 
@@ -249,7 +290,7 @@ export function ensureAuditLogsForPo(po: PurchaseOrder): PoAuditLog[] {
       performedBy: "KSRTC Procurement Officer",
       timestamp: `${baseDate} 10:15`,
       newValue: `PO submitted and issued to supplier ${po.supplier}`,
-      remarks: `Expected delivery date: ${deliveryDate}`,
+      remarks: `Expected delivery date: ${po.expectedDelivery || "2026-10-05"}`,
     });
   }
 
@@ -267,7 +308,7 @@ export function ensureAuditLogsForPo(po: PurchaseOrder): PoAuditLog[] {
         poNumber: po.poNumber,
         action: "Goods Receipt Created",
         performedBy: "KSRTC Receiving Officer",
-        timestamp: `${deliveryDate} 11:00`,
+        timestamp: `${baseDate} 11:00`,
         newValue: `Goods Receipt GRN/2026/${rawNum}/01 processed (${acceptedCount} accepted into inventory, ${rejectedCount} rejected)`,
         remarks: "Shipment received and inspected at KSRTC central depot.",
       });
@@ -285,7 +326,7 @@ export function ensureAuditLogsForPo(po: PurchaseOrder): PoAuditLog[] {
         poNumber: po.poNumber,
         action: "Rejected Quantity Recorded",
         performedBy: "Quality Inspector",
-        timestamp: `${deliveryDate} 11:05`,
+        timestamp: `${baseDate} 11:05`,
         newValue: `${rejUnits} rejected units recorded separately`,
         reason: lineRejections || "Damaged / Substandard Quality",
         remarks: "Rejected quantities are stored separately for quality audit and NOT added to central inventory stock.",
@@ -298,7 +339,7 @@ export function ensureAuditLogsForPo(po: PurchaseOrder): PoAuditLog[] {
         poNumber: po.poNumber,
         action: "Full Receipt",
         performedBy: "KSRTC Receiving Officer",
-        timestamp: `${deliveryDate} 11:10`,
+        timestamp: `${baseDate} 11:10`,
         previousValue: `Pending: ${totalOrdered}`,
         newValue: "All ordered items fully accounted for (Pending: 0)",
         remarks: hasRejections ? `Fulfilled with ${totalRejected} rejected discrepancy units.` : "Order fully received and central inventory updated.",
@@ -310,8 +351,8 @@ export function ensureAuditLogsForPo(po: PurchaseOrder): PoAuditLog[] {
         poNumber: po.poNumber,
         action: "Partial Receipt",
         performedBy: "KSRTC Receiving Officer",
-        timestamp: `${deliveryDate} 11:10`,
-        newValue: `Processed: ${totalReceived + totalRejected} units, Remaining Pending: ${pendingCount} units`,
+        timestamp: `${baseDate} 11:10`,
+        newValue: `Received in shipment: ${totalReceived} units (Total Received: ${totalReceived}, Pending: ${pendingCount} units)`,
         remarks: `Partial delivery received at depot. Remaining pending quantity: ${pendingCount} units.`,
       });
     }
@@ -322,7 +363,7 @@ export function ensureAuditLogsForPo(po: PurchaseOrder): PoAuditLog[] {
         poNumber: po.poNumber,
         action: "PO Status Updated",
         performedBy: "KSRTC Procurement Officer",
-        timestamp: `${deliveryDate} 11:15`,
+        timestamp: `${baseDate} 11:15`,
         previousValue: "Status: Ordered",
         newValue: "Status: Received",
         remarks: "PO status set to Received upon verified receipt.",
@@ -333,7 +374,7 @@ export function ensureAuditLogsForPo(po: PurchaseOrder): PoAuditLog[] {
         poNumber: po.poNumber,
         action: "PO Status Updated",
         performedBy: "KSRTC Procurement Officer",
-        timestamp: `${deliveryDate} 11:15`,
+        timestamp: `${baseDate} 11:15`,
         previousValue: "Status: Ordered",
         newValue: "Status: Partially Received",
         remarks: "PO status set to Partially Received.",
@@ -347,7 +388,7 @@ export function ensureAuditLogsForPo(po: PurchaseOrder): PoAuditLog[] {
       poNumber: po.poNumber,
       action: "PO Cancelled",
       performedBy: "KSRTC Procurement Officer",
-      timestamp: `${deliveryDate} 12:00`,
+      timestamp: `${baseDate} 12:00`,
       previousValue: "Status: Ordered",
       newValue: "Status: Cancelled",
       remarks: "Purchase order cancelled by procurement officer.",
@@ -360,7 +401,7 @@ export function ensureAuditLogsForPo(po: PurchaseOrder): PoAuditLog[] {
       poNumber: po.poNumber,
       action: "PO Closed",
       performedBy: "KSRTC Procurement Officer",
-      timestamp: `${deliveryDate} 12:00`,
+      timestamp: `${baseDate} 12:00`,
       previousValue: "Status: Received",
       newValue: "Status: Closed",
       remarks: "Purchase order closed following audit verification.",
@@ -993,12 +1034,15 @@ export async function processGoodsReceipt(
   // Step 4: Record Automatic Audit Log Entries
   const isFullReceipt = remainingPendingAll === 0;
 
+  const totalReceivedPrior = totalReceivedAll - totalAcceptedThisReceipt;
+
   createAuditLog({
     poNumber,
     action: "Goods Receipt Created",
     performedBy: receivedBy,
-    newValue: `Receipt ${receiptNumber}: ${totalAcceptedThisReceipt} accepted into inventory, ${totalRejectedThisReceipt} rejected`,
-    remarks: globalRemarks || `Goods receipt processed on ${todayStr}.`,
+    previousValue: totalReceivedPrior > 0 ? `Total Received Prior: ${totalReceivedPrior} units` : undefined,
+    newValue: `Receipt ${receiptNumber}: ${totalAcceptedThisReceipt} accepted into inventory (${totalRejectedThisReceipt} rejected)`,
+    remarks: globalRemarks || `Received ${totalAcceptedThisReceipt} units in this shipment. Cumulative received: ${totalReceivedAll} units (Remaining pending: ${remainingPendingAll} units).`,
     details: JSON.stringify({ receiptNumber, accepted: totalAcceptedThisReceipt, rejected: totalRejectedThisReceipt, pending: remainingPendingAll }),
   });
 
@@ -1007,17 +1051,18 @@ export async function processGoodsReceipt(
       poNumber,
       action: "Full Receipt",
       performedBy: receivedBy,
-      previousValue: `Pending: ${totalAcceptedThisReceipt + totalRejectedThisReceipt}`,
-      newValue: "All ordered items fully accounted for (Pending: 0)",
-      remarks: totalRejectedAll > 0 ? `Fulfilled with ${totalRejectedAll} rejected discrepancy units.` : "Order fully received and fulfilled.",
+      previousValue: `Received in this final shipment: ${totalAcceptedThisReceipt} units (Pending was: ${totalAcceptedThisReceipt + totalRejectedThisReceipt})`,
+      newValue: `All ordered items fully accounted for (Cumulative Received: ${totalReceivedAll}, Pending: 0)`,
+      remarks: totalRejectedAll > 0 ? `Order fulfilled with ${totalRejectedAll} total rejected discrepancy units.` : "Order fully received and fulfilled.",
     });
   } else {
     createAuditLog({
       poNumber,
       action: "Partial Receipt",
       performedBy: receivedBy,
-      newValue: `Processed: ${totalAcceptedThisReceipt + totalRejectedThisReceipt}, Remaining Pending: ${remainingPendingAll}`,
-      remarks: `Partial delivery received. Remaining pending quantity: ${remainingPendingAll} units.`,
+      previousValue: `Total Received Prior: ${totalReceivedPrior} units | Pending Before: ${remainingPendingAll + totalAcceptedThisReceipt + totalRejectedThisReceipt} units`,
+      newValue: `Received Now: ${totalAcceptedThisReceipt} units | Cumulative Received to Date: ${totalReceivedAll} units | Remaining Pending: ${remainingPendingAll} units`,
+      remarks: `Partial delivery of ${totalAcceptedThisReceipt} units received at depot. Total received to date: ${totalReceivedAll} units, Remaining pending: ${remainingPendingAll} units.`,
     });
   }
 

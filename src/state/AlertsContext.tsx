@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
 import { getInventory } from "../services/inventoryApi";
 import type { InventoryItem } from "../types";
 
@@ -43,22 +43,32 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, [refreshAlerts]);
 
-  return (
-    <AlertsContext.Provider
-      value={{
-        lowStockItems,
-        criticalItems,
-        warningItems,
-        totalAlerts: lowStockItems.length,
-        isAlertModalOpen,
-        openAlertModal: () => setIsAlertModalOpen(true),
-        closeAlertModal: () => setIsAlertModalOpen(false),
-        refreshAlerts,
-      }}
-    >
-      {children}
-    </AlertsContext.Provider>
+  const openAlertModal = useCallback(() => setIsAlertModalOpen(true), []);
+  const closeAlertModal = useCallback(() => setIsAlertModalOpen(false), []);
+
+  const value = useMemo(
+    () => ({
+      lowStockItems,
+      criticalItems,
+      warningItems,
+      totalAlerts: lowStockItems.length,
+      isAlertModalOpen,
+      openAlertModal,
+      closeAlertModal,
+      refreshAlerts,
+    }),
+    [
+      lowStockItems,
+      criticalItems,
+      warningItems,
+      isAlertModalOpen,
+      openAlertModal,
+      closeAlertModal,
+      refreshAlerts,
+    ]
   );
+
+  return <AlertsContext.Provider value={value}>{children}</AlertsContext.Provider>;
 }
 
 export function useAlerts() {
