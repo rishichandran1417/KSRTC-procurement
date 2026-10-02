@@ -752,6 +752,26 @@ export function SupplyScheduleBoard({
                               </div>
                             </div>
 
+                            {/* Split Delivery Schedule Tranches Preview */}
+                            {po.deliverySchedule && po.deliverySchedule.length > 0 && (
+                              <div className="pt-1.5 border-t border-[var(--color-border)]/60">
+                                <div className="flex items-center justify-between text-[10px] font-semibold text-blue-600 dark:text-blue-400 mb-1">
+                                  <span>🚚 Split Delivery ({po.deliverySchedule.length} Installments)</span>
+                                </div>
+                                <div className="flex items-center gap-1 flex-wrap">
+                                  {po.deliverySchedule.map((t, idx) => (
+                                    <span
+                                      key={t.id || idx}
+                                      className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/60"
+                                      title={`Installment ${t.installmentNumber}: ${t.quantity} units on ${t.expectedDate} (${t.notes || ""})`}
+                                    >
+                                      #{t.installmentNumber}: {t.quantity}u ({t.expectedDate?.slice(5)})
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
                             {/* Line Items Preview */}
                             {po.lines && po.lines.length > 0 && (
                               <div className="pt-1.5 border-t border-[var(--color-border)]/60">

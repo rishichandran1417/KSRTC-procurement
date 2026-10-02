@@ -160,6 +160,18 @@ export interface PurchaseOrderLine {
   rejectedQuantity?: number; // Previously Rejected Quantity
 }
 
+export type InstallmentStatus = "Scheduled" | "Partially Received" | "Fully Received" | "Delayed";
+
+export interface DeliveryInstallment {
+  id: string;
+  installmentNumber: number; // e.g., 1, 2, 3
+  expectedDate: string; // e.g. "2026-10-05"
+  quantity: number; // Scheduled Qty (e.g. 50, 25, 25)
+  receivedQuantity?: number; // Quantity received for this installment
+  status?: InstallmentStatus;
+  notes?: string; // e.g. "Initial shipment of 50 units", "2nd tranche of 25 units"
+}
+
 export interface PurchaseOrder {
   id?: number | string;
   poNumber: string;
@@ -172,6 +184,7 @@ export interface PurchaseOrder {
   status: PoStatus;
   lines: PurchaseOrderLine[];
   notes?: string;
+  deliverySchedule?: DeliveryInstallment[];
   createdAt?: number;
   isNew?: boolean;
   inventoryReceived?: boolean;

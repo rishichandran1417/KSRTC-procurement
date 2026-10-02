@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, PackageCheck, AlertTriangle, CheckCircle2, ShieldAlert } from "lucide-react";
+import { X, PackageCheck, AlertTriangle, CheckCircle2, ShieldAlert, Split, Calendar } from "lucide-react";
 import { processGoodsReceipt } from "../../services/purchaseOrderApi";
 import type { PurchaseOrder, GoodsReceiptItem, RejectionReason } from "../../types";
 
@@ -224,6 +224,39 @@ export const ReceiveGoodsModal: React.FC<ReceiveGoodsModalProps> = ({ po, onClos
             <div className="rounded-md bg-rose-50 dark:bg-rose-950/40 p-3 text-xs text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 flex items-center gap-2">
               <AlertTriangle size={16} className="shrink-0" />
               <span>{error}</span>
+            </div>
+          )}
+
+          {/* SPLIT DELIVERY SCHEDULE BANNER */}
+          {po.deliverySchedule && po.deliverySchedule.length > 0 && (
+            <div className="rounded-lg border border-blue-200 dark:border-blue-900/60 bg-blue-50/50 dark:bg-blue-950/30 p-3 text-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
+                  <Split size={14} className="text-blue-600 dark:text-blue-400" />
+                  Split Delivery Schedule ({po.deliverySchedule.length} Installments)
+                </span>
+                <span className="text-[10px] text-blue-700 dark:text-blue-400 font-mono">
+                  Staggered Delivery Commitments
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {po.deliverySchedule.map((t, idx) => (
+                  <div
+                    key={t.id || idx}
+                    className="rounded border border-blue-200 dark:border-blue-800 bg-[var(--color-surface-0)] p-2 text-[11px] space-y-0.5"
+                  >
+                    <div className="flex items-center justify-between font-semibold text-[var(--color-ink-900)]">
+                      <span className="text-blue-600 dark:text-blue-400 font-mono">Installment #{t.installmentNumber}</span>
+                      <span className="font-bold">{t.quantity} units</span>
+                    </div>
+                    <div className="text-[10px] text-[var(--color-ink-500)] flex items-center gap-1">
+                      <Calendar size={10} className="text-blue-500" />
+                      <span>Due: {t.expectedDate}</span>
+                    </div>
+                    {t.notes && <div className="text-[10px] text-[var(--color-ink-600)] italic truncate">{t.notes}</div>}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

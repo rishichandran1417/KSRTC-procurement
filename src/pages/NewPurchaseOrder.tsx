@@ -10,7 +10,8 @@ import { createPurchaseOrder, getNextPoNumber, getPurchaseOrders } from "../serv
 import { getSuppliers, DEFAULT_KSRTC_SUPPLIERS } from "../services/supplierApi";
 import { getInventory, DEFAULT_KSRTC_PARTS } from "../services/inventoryApi";
 import { PurchaseOrderPdfModal } from "../components/ui/PurchaseOrderPdfModal";
-import type { ProcurementItem, PurchaseOrder, Supplier, InventoryItem } from "../types";
+import { DeliveryScheduleSection } from "../components/purchaseOrders/DeliveryScheduleSection";
+import type { ProcurementItem, PurchaseOrder, Supplier, InventoryItem, DeliveryInstallment } from "../types";
 
 interface NavState {
   items?: ProcurementItem[];
@@ -111,6 +112,7 @@ interface FormLineItem {
 
   const [submitting, setSubmitting] = useState(false);
   const [showPdf, setShowPdf] = useState(false);
+  const [deliverySchedule, setDeliverySchedule] = useState<DeliveryInstallment[]>([]);
 
   const supplierContainerRef = useRef<HTMLDivElement>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -329,6 +331,7 @@ interface FormLineItem {
         totalCost: (Number(l.quantity) || 1) * (Number(l.unitPrice) || 0),
       })),
       notes,
+      deliverySchedule: deliverySchedule.length > 0 ? deliverySchedule : undefined,
       isNew: true,
       createdAt: Date.now(),
     };
@@ -800,6 +803,14 @@ interface FormLineItem {
               </p>
             )}
           </div>
+
+          {/* SPLIT DELIVERY SCHEDULE SECTION */}
+          <DeliveryScheduleSection
+            totalOrderedQuantity={lines.reduce((s, l) => s + (Number(l.quantity) || 0), 0)}
+            baseExpectedDelivery={expectedDelivery}
+            installments={deliverySchedule}
+            onChange={setDeliverySchedule}
+          />
 
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-500)]">

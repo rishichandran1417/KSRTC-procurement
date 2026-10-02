@@ -4,6 +4,7 @@ import {
   History, ShieldCheck, ClipboardList, Clock, Truck
 } from "lucide-react";
 import { StatusBadge } from "../ui/StatusBadge";
+import { DeliveryScheduleSection } from "./DeliveryScheduleSection";
 import {
   getGoodsReceipts,
   getDeliveryReschedules,
@@ -236,6 +237,15 @@ export const PoDetailModal: React.FC<PoDetailModalProps> = ({
                 </div>
               )}
 
+              {/* Delivery Schedule / Tranches */}
+              <DeliveryScheduleSection
+                totalOrderedQuantity={totalOrdered}
+                baseExpectedDelivery={po.expectedDelivery}
+                installments={po.deliverySchedule || []}
+                onChange={() => {}}
+                readOnly={true}
+              />
+
               {/* Line Items Table */}
               <div>
                 <p className="text-xs font-semibold text-[var(--color-ink-700)] mb-2">
@@ -260,6 +270,10 @@ export const PoDetailModal: React.FC<PoDetailModalProps> = ({
                         const rec = Number(line.receivedQuantity) || 0;
                         const rej = Number(line.rejectedQuantity) || 0;
                         const pend = Math.max(0, ord - rec - rej);
+                        const uPrice = Number(line.unitPrice) || 0;
+                        const tCost = line.totalCost !== undefined && line.totalCost !== null && !isNaN(Number(line.totalCost))
+                          ? Number(line.totalCost)
+                          : ord * uPrice;
 
                         return (
                           <tr key={i} className="hover:bg-[var(--color-surface-0)] transition-colors">
@@ -273,8 +287,8 @@ export const PoDetailModal: React.FC<PoDetailModalProps> = ({
                             <td className="p-2.5 text-center font-mono font-bold text-emerald-600 dark:text-emerald-400">{rec}</td>
                             <td className="p-2.5 text-center font-mono font-bold text-rose-600 dark:text-rose-400">{rej}</td>
                             <td className="p-2.5 text-center font-mono font-bold text-blue-600 dark:text-blue-400">{pend}</td>
-                            <td className="p-2.5 text-right font-mono">₹{line.unitPrice.toLocaleString("en-IN")}</td>
-                            <td className="p-2.5 text-right font-mono font-semibold">₹{line.totalCost.toLocaleString("en-IN")}</td>
+                            <td className="p-2.5 text-right font-mono">₹{uPrice.toLocaleString("en-IN")}</td>
+                            <td className="p-2.5 text-right font-mono font-semibold">₹{tCost.toLocaleString("en-IN")}</td>
                           </tr>
                         );
                       })}
@@ -287,7 +301,7 @@ export const PoDetailModal: React.FC<PoDetailModalProps> = ({
               <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-3 text-xs">
                 <span className="font-semibold text-[var(--color-ink-600)]">Total Order Value</span>
                 <span className="tabular text-sm font-bold text-blue-600 dark:text-blue-400">
-                  ₹{po.total.toLocaleString("en-IN")}
+                  ₹{(Number(po.total) || 0).toLocaleString("en-IN")}
                 </span>
               </div>
             </div>

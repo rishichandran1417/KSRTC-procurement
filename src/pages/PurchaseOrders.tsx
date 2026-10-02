@@ -26,7 +26,8 @@ import { ReceiveGoodsModal } from "../components/purchaseOrders/ReceiveGoodsModa
 import { RescheduleDeliveryModal } from "../components/purchaseOrders/RescheduleDeliveryModal";
 import { PoDetailModal } from "../components/purchaseOrders/PoDetailModal";
 import { CancelPoModal } from "../components/purchaseOrders/CancelPoModal";
-import type { PurchaseOrder, PoStatus, InventoryItem, PurchaseOrderLine } from "../types";
+import { DeliveryScheduleSection } from "../components/purchaseOrders/DeliveryScheduleSection";
+import type { PurchaseOrder, PoStatus, InventoryItem, PurchaseOrderLine, DeliveryInstallment } from "../types";
 interface PoTableRowProps {
   po: PurchaseOrder;
   onView: (po: PurchaseOrder) => void;
@@ -105,6 +106,14 @@ const PoTableRow = React.memo(function PoTableRow({
           </button>
 
           <div className="flex items-center gap-1 flex-wrap">
+            {po.deliverySchedule && po.deliverySchedule.length > 1 && (
+              <span
+                className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-blue-800 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/50 px-1.5 py-0.5 rounded border border-blue-300 dark:border-blue-900/60 shadow-2xs"
+                title={`Split delivery schedule: ${po.deliverySchedule.length} installments (${po.deliverySchedule.map((s) => s.quantity).join(", ")} units)`}
+              >
+                🚚 {po.deliverySchedule.length} Installments ({po.deliverySchedule.map((s) => s.quantity).join(", ")})
+              </span>
+            )}
             {po.isRescheduled && (
               <span
                 className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 rounded border border-amber-300 dark:border-amber-900/60 shadow-2xs"
@@ -122,7 +131,7 @@ const PoTableRow = React.memo(function PoTableRow({
         </div>
       </td>
       <td className="tabular px-3 py-2.5 font-semibold text-[var(--color-ink-900)] whitespace-nowrap">
-        ₹{po.total.toLocaleString("en-IN")}
+        ₹{(Number(po.total) || 0).toLocaleString("en-IN")}
       </td>
       <td className="px-3 py-2.5 whitespace-nowrap">
         <div className="flex items-center gap-1 flex-wrap">
@@ -325,6 +334,7 @@ export default function PurchaseOrders() {
   const [editExpectedDelivery, setEditExpectedDelivery] = useState("");
   const [editStatus, setEditStatus] = useState<PoStatus>("Submitted");
   const [editNotes, setEditNotes] = useState("");
+  const [editDeliverySchedule, setEditDeliverySchedule] = useState<DeliveryInstallment[]>([]);
   const [editLines, setEditLines] = useState<{
     part: string;
     category?: string;
@@ -377,6 +387,7 @@ export default function PurchaseOrders() {
     setEditExpectedDelivery(po.expectedDelivery || "");
     setEditStatus(po.status || "Submitted");
     setEditNotes(po.notes || "");
+    setEditDeliverySchedule(po.deliverySchedule || []);
     setEditLines(
       po.lines && po.lines.length > 0
         ? po.lines.map((l) => ({
@@ -436,6 +447,7 @@ export default function PurchaseOrders() {
         expectedDelivery: editExpectedDelivery || editingPo.expectedDelivery,
         status: editStatus,
         notes: editNotes.trim(),
+        deliverySchedule: editDeliverySchedule.length > 0 ? editDeliverySchedule : undefined,
         lines: editLines.map((l) => ({
           part: l.part.trim() || "Item",
           category: l.category?.trim() || undefined,
@@ -1530,6 +1542,14 @@ export default function PurchaseOrders() {
                   </span>
                 </div>
               </div>
+
+              {/* SPLIT DELIVERY SCHEDULE SECTION */}
+              <DeliveryScheduleSection
+                totalOrderedQuantity={editLines.reduce((s, l) => s + (Number(l.quantity) || 0), 0)}
+                baseExpectedDelivery={editExpectedDelivery}
+                installments={editDeliverySchedule}
+                onChange={setEditDeliverySchedule}
+              />
             </div>
 
             <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-[var(--color-border)]">
